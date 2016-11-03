@@ -45,7 +45,7 @@
 				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
 				<h2 class="blog-motto">special for SLAM</h2>
 			</div>
-			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜单">
 			</a></div>
 			<nav class="animated">
 				<ul>
@@ -61,7 +61,7 @@
  					
 					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
 						<label>Search</label>
-						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
 						<input type="hidden" name="q" value="site:fangrenziwo.com">
 					</form>
 					
@@ -73,223 +73,653 @@
     <div id="container">
       <div id="main">
 
-  
-<section class="post" itemscope itemprop="blogitem">
-  
-    <a href="/2016/10/26/cv-loop-closing/" title="SLAM系列--回环检测DBoW2原理" itemprop="url">
-  
-    <h1 itemprop="name">SLAM系列--回环检测DBoW2原理</h1>
+   
     
-     
-       <p itemprop="description" >作者：Frank时间：2016-10-25
-
-在SLAM系统中，当相机姿态被逐帧的计算出来之后，就可以通过对相机姿态的叠加得到相机在空间中的位姿。然而由于相机姿态中或多或少的存在噪声，因此当相机回到重复场景的时候，相机的姿态和重复帧所对应的姿态并不重合，从而导致三角化后得到的地图</p>
-      
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
     
-    <time datetime="2016-10-26T03:06:08.000Z" itemprop="datePublished">2016-10-26</time>
-  </a>
-</section>
-
-
-
-
-
-
-  
-<section class="post" itemscope itemprop="blogitem">
-  
-    <a href="/2016/10/15/transplant-lsd-slam-start/" title="SLAM移植系列---LSDSLAM" itemprop="url">
-  
-    <h1 itemprop="name">SLAM移植系列---LSDSLAM</h1>
+      <a href="/2016/10/26/cv-loop-closing/" title="SLAM系列--回环检测DBoW2原理" itemprop="url">SLAM系列--回环检测DBoW2原理</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-10-26T03:06:08.000Z" itemprop="datePublished"> 发表于 2016-10-26</time>
     
-     
-           <p itemprop="description" >作者：Frank时间：2016-10-15
-
-从本节开始，在SLAM理论学习之外，会开始对一些主流的SLAM框架进行移植，因为毕业设计的研究方向也是这个，所以之后会对主流的SLAM框架进行移植。之前在业余时间移植过ORBSLAM到Android上，之后会基于LSDSLAM出的在A</p>
+  </p>
+</header>
+    <div class="article-content">
         
+        <p><strong><br>作者：Frank<br>时间：2016-10-25
+</strong></p>
+<p>在SLAM系统中，当相机姿态被逐帧的计算出来之后，就可以通过对相机姿态的叠加得到相机在空间中的位姿。然而由于相机姿态中或多或少的存在噪声，因此当相机回到重复场景的时候，相机的姿态和重复帧所对应的姿态并不重合，从而导致三角化后得到的地图点出现错位。因此在SLAM系统中，需要利用算法对相机运动过程中可能出现的重复场景进行检测，即回环检测算法。在ORB-SLAM和Kintinuous中都使用了DBoW2作为回环检测算法，因此在本部分对DBoW2算法进行简要的介绍。<br>
+        
+        
+        <p class="article-more-link">
+          
+            <a href="/2016/10/26/cv-loop-closing/#more">Read More</a>
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/SLAM/">SLAM</a><a href="/tags/回环检测/">回环检测</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/10/26/cv-loop-closing/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/10/26/cv-loop-closing/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+   
     
-    <time datetime="2016-10-15T14:02:52.000Z" itemprop="datePublished">2016-10-15</time>
-  </a>
-</section>
-
-
-
-
-
-
-  
-<section class="post" itemscope itemprop="blogitem">
-  
-    <a href="/2016/09/23/cv-depthestimation-and-propagation/" title="SLAM系列--深度估计的更新和传播" itemprop="url">
-  
-    <h1 itemprop="name">SLAM系列--深度估计的更新和传播</h1>
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
     
-     
-       <p itemprop="description" >作者：Frank时间：2016-09-22
-
-ORBSLAM原作者的新论文《Probabilistic Semi Dense Mapping from Highly Accurate Feature-Based Method Monocular SLAM》结合了原来自身的ORBS</p>
-      
+      <a href="/2016/10/15/transplant-lsd-slam-start/" title="SLAM移植系列---LSDSLAM" itemprop="url">SLAM移植系列---LSDSLAM</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-10-15T14:02:52.000Z" itemprop="datePublished"> 发表于 2016-10-15</time>
     
-    <time datetime="2016-09-22T16:22:10.000Z" itemprop="datePublished">2016-09-23</time>
-  </a>
-</section>
+  </p>
+</header>
+    <div class="article-content">
+        
+        <p><strong><br>作者：Frank<br>时间：2016-10-15
+</strong></p>
+<p>从本节开始，在SLAM理论学习之外，会开始对一些主流的SLAM框架进行移植，因为毕业设计的研究方向也是这个，所以之后会对主流的SLAM框架进行移植。之前在业余时间移植过ORBSLAM到Android上，之后会基于LSDSLAM出的在Android上运行的论文，来实现LSDSLAM在Android上的移植，同时熟悉一些移动端的优化方法。</p>
+<center><br><strong><br>转载请注明出处
+</strong><br></center>
+        
+        
+        <p class="article-more-link">
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/10/15/transplant-lsd-slam-start/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/10/15/transplant-lsd-slam-start/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
 
 
 
 
 
 
-  
-<section class="post" itemscope itemprop="blogitem">
-  
-    <a href="/2016/09/16/cv-direct-method-camera-pose/" title="SLAM系列--Camera Pose的求解(Direct Method)" itemprop="url">
-  
-    <h1 itemprop="name">SLAM系列--Camera Pose的求解(Direct Method)</h1>
+   
     
-     
-       <p itemprop="description" >作者：Frank时间：2016-09-16
-
-在SLAM前端，即视觉里程计(Visual Odometry)中，主流的求解相机姿态(Camera Pose)的方式有以下两种，一种是基于特征的(Feature-Based)VO，一种是直接法(Direct Method)求VO，本节</p>
-      
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
     
-    <time datetime="2016-09-16T11:16:16.000Z" itemprop="datePublished">2016-09-16</time>
-  </a>
-</section>
-
-
-
-
-
-
-  
-<section class="post" itemscope itemprop="blogitem">
-  
-    <a href="/2016/09/08/cv-ransac-epnp/" title="SLAM系列--RANSAC和EPNP算法" itemprop="url">
-  
-    <h1 itemprop="name">SLAM系列--RANSAC和EPNP算法</h1>
+      <a href="/2016/09/23/cv-depthestimation-and-propagation/" title="SLAM系列--深度估计的更新和传播" itemprop="url">SLAM系列--深度估计的更新和传播</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-09-22T16:22:10.000Z" itemprop="datePublished"> 发表于 2016-09-23</time>
     
-     
-       <p itemprop="description" >作者：Frank时间：2016-09-03
+  </p>
+</header>
+    <div class="article-content">
+        
+        <p><strong><br>作者：Frank<br>时间：2016-09-22
+</strong></p>
+<p>ORBSLAM原作者的新论文<a href="http://www.roboticsproceedings.org/rss11/p41.pdf">《Probabilistic Semi Dense Mapping from Highly Accurate Feature-Based Method Monocular SLAM》</a>结合了原来自身的ORBSLAM的流程和LSD-SLAM中利用概率统计的方式实现半稠密的深度重建，群里的贺所长根据这篇论文和ORBSLAM2的源码，实现了在ORB上的半稠密重建过程。这几天对这份代码进行了仔细的研究，受益颇多，这里就结合该论文讲述下半稠密的重建步骤。<br>贺所长的博客：<a href="http://blog.csdn.net/heyijia0327/article/details/52464278">http://blog.csdn.net/heyijia0327/article/details/52464278</a><br>Semi-Dense ORB：<a href="https://github.com/HeYijia/ORB_SLAM2">https://github.com/HeYijia/ORB_SLAM2</a></p>
+        
+        
+        <p class="article-more-link">
+          
+            <a href="/2016/09/23/cv-depthestimation-and-propagation/#more">Read More</a>
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
 
-在Feature-Based SLAM中， 在利用特征检测算子对前后两帧进行了特征检测和匹配后，得到的结果可能有很大的误差，因为可能会存在误匹配的情况，这会使得计算获取的位姿精度降低，因此我们需要对匹配结果进行滤波和优化，而在此过程中</p>
-      
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/SLAM/">SLAM</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/09/23/cv-depthestimation-and-propagation/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/09/23/cv-depthestimation-and-propagation/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+   
     
-    <time datetime="2016-09-08T08:53:23.000Z" itemprop="datePublished">2016-09-08</time>
-  </a>
-</section>
-
-
-
-
-
-
-  
-<section class="post" itemscope itemprop="blogitem">
-  
-    <a href="/2016/09/03/cv-svd/" title="SLAM系列---SVD分解" itemprop="url">
-  
-    <h1 itemprop="name">SLAM系列---SVD分解</h1>
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
     
-     
-       <p itemprop="description" >作者：Frank时间：2016-09-03
-
-在SLAM中，无论是计算Homography Matrix，Fundamental Matrix，还是做三角化(Triangulation)时，都会用到最小二乘法。而在最小二乘法中的最常用的解法就是SVD（Singular Value</p>
-      
+      <a href="/2016/09/16/cv-direct-method-camera-pose/" title="SLAM系列--Camera Pose的求解(Direct Method)" itemprop="url">SLAM系列--Camera Pose的求解(Direct Method)</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-09-16T11:16:16.000Z" itemprop="datePublished"> 发表于 2016-09-16</time>
     
-    <time datetime="2016-09-03T12:34:33.000Z" itemprop="datePublished">2016-09-03</time>
-  </a>
-</section>
+  </p>
+</header>
+    <div class="article-content">
+        
+        <p><strong><br>作者：Frank<br>时间：2016-09-16
+</strong></p>
+<p>在SLAM前端，即视觉里程计(Visual Odometry)中，主流的求解相机姿态(Camera Pose)的方式有以下两种，一种是基于特征的(Feature-Based)VO，一种是直接法(Direct Method)求VO，本节从比较Feature-Based VO和Direct-Method VO出发，开始讲解利用Direct Method求解Camera Pose的过程。</p>
+        
+        
+        <p class="article-more-link">
+          
+            <a href="/2016/09/16/cv-direct-method-camera-pose/#more">Read More</a>
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
 
 
-
-
-
-
+  <div class="article-tags">
   
-<section class="post" itemscope itemprop="blogitem">
-  
-    <a href="/2016/08/14/slam-resources-list/" title="【泡泡机器人】SLAM干货整理" itemprop="url">
-  
-    <h1 itemprop="name">【泡泡机器人】SLAM干货整理</h1>
+  <span></span> <a href="/tags/相机姿态/">相机姿态</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/09/16/cv-direct-method-camera-pose/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/09/16/cv-direct-method-camera-pose/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+   
     
-     
-       <p itemprop="description" >作者：Frank时间：2016-08-14
-本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！
-
-持续更新中…
-重要的事情说三遍!</p>
-      
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
     
-    <time datetime="2016-08-14T05:15:42.000Z" itemprop="datePublished">2016-08-14</time>
-  </a>
-</section>
-
-
-
-
-
-
-  
-<section class="post" itemscope itemprop="blogitem">
-  
-    <a href="/2016/08/03/cv-nonlinear-optimazation-02/" title="SLAM系列--非线性优化（2）" itemprop="url">
-  
-    <h1 itemprop="name">SLAM系列--非线性优化（2）</h1>
+      <a href="/2016/09/08/cv-ransac-epnp/" title="SLAM系列--RANSAC和EPNP算法" itemprop="url">SLAM系列--RANSAC和EPNP算法</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-09-08T08:53:23.000Z" itemprop="datePublished"> 发表于 2016-09-08</time>
     
-     
-       <p itemprop="description" >作者：Frank时间：2016-08-03
+  </p>
+</header>
+    <div class="article-content">
+        
+        <p><strong><br>作者：Frank<br>时间：2016-09-03
+</strong></p>
+<p>在Feature-Based SLAM中， 在利用特征检测算子对前后两帧进行了特征检测和匹配后，得到的结果可能有很大的误差，因为可能会存在误匹配的情况，这会使得计算获取的位姿精度降低，因此我们需要对匹配结果进行滤波和优化，而在此过程中最经典的就是利用RANSAC(RANdom SAmple Consensus ，随机采样一致性)算法。而在优化了匹配结果后，我们需要利用该结果来计算两帧之间的相对运动（即旋转R和平移t），而这部分可以利用本节将要讲述的EPNP算法来进行求解。因此，本节会按照上述的顺序先介绍RANSAC算法的基本原理，然后再介绍EPNP算法的原理。<br>
+        
+        
+        <p class="article-more-link">
+          
+            <a href="/2016/09/08/cv-ransac-epnp/#more">Read More</a>
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
 
-本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquar</p>
-      
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/SLAM/">SLAM</a><a href="/tags/算法/">算法</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/09/08/cv-ransac-epnp/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/09/08/cv-ransac-epnp/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+   
     
-    <time datetime="2016-08-03T13:43:15.000Z" itemprop="datePublished">2016-08-03</time>
-  </a>
-</section>
-
-
-
-
-
-
-  
-<section class="post" itemscope itemprop="blogitem">
-  
-    <a href="/2016/07/31/cv-nonlinear-optimazation-01/" title="SLAM系列--非线性优化（1）" itemprop="url">
-  
-    <h1 itemprop="name">SLAM系列--非线性优化（1）</h1>
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
     
-     
-       <p itemprop="description" >作者：Frank时间：2016-07-31
-
-不论是在Feature-based SLAM还是在Direct-Method SLAM中，为了求得当前帧和参考帧直接的相对相机运动(位姿)，都涉及到求解非线性优化问题。在Feature-Based SLAM中，我们可以在得到参考帧和当</p>
-      
+      <a href="/2016/09/03/cv-svd/" title="SLAM系列---SVD分解" itemprop="url">SLAM系列---SVD分解</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-09-03T12:34:33.000Z" itemprop="datePublished"> 发表于 2016-09-03</time>
     
-    <time datetime="2016-07-31T08:19:16.000Z" itemprop="datePublished">2016-07-31</time>
-  </a>
-</section>
+  </p>
+</header>
+    <div class="article-content">
+        
+        <p><strong><br>作者：Frank<br>时间：2016-09-03
+</strong></p>
+<p>在SLAM中，无论是计算Homography Matrix，Fundamental Matrix，还是做三角化(Triangulation)时，都会用到最小二乘法。而在最小二乘法中的最常用的解法就是SVD（Singular Value Decomposition）分解。本节就讲述SVD分解的基本概念以及其在最小二乘法中的应用和证明。</p>
+        
+        
+        <p class="article-more-link">
+          
+            <a href="/2016/09/03/cv-svd/#more">Read More</a>
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
 
 
-
-
-
-
+  <div class="article-tags">
   
-<section class="post" itemscope itemprop="blogitem">
-  
-    <a href="/2016/07/11/cv-feature-extraction-and-matching2/" title="SLAM系列-特征检测和匹配(2)" itemprop="url">
-  
-    <h1 itemprop="name">SLAM系列-特征检测和匹配(2)</h1>
+  <span></span> <a href="/tags/SLAM/">SLAM</a><a href="/tags/算法/">算法</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/09/03/cv-svd/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/09/03/cv-svd/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+   
     
-     
-       <p itemprop="description" >作者：Frank时间：2016-07-12
-
-
-在最近的Feature-Based SLAM系统中，ORB特征检测算子也应用的较为频繁，特别是ORB-SLAM以及ORB-SLAM2的出现，使得ORB特征检测算子的应用更加广泛。因此本节要讲述的就是ORB特征检测算子的原理。</p>
-      
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
     
-    <time datetime="2016-07-11T14:20:05.000Z" itemprop="datePublished">2016-07-11</time>
-  </a>
-</section>
+      <a href="/2016/08/14/slam-resources-list/" title="【泡泡机器人】SLAM干货整理" itemprop="url">【泡泡机器人】SLAM干货整理</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-08-14T05:15:42.000Z" itemprop="datePublished"> 发表于 2016-08-14</time>
+    
+  </p>
+</header>
+    <div class="article-content">
+        
+        <p><strong><br>作者：Frank<br>时间：2016-08-14
+</strong><br><strong><br>本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！<br>本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！<br>本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！
+</strong></p>
+<p><strong>持续更新中…</strong></p>
+<p>重要的事情说三遍!<br>
+        
+        
+        <p class="article-more-link">
+          
+            <a href="/2016/08/14/slam-resources-list/#more">Read More</a>
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/SLAM资源/">SLAM资源</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/干货/">干货</a><a href="/tags/链接/">链接</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/08/14/slam-resources-list/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/08/14/slam-resources-list/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+   
+    
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/08/03/cv-nonlinear-optimazation-02/" title="SLAM系列--非线性优化（2）" itemprop="url">SLAM系列--非线性优化（2）</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-08-03T13:43:15.000Z" itemprop="datePublished"> 发表于 2016-08-03</time>
+    
+  </p>
+</header>
+    <div class="article-content">
+        
+        <p><strong><br>作者：Frank<br>时间：2016-08-03
+</strong></p>
+<p>本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquardt是结合了Gauss-Newton和梯度下降法的优点总结而来的迭代算法，因此这里会先介绍梯度下降法。<br>
+        
+        
+        <p class="article-more-link">
+          
+            <a href="/2016/08/03/cv-nonlinear-optimazation-02/#more">Read More</a>
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/非线性优化/">非线性优化</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/08/03/cv-nonlinear-optimazation-02/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/08/03/cv-nonlinear-optimazation-02/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+   
+    
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/07/31/cv-nonlinear-optimazation-01/" title="SLAM系列--非线性优化（1）" itemprop="url">SLAM系列--非线性优化（1）</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-07-31T08:19:16.000Z" itemprop="datePublished"> 发表于 2016-07-31</time>
+    
+  </p>
+</header>
+    <div class="article-content">
+        
+        <p><strong><br>作者：Frank<br>时间：2016-07-31
+</strong></p>
+<p>不论是在Feature-based SLAM还是在Direct-Method SLAM中，为了求得当前帧和参考帧直接的相对相机运动(位姿)，都涉及到求解非线性优化问题。在Feature-Based SLAM中，我们可以在得到参考帧和当前帧的匹配对后利用opencv自带的solvePnp函数来求解位姿，而solvePnp中经典的是EPNP算法，算法中就涉及到利用Gauss-Newton迭代来求解最优化参数；而在Direct-Method SLAM中，算法直接根据图像像素匹配误差(photometric error)来构造优化函数来求其最优解。在SLAM的优化问题中常见的有Gauss-Newton迭代和Levenberg-Marquardt迭代，本节和下节将会分别就这两种优化方法展开讲述（主要是针对直接法中需要用到的优化解）。<br>
+        
+        
+        <p class="article-more-link">
+          
+            <a href="/2016/07/31/cv-nonlinear-optimazation-01/#more">Read More</a>
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/非线性优化/">非线性优化</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/07/31/cv-nonlinear-optimazation-01/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/07/31/cv-nonlinear-optimazation-01/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+   
+    
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/07/11/cv-feature-extraction-and-matching2/" title="SLAM系列-特征检测和匹配(2)" itemprop="url">SLAM系列-特征检测和匹配(2)</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-07-11T14:20:05.000Z" itemprop="datePublished"> 发表于 2016-07-11</time>
+    
+  </p>
+</header>
+    <div class="article-content">
+        
+        <p><strong><br>作者：Frank<br>时间：2016-07-12
+</strong></p>
+<hr>
+<p>在最近的Feature-Based SLAM系统中，ORB特征检测算子也应用的较为频繁，特别是ORB-SLAM以及ORB-SLAM2的出现，使得ORB特征检测算子的应用更加广泛。因此本节要讲述的就是ORB特征检测算子的原理。<br>
+        
+        
+        <p class="article-more-link">
+          
+            <a href="/2016/07/11/cv-feature-extraction-and-matching2/#more">Read More</a>
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/特征检测/">特征检测</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/07/11/cv-feature-extraction-and-matching2/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/07/11/cv-feature-extraction-and-matching2/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
 
 
 
@@ -297,20 +727,20 @@ ORBSLAM原作者的新论文《Probabilistic Semi Dense Mapping from Highly Accu
 
 
 
-  <nav id="page-nav" class="clearfix unexpand">
+  <nav id="page-nav" class="clearfix">
     <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next<span></span></a>
   </nav>
 
 </div>
-      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+      <div class="openaside"><a class="navbutton" href="#" title="显示侧边栏"></a></div>
 
 <div id="asidepart">
-<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<div class="closeaside"><a class="closebutton" href="#" title="隐藏侧边栏"></a></div>
 <aside class="clearfix">
 
   
 <div class="categorieslist">
-	<p class="asidetitle">Categories</p>
+	<p class="asidetitle">分类</p>
 		<ul>
 		
 		  
@@ -339,7 +769,7 @@ ORBSLAM原作者的新论文《Probabilistic Semi Dense Mapping from Highly Accu
 
   
 <div class="tagslist">
-	<p class="asidetitle">Tags</p>
+	<p class="asidetitle">标签</p>
 		<ul class="clearfix">
 		
 			
@@ -391,7 +821,7 @@ ORBSLAM原作者的新论文《Probabilistic Semi Dense Mapping from Highly Accu
 
 
   <div class="linkslist">
-  <p class="asidetitle">Links</p>
+  <p class="asidetitle">友情链接</p>
     <ul>
         
           <li>
@@ -556,7 +986,7 @@ var _hmt = _hmt || [];
 <!-- Totop Begin -->
 
 	<div id="totop">
-	<a title="Back to Top"><img src="/img/scrollup.png"/></a>
+	<a title="返回顶部"><img src="/img/scrollup.png"/></a>
 	</div>
 	<script src="/js/totop.js"></script>
 
