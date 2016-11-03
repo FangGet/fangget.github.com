@@ -62,7 +62,7 @@
 				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
 				<h2 class="blog-motto">special for SLAM</h2>
 			</div>
-			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜單">
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
 			</a></div>
 			<nav class="animated">
 				<ul>
@@ -78,7 +78,7 @@
  					
 					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
 						<label>Search</label>
-						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
 						<input type="hidden" name="q" value="site:fangrenziwo.com">
 					</form>
 					
@@ -101,14 +101,14 @@
 		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
 		
   <p class="article-time">
-    <time datetime="2016-07-10T04:27:03.000Z" itemprop="datePublished"> 發表於 2016-07-10</time>
+    <time datetime="2016-07-10T04:27:03.000Z" itemprop="datePublished"> Published 2016-07-10</time>
     
   </p>
 </header>
 	<div class="article-content">
 		
 		<div id="toc" class="toc-article">
-			<strong class="toc-title">文章目錄</strong>
+			<strong class="toc-title">Contents</strong>
 		
 			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SIFT特征检测算子"><span class="toc-number">1.</span> <span class="toc-text">SIFT特征检测算子</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#1-构建尺度空间"><span class="toc-number">2.</span> <span class="toc-text">1.构建尺度空间</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-理论知识"><span class="toc-number">2.1.</span> <span class="toc-text">1.1.理论知识</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-1-高斯核"><span class="toc-number">2.1.1.</span> <span class="toc-text">1.1.1.高斯核</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-2-DOG角点检测"><span class="toc-number">2.1.2.</span> <span class="toc-text">1.1.2.DOG角点检测</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-构建尺度空间"><span class="toc-number">2.2.</span> <span class="toc-text">1.2 构建尺度空间</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-1-高斯核函数的引入"><span class="toc-number">2.2.1.</span> <span class="toc-text">1.2.1.高斯核函数的引入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-2-图像金字塔的建立"><span class="toc-number">2.2.2.</span> <span class="toc-text">1.2.2. 图像金字塔的建立</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-3-检测极值点"><span class="toc-number">2.2.3.</span> <span class="toc-text">1.2.3.检测极值点</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-特征点过滤及精确定位"><span class="toc-number">3.</span> <span class="toc-text">2.特征点过滤及精确定位</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-去除低对比度的点"><span class="toc-number">3.1.</span> <span class="toc-text">2.1. 去除低对比度的点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-去除边缘响应点"><span class="toc-number">3.2.</span> <span class="toc-text">2.2.去除边缘响应点</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-特征描述符提取和方向值分配"><span class="toc-number">4.</span> <span class="toc-text">3.特征描述符提取和方向值分配</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-关键点描述子的生成"><span class="toc-number">5.</span> <span class="toc-text">4.关键点描述子的生成</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">6.</span> <span class="toc-text">总结</span></a></li></ol>
 		
@@ -211,22 +211,22 @@
 
 
 </div>  
-      <div class="openaside"><a class="navbutton" href="#" title="顯示側邊欄"></a></div>
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
 
   <div id="toc" class="toc-aside">
-  <strong class="toc-title">文章目錄</strong>
+  <strong class="toc-title">Contents</strong>
  
  <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SIFT特征检测算子"><span class="toc-number">1.</span> <span class="toc-text">SIFT特征检测算子</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#1-构建尺度空间"><span class="toc-number">2.</span> <span class="toc-text">1.构建尺度空间</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-理论知识"><span class="toc-number">2.1.</span> <span class="toc-text">1.1.理论知识</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-1-高斯核"><span class="toc-number">2.1.1.</span> <span class="toc-text">1.1.1.高斯核</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-2-DOG角点检测"><span class="toc-number">2.1.2.</span> <span class="toc-text">1.1.2.DOG角点检测</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-构建尺度空间"><span class="toc-number">2.2.</span> <span class="toc-text">1.2 构建尺度空间</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-1-高斯核函数的引入"><span class="toc-number">2.2.1.</span> <span class="toc-text">1.2.1.高斯核函数的引入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-2-图像金字塔的建立"><span class="toc-number">2.2.2.</span> <span class="toc-text">1.2.2. 图像金字塔的建立</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-3-检测极值点"><span class="toc-number">2.2.3.</span> <span class="toc-text">1.2.3.检测极值点</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-特征点过滤及精确定位"><span class="toc-number">3.</span> <span class="toc-text">2.特征点过滤及精确定位</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-去除低对比度的点"><span class="toc-number">3.1.</span> <span class="toc-text">2.1. 去除低对比度的点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-去除边缘响应点"><span class="toc-number">3.2.</span> <span class="toc-text">2.2.去除边缘响应点</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-特征描述符提取和方向值分配"><span class="toc-number">4.</span> <span class="toc-text">3.特征描述符提取和方向值分配</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-关键点描述子的生成"><span class="toc-number">5.</span> <span class="toc-text">4.关键点描述子的生成</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">6.</span> <span class="toc-text">总结</span></a></li></ol>
  
   </div>
 
 <div id="asidepart">
-<div class="closeaside"><a class="closebutton" href="#" title="隱藏側邊欄"></a></div>
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
 <aside class="clearfix">
 
   
 <div class="categorieslist">
-	<p class="asidetitle">分類</p>
+	<p class="asidetitle">Categories</p>
 		<ul>
 		
 		  
@@ -255,7 +255,7 @@
 
   
 <div class="tagslist">
-	<p class="asidetitle">標簽</p>
+	<p class="asidetitle">Tags</p>
 		<ul class="clearfix">
 		
 			
@@ -307,12 +307,18 @@
 
 
   <div class="linkslist">
-  <p class="asidetitle">友情鏈接</p>
+  <p class="asidetitle">Links</p>
     <ul>
         
           <li>
             
             	<a href="http://blog.csdn.net/zf19921020" target="_blank" title="我的CSDN">我的CSDN</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wantedonline.cn" target="_blank" title="技术家园">技术家园</a>
             
           </li>
         
@@ -555,7 +561,7 @@ var _hmt = _hmt || [];
 <!-- Totop Begin -->
 
 	<div id="totop">
-	<a title="返回頂部"><img src="/img/scrollup.png"/></a>
+	<a title="Back to Top"><img src="/img/scrollup.png"/></a>
 	</div>
 	<script src="/js/totop.js"></script>
 
