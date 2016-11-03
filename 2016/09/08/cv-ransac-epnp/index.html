@@ -1,0 +1,614 @@
+
+ <!DOCTYPE HTML>
+<html >
+<head>
+  <meta charset="UTF-8">
+  
+    <title>SLAM系列--RANSAC和EPNP算法 | Fang&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="Fang">
+    
+
+    
+    <meta name="description" content="作者：Frank时间：2016-09-03
+
+在Feature-Based SLAM中， 在利用特征检测算子对前后两帧进行了特征检测和匹配后，得到的结果可能有很大的误差，因为可能会存在误匹配的情况，这会使得计算获取的位姿精度降低，因此我们需要对匹配结果进行滤波和优化，而在此过程中最经典的就是利用RANSAC(RANdom SAmple Consensus ，随机采样一致性)算法。而在优化了匹配结果">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SLAM系列--RANSAC和EPNP算法">
+<meta property="og:url" content="http://fangrenziwo.com/2016/09/08/cv-ransac-epnp/index.html">
+<meta property="og:site_name" content="Fang's Blog">
+<meta property="og:description" content="作者：Frank时间：2016-09-03
+
+在Feature-Based SLAM中， 在利用特征检测算子对前后两帧进行了特征检测和匹配后，得到的结果可能有很大的误差，因为可能会存在误匹配的情况，这会使得计算获取的位姿精度降低，因此我们需要对匹配结果进行滤波和优化，而在此过程中最经典的就是利用RANSAC(RANdom SAmple Consensus ，随机采样一致性)算法。而在优化了匹配结果">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-9-8/40415416.jpg">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-9-8/29105637.jpg">
+<meta property="og:updated_time" content="2016-09-08T11:12:54.933Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SLAM系列--RANSAC和EPNP算法">
+<meta name="twitter:description" content="作者：Frank时间：2016-09-03
+
+在Feature-Based SLAM中， 在利用特征检测算子对前后两帧进行了特征检测和匹配后，得到的结果可能有很大的误差，因为可能会存在误匹配的情况，这会使得计算获取的位姿精度降低，因此我们需要对匹配结果进行滤波和优化，而在此过程中最经典的就是利用RANSAC(RANdom SAmple Consensus ，随机采样一致性)算法。而在优化了匹配结果">
+<meta name="twitter:image" content="http://o9n30cpt4.bkt.clouddn.com/16-9-8/40415416.jpg">
+
+    
+    
+    <link rel="icon" href="/img/avatar2.png">
+    
+    
+    <link rel="apple-touch-icon" href="/img/avatar.png">
+    <link rel="apple-touch-icon-precomposed" href="/img/avatar.png">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/avatar2.png" alt="Fang&#39;s Blog" title="Fang&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
+				<h2 class="blog-motto">special for SLAM</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜單">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:fangrenziwo.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/09/08/cv-ransac-epnp/" title="SLAM系列--RANSAC和EPNP算法" itemprop="url">SLAM系列--RANSAC和EPNP算法</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-09-08T08:53:23.000Z" itemprop="datePublished"> 發表於 2016-09-08</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目錄</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-RANSAC算法"><span class="toc-number">1.</span> <span class="toc-text">1. RANSAC算法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-RANSAC算法基础"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. RANSAC算法基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-1-算法的基本假设"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.1.1. 算法的基本假设</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-2-算法示例"><span class="toc-number">1.1.2.</span> <span class="toc-text">1.1.2. 算法示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-3-算法概述"><span class="toc-number">1.1.3.</span> <span class="toc-text">1.1.3. 算法概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-4-RANSAC的优劣"><span class="toc-number">1.1.4.</span> <span class="toc-text">1.1.4. RANSAC的优劣</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-RANSAC算法用于消除图像误匹配原理"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. RANSAC算法用于消除图像误匹配原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-1-算法原理"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.2.1. 算法原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-2-算法步骤"><span class="toc-number">1.2.2.</span> <span class="toc-text">1.2.2. 算法步骤</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-EPnP算法"><span class="toc-number">2.</span> <span class="toc-text">2. EPnP算法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-基本表示"><span class="toc-number">2.1.</span> <span class="toc-text">2.1. 基本表示</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-控制点在相机坐标系的坐标"><span class="toc-number">2.2.</span> <span class="toc-text">2.2. 控制点在相机坐标系的坐标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-选择合适的线性组合"><span class="toc-number">2.3.</span> <span class="toc-text">2.3. 选择合适的线性组合</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-4-计算R-t"><span class="toc-number">2.4.</span> <span class="toc-text">2.4. 计算R,t</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<p><strong><br>作者：Frank<br>时间：2016-09-03
+</strong></p>
+<p>在Feature-Based SLAM中， 在利用特征检测算子对前后两帧进行了特征检测和匹配后，得到的结果可能有很大的误差，因为可能会存在误匹配的情况，这会使得计算获取的位姿精度降低，因此我们需要对匹配结果进行滤波和优化，而在此过程中最经典的就是利用RANSAC(RANdom SAmple Consensus ，随机采样一致性)算法。而在优化了匹配结果后，我们需要利用该结果来计算两帧之间的相对运动（即旋转R和平移t），而这部分可以利用本节将要讲述的EPNP算法来进行求解。因此，本节会按照上述的顺序先介绍RANSAC算法的基本原理，然后再介绍EPNP算法的原理。<br><a id="more"></a></p>
+<h1 id="1-RANSAC算法"><a href="#1-RANSAC算法" class="headerlink" title="1. RANSAC算法"></a>1. RANSAC算法</h1><h2 id="1-1-RANSAC算法基础"><a href="#1-1-RANSAC算法基础" class="headerlink" title="1.1. RANSAC算法基础"></a>1.1. RANSAC算法基础</h2><h3 id="1-1-1-算法的基本假设"><a href="#1-1-1-算法的基本假设" class="headerlink" title="1.1.1. 算法的基本假设"></a>1.1.1. 算法的基本假设</h3><ol>
+<li>数据是由”局内点”组成，例如：数据的分布可以用一些模型参数来解释；</li>
+<li>“局外点”是不能适应该模型的数据；</li>
+<li>除此之外的数据属于噪声。</li>
+</ol>
+<p>局外点产生的原因有：噪声的极值；错误的测量方法；对数据的错误假设。<br>RANSAC也做了以下假设：给定一组（通常很小的）局内点，存在一个可以估计模型参数的过程，而该模型能够解释或者适用于局内点。</p>
+<h3 id="1-1-2-算法示例"><a href="#1-1-2-算法示例" class="headerlink" title="1.1.2. 算法示例"></a>1.1.2. 算法示例</h3><p>一个简单的例子就是从一组观测数据中找出合适的二维直线。假设观测数据中包含局内点和局外点，其中局内点近似的被直线所通过，而局外点远离直线。简单的最小二乘法不能找到适应于局内点的直线，原因是最小二乘法尽量去适应包括局外点在内的所有点。相反，RANSAC能得出一个仅仅利用局内点计算出模型，并且概率还足够高。但是，RANSAC并不能保证结果一定正确，为了保证算法有足够高的合理概率，我们必须小心的选择算法的参数。图示如下所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-9-8/40415416.jpg" alt="">  <img src="http://o9n30cpt4.bkt.clouddn.com/16-9-8/29105637.jpg" alt=""></p>
+<p>上一张图表示包含很多局外点的数据集，而右图则是RANSAC找到的直线（局外点并不会影响结果）。</p>
+<h3 id="1-1-3-算法概述"><a href="#1-1-3-算法概述" class="headerlink" title="1.1.3. 算法概述"></a>1.1.3. 算法概述</h3><p>RANSAC算法的输入是一组观测数据，一个可以解释或者适应于观测数据的参数化模型，一些可信的参数。<br>RANSAC通过反复选择数据中的一组随机子集来达成目标。被选取的子集被假设为局内点，并用下述方法进行验证：</p>
+<ol>
+<li>有一个模型适应于假设的局内点，即所有的未知参数都能从假设的局内点计算得出；</li>
+<li>用1中得到的模型去测试所有的其他数据，如果某个点适应于估计的模型，认为它也是局内点。</li>
+<li>如果有足够多的点被归类于假设的局内点，那么估计的模型就足够合理；</li>
+<li>然后，用所有假设的局内点去重新估计模型，因为它仅仅被初始的假设局内点估计过；</li>
+<li>最后，通过估计局内点与模型的错误率来评估模型。</li>
+</ol>
+<p>这个过程被重复执行固定的次数，每次产生的模型要么因为局内点太少而被舍弃，要么因为比现在的模型更好而被选用。</p>
+<h3 id="1-1-4-RANSAC的优劣"><a href="#1-1-4-RANSAC的优劣" class="headerlink" title="1.1.4. RANSAC的优劣"></a>1.1.4. RANSAC的优劣</h3><p>RANSAC的优点：是能鲁棒的估计模型参数。例如，它能从包含大量局外点的数据集中估计出高精度的参数。<br>RANSAC的缺点：计算参数的迭代次数没有上限，如果设置迭代次数的上限，得到的结果可能不是最优的结果，甚至可能得到错误的结果。RANSAC只有一定的概率得到可信的模型，概率与迭代次数成正比。另一个缺点是它要求设置跟问题相关的阈值。而且RANSAC只能从特定的数据集中估计出一个模型，如果存在两个（或多个）模型，RANSAC不能找到别的模型。<br>总之，在一组包含局内点的数据集中，采用不断迭代的方法寻找参数模型。</p>
+<h2 id="1-2-RANSAC算法用于消除图像误匹配原理"><a href="#1-2-RANSAC算法用于消除图像误匹配原理" class="headerlink" title="1.2. RANSAC算法用于消除图像误匹配原理"></a>1.2. RANSAC算法用于消除图像误匹配原理</h2><h3 id="1-2-1-算法原理"><a href="#1-2-1-算法原理" class="headerlink" title="1.2.1. 算法原理"></a>1.2.1. 算法原理</h3><p>利用RANSAC算法来消除图像误匹配的原理，是利用RANSAC算法来寻找一个最佳单应性矩阵，矩阵大小为$3 \times 3$，目的是找到一个最优的参数矩阵，使得满足该矩阵的数据点数最多，通常令$ h_{33}=1$，由于单应性矩阵有8个位置参数，所以需要8个线性方程求解。对应到点位置信息上，一组点对可以列出两个方程，则至少包含4组匹配点对。，公式如下所示：（也可以 关于张正友标定 的讲述中找到该部分）<br>$$ s \left[\matrix{ x’ \cr y’ \cr 1 \cr}\right]=\left[\matrix{h_{11}&amp;h_{12}&amp;h_{13} \cr h_{21}&amp;h_{22}&amp;h_{23} \cr h_{31}&amp;h_{32}&amp;1 \cr}\right] \left[\matrix{x \cr y \cr 1 \cr}\right] \tag{1} $$</p>
+<p>其中，$(x,y) $表示目标图像的角点位置，$(x’,y’)$为场景图像角点位置。s为尺度参数。</p>
+<p>RANSAC算法从匹配数据集中随机抽取四个样本并保证这四个样本之间不共线。计算出单应性矩阵，然后利用这个模型测试所有数据，并计算满足这个模型数据点的个数和投影误差（即代价函数）若此模型为最优模型，则对应的代价函数最小：<br>$$\sum_{i=1}^{n}((x_i^{‘}{h_{11}x_i+h_{12}y_i+h_{13} \over h_{31}x_i+h_{32}y_i+h_{33} })^2+(y_i^{‘}{h_{21}x_i+h_{22}y_i+h_{23} \over h_{31}x_i+h_{32}y_i+h_{33} })^2) \tag{2} $$</p>
+<h3 id="1-2-2-算法步骤"><a href="#1-2-2-算法步骤" class="headerlink" title="1.2.2. 算法步骤"></a>1.2.2. 算法步骤</h3><ol>
+<li>随机从数据集中随机抽出4个样本数据（此四个样本之间不共线）计算出变换矩阵H，记为模型M；</li>
+<li>计算数据集中所有数据与模型M的投影误差，若误差小于阈值，加入内点集I；</li>
+<li>如果当前内点集元素个数大于最优内点集$I_{best}$，则更新$I_{best}=I$，同事更新迭代次数k；</li>
+<li>如果迭代次数大于k，则退出；否则迭代次数加1，并重复上述步骤；</li>
+</ol>
+<p>注：迭代次数k在不大于最大迭代次数的情况下，是在不断更新而不是固定的。<br>$$ k={log(1-p) \over log(1-w^m)} \tag{3} $$<br>其中，p为置信度，一般取为0.995，w为内点的比例，m为计算模型所需要的最小样本数；</p>
+<p>** 转载来源：<a href="http://www.cnblogs.com/xrwang/archive/2011/03/09/ransac-1.html" target="_blank" rel="external">随机抽样一致性算法（RANSAC）</a>;</p>
+<h1 id="2-EPnP算法"><a href="#2-EPnP算法" class="headerlink" title="2. EPnP算法"></a>2. EPnP算法</h1><p>PnP是利用已知匹配点对以及相机内参来求解相机位姿的算法，而EPnP则是针对$n \geq 3$情况下相机位姿求解的O(n)时间的算法。</p>
+<h2 id="2-1-基本表示"><a href="#2-1-基本表示" class="headerlink" title="2.1. 基本表示"></a>2.1. 基本表示</h2><p>相机坐标用$F^c$表示，世界坐标系用$F^w$表示，任何一点可以用四个控制点$c_j$表示，其中，世界坐标系中的点$p_i^w$可以表示为：<br>$$p_i^w=\sum_{j=1}^{4} \alpha _{ij} c_j^w , with \sum_{j=1}^{4}\alpha _{ij}=1 \tag{4} $$<br>对于相机坐标系中的点$ p_i^c$,有：<br>$$ p_i^c=\sum_{j=1}^{4} \alpha _{ij} c_j^c , with \sum_{j=1}^{4}\alpha _{ij}=1 \tag{5} $$<br>对于上面的公式来说，首先需要说明的是$ \alpha _{ij}$确实存在，因为$c_j^w$构成的方程组是非正定的，所以一定存在解。<br>理论上来说，控制点可以随便选择，这里选择控制点为参考点的中心，其他的点在PCA得到的主轴上单位长度处，从而提高算法的稳定性。</p>
+<h2 id="2-2-控制点在相机坐标系的坐标"><a href="#2-2-控制点在相机坐标系的坐标" class="headerlink" title="2.2. 控制点在相机坐标系的坐标"></a>2.2. 控制点在相机坐标系的坐标</h2><p>根据投影方程得到世界坐标系中参考点坐标和相机坐标系中参考点的约束关系：<br>$$ \forall i, w_i\left[\matrix{u_i \cr v_i \cr 1 \cr}\right]=A p_i^c=A\sum_{j=1}^{4}\alpha _{ij}c_j^c \tag{6} $$<br>写成矩阵的形式为：<br>$$ \forall i, w_i\left[\matrix{u_i \cr v_i \cr 1 \cr}\right]=\left[\matrix{f_u &amp; 0 &amp; u_c \cr 0 &amp; f_v &amp; v_c \cr 0 &amp; 0 &amp; 1 \cr}\right] \sum_{j=1}^{4} \alpha _{ij} \left[\matrix{x_j^c \cr y_j^c \cr z_j^c \cr}\right] \tag{7} $$</p>
+<p>将等式拆解，从第三行得到：<br>$$ w_i=\sum _{j=1}^{4} \alpha_{ij} z_j^c \tag{8} $$<br>将$w_i$代入一二行，可以得到如下等式：<br>$$ \matrix{<br>\sum_{j=1}^{4} \alpha _{ij} f_u x_j^c + \alpha _{ij} (u_c-u_i)z_j^c =0 \cr<br>\sum_{j=1}^{4} \alpha _{ij} f_v y_j^c + \alpha _{ij} (v_c-v_i)z_j^c =0 \cr<br>} \tag{9} $$</p>
+<p>因此，可以得到如下线性方程组：<br>$$ x={\left[\matrix{c_1^{cT} &amp; c_2^{cT} &amp; c_3^{cT} &amp; c_4^{cT} \cr}\right]}^T \tag{10} $$</p>
+<p>上面的方程中，四个控制点总共12个未知变量，M为$2n \times 12 $的矩阵。因此，x属于M的右零空间，$v_i$为矩阵M的右奇异向量，可以通过求解$M^TM$的零空间的特征值得到。<br>$$ x=\sum_{i=1}^{N} \beta _i v_i \tag{11} $$</p>
+<p>说明：使用$M^TM$比使用M计算量更小，因为$M^TM$的求解释常数复杂度，而M是$O(n^3)$的复杂度，但是计算$M^TM$的复杂度是$O(n)$的。</p>
+<h2 id="2-3-选择合适的线性组合"><a href="#2-3-选择合适的线性组合" class="headerlink" title="2.3. 选择合适的线性组合"></a>2.3. 选择合适的线性组合</h2><p>上面的求解的x中，需要确定$\beta _i$，也就是确定合适的线性组合。根据参考点的位置不同，矩阵$M^TM$的零空间维度可能为N=1-&gt;4维。求解$\beta$的策略是控制点在坐标系$F^w$和$F^c$中，两两之间的距离是相同的，而x的3K+1-&gt;3K分量表示不用控制点在相机坐标系中的坐标，总共有$C_4^2=6$个约束。<br>如果N=1，则根据约束有：<br>$$||\beta v^{|i|}-\beta v^{|j|}||^2=||c_i^w-c_j^w||^2 \tag{12} $$<br>所以：<br>$$\beta ={\sum _{|i,j| \in |i;4|} ||v^{|i|}-v^{|j|}|| \cdot ||c_i^w-c_j^w||} \over \sum _{|i,j| \in |i;4|} ||v^{|i|}-v^{|j|}||^2 \tag{13} $$<br>如果N=2，<br>$$||\beta _1 v_1^{[i]}+\beta _2 v_2^{[i]}-(\beta _1 v_1^{[j]}+\beta _2 v_2^{[j]})||^2=||c_i^w-c_j^w||^2 \tag{14}$$<br>由于$\beta_1$和$\beta_2$只以二次项出现在方程中，记$\beta =\left[\matrix{\beta_1^2 &amp; \beta_1 \beta_2 &amp; \beta_2^2 \cr}\right]^T$，$\rho$的每一项为$||c_i^w-c_j^w||^2$，得到相面的方程：<br>$$ L\beta =\rho \tag{15} $$<br>其中L是由$v_1$和$v_2$构成的$6 \times 3$的矩阵。<br>上面的方程可以通过$\beta=(L^TL)-1L^T \rho$得到，然后通过选择合适的符号从$\beta_1^2 , \beta_1 \beta_2 , \beta_2^2 $使得所有的$p_i^c$有正的z坐标。<br>如果N=3则和N=2差不多，唯一的区别在于使用的是L的逆，而不是伪逆，此时的L是$6 \times 6$的矩阵。<br>前面的步骤可以得到目标点在相机坐标系中的闭式解，作为G-N优化的初始值，优化的变量为$\beta=\left[\matrix{\beta_1,\beta_2,\cdots , \beta_N \cr}\right]^T$，目标函数为：<br>$$ Error(\beta) = \sum_{(i,j)s.t.i&lt;j}(||c_i^c-c_j^c||^2-||c_i^w-c_j^w||^2) \tag{16} $$<br>该优化过程和参考点的数目无关，优化步骤和时间是常数。</p>
+<h2 id="2-4-计算R-t"><a href="#2-4-计算R-t" class="headerlink" title="2.4. 计算R,t"></a>2.4. 计算R,t</h2><p>前面的两步计算不同维数的零空间的误差，选择误差最小维数对应的$\beta$，从而得到x，恢复出控制点在相机坐标系中的坐标并根据质心坐标系数得到参考点在相机坐标系中的坐标。剩下的工作就是已知一组点云在两个坐标系中的坐标，求两个坐标系的位姿变换。步骤如下：</p>
+<ol>
+<li>求中心点，$p_c^c={\sum p_c^i \over N},p_w^c={\sum p_w^i \over N}$；</li>
+<li>去中心，$q_c^i=p_c^i-p_c^c,q_w^i=p_w^i-p_w^c$；</li>
+<li>计算H矩阵，$H=\sum_{i=1}^{N}q_c^i q_w^{iT} $；</li>
+<li>对H进行SVD分解，$H=U \Lambda V^T $；</li>
+<li>计算$X=VU^T$，如果$det(x)=1$，则$R=X$，$t=P_c^c -R P_w^c$。否则$R(2,\cdot)=-R(2,\cdot)$；</li>
+</ol>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+
+
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/SLAM/">SLAM</a><a href="/tags/算法/">算法</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://fangrenziwo.com/2016/09/08/cv-ransac-epnp/" data-title="SLAM系列--RANSAC和EPNP算法 | Fang&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2016/09/16/cv-direct-method-camera-pose/" title="SLAM系列--Camera Pose的求解(Direct Method)">
+  <strong>上一篇：</strong><br/>
+  <span>
+  SLAM系列--Camera Pose的求解(Direct Method)</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2016/09/03/cv-svd/"  title="SLAM系列---SVD分解">
+ <strong>下一篇：</strong><br/> 
+ <span>SLAM系列---SVD分解
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2016/09/08/cv-ransac-epnp/" data-title="SLAM系列--RANSAC和EPNP算法" data-url="http://fangrenziwo.com/2016/09/08/cv-ransac-epnp/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="顯示側邊欄"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目錄</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-RANSAC算法"><span class="toc-number">1.</span> <span class="toc-text">1. RANSAC算法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-RANSAC算法基础"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. RANSAC算法基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-1-算法的基本假设"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.1.1. 算法的基本假设</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-2-算法示例"><span class="toc-number">1.1.2.</span> <span class="toc-text">1.1.2. 算法示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-3-算法概述"><span class="toc-number">1.1.3.</span> <span class="toc-text">1.1.3. 算法概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-4-RANSAC的优劣"><span class="toc-number">1.1.4.</span> <span class="toc-text">1.1.4. RANSAC的优劣</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-RANSAC算法用于消除图像误匹配原理"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. RANSAC算法用于消除图像误匹配原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-1-算法原理"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.2.1. 算法原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-2-算法步骤"><span class="toc-number">1.2.2.</span> <span class="toc-text">1.2.2. 算法步骤</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-EPnP算法"><span class="toc-number">2.</span> <span class="toc-text">2. EPnP算法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-基本表示"><span class="toc-number">2.1.</span> <span class="toc-text">2.1. 基本表示</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-控制点在相机坐标系的坐标"><span class="toc-number">2.2.</span> <span class="toc-text">2.2. 控制点在相机坐标系的坐标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-选择合适的线性组合"><span class="toc-number">2.3.</span> <span class="toc-text">2.3. 选择合适的线性组合</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-4-计算R-t"><span class="toc-number">2.4.</span> <span class="toc-text">2.4. 计算R,t</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隱藏側邊欄"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分類</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/SLAM系列/" title="SLAM系列">SLAM系列<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/SLAM系列/" title="SLAM系列">SLAM系列<sup>8</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM资源/" title="SLAM资源">SLAM资源<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/" title="计算机视觉">计算机视觉<sup>10</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/随笔/" title="随笔">随笔<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">標簽</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/SLAM/" title="SLAM">SLAM<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/计算机视觉/" title="计算机视觉">计算机视觉<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/特征检测/" title="特征检测">特征检测<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/非线性优化/" title="非线性优化">非线性优化<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/算法/" title="算法">算法<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/test/" title="test">test<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/链接/" title="链接">链接<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像处理理论/" title="图像处理理论">图像处理理论<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/回环检测/" title="回环检测">回环检测<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/干货/" title="干货">干货<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机姿态/" title="相机姿态">相机姿态<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情鏈接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://blog.csdn.net/zf19921020" target="_blank" title="我的CSDN">我的CSDN</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> 业精于勤荒于嬉，行成于思毁于随 <br/>
+			热爱计算机视觉，热爱Coding...</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/FangGet" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:buptzhaofang@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2016 
+		
+		<a href="/about" target="_blank" title="Fang">Fang</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"fangrenziwo"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?e6d1f421bbc9962127a50488f9ed37d1";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回頂部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

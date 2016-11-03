@@ -1,0 +1,583 @@
+
+ <!DOCTYPE HTML>
+<html >
+<head>
+  <meta charset="UTF-8">
+  
+    <title>SLAM系列--非线性优化（2） | Fang&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="Fang">
+    
+
+    
+    <meta name="description" content="作者：Frank时间：2016-08-03
+
+本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquardt是结合了Gauss-Newton和梯度下降法的优点总结而来的迭代算法，因此这里会先介绍梯度下降法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SLAM系列--非线性优化（2）">
+<meta property="og:url" content="http://fangrenziwo.com/2016/08/03/cv-nonlinear-optimazation-02/index.html">
+<meta property="og:site_name" content="Fang's Blog">
+<meta property="og:description" content="作者：Frank时间：2016-08-03
+
+本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquardt是结合了Gauss-Newton和梯度下降法的优点总结而来的迭代算法，因此这里会先介绍梯度下降法。">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-8-3/91157798.jpg">
+<meta property="og:updated_time" content="2016-08-03T15:10:12.816Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SLAM系列--非线性优化（2）">
+<meta name="twitter:description" content="作者：Frank时间：2016-08-03
+
+本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquardt是结合了Gauss-Newton和梯度下降法的优点总结而来的迭代算法，因此这里会先介绍梯度下降法。">
+<meta name="twitter:image" content="http://o9n30cpt4.bkt.clouddn.com/16-8-3/91157798.jpg">
+
+    
+    
+    <link rel="icon" href="/img/avatar2.png">
+    
+    
+    <link rel="apple-touch-icon" href="/img/avatar.png">
+    <link rel="apple-touch-icon-precomposed" href="/img/avatar.png">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/avatar2.png" alt="Fang&#39;s Blog" title="Fang&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
+				<h2 class="blog-motto">special for SLAM</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜單">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:fangrenziwo.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/08/03/cv-nonlinear-optimazation-02/" title="SLAM系列--非线性优化（2）" itemprop="url">SLAM系列--非线性优化（2）</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-08-03T13:43:15.000Z" itemprop="datePublished"> 發表於 2016-08-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目錄</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-梯度下降法"><span class="toc-number">1.</span> <span class="toc-text">1. 梯度下降法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-梯度的概念"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. 梯度的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-梯度下降"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. 梯度下降</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-梯度方向下降和函数最值"><span class="toc-number">1.3.</span> <span class="toc-text">1.3. 梯度方向下降和函数最值</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-Levenberg-Marquardt算法"><span class="toc-number">2.</span> <span class="toc-text">2. Levenberg-Marquardt算法</span></a></li></ol>
+		
+		</div>
+		
+		<p><strong><br>作者：Frank<br>时间：2016-08-03
+</strong></p>
+<p>本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquardt是结合了Gauss-Newton和梯度下降法的优点总结而来的迭代算法，因此这里会先介绍梯度下降法。<br><a id="more"></a></p>
+<h1 id="1-梯度下降法"><a href="#1-梯度下降法" class="headerlink" title="1. 梯度下降法"></a>1. 梯度下降法</h1><p>梯度下降法是一个一阶最优化算法，通常我们也将其称为最速下降法。</p>
+<h2 id="1-1-梯度的概念"><a href="#1-1-梯度的概念" class="headerlink" title="1.1. 梯度的概念"></a>1.1. 梯度的概念</h2><p>一个函数$D(\theta)$对它的一个变量$\theta$的梯度定义为：<br>$${\partial D(\theta) \over \partial \theta}=\lim_{\delta \theta \rightarrow 0}{D(\theta+\partial \theta)-D(\theta) \over \delta \theta}\tag{1}$$<br>某一点上的梯度指向标量场增长最快的方向，梯度的长度就是最大的变化率。</p>
+<h2 id="1-2-梯度下降"><a href="#1-2-梯度下降" class="headerlink" title="1.2. 梯度下降"></a>1.2. 梯度下降</h2><p>我们知道对于一个函数沿着梯度的那个方向是下降最快的。例如为了选取一个$\theta$使得$D(\theta)$最小，我们可以先随机选择$\theta$一个初始值，然后不断的修改$\theta$以减小$D(\theta)$，知道$\theta$的值不再改变，对于梯度下降法，可以表示为：<br>$$\theta_j=\theta_j-\alpha {\partial D(\theta) \over \partial \theta_j}\tag{2}$$<br>即不断地向梯度的那个方向（减小最快的方向）更新$\theta$，最终使得$D(\theta)$最小。其中$\alpha$称为学习速率，取值太小会导致迭代过慢，取值太大可能错过最值点。</p>
+<h2 id="1-3-梯度方向下降和函数最值"><a href="#1-3-梯度方向下降和函数最值" class="headerlink" title="1.3. 梯度方向下降和函数最值"></a>1.3. 梯度方向下降和函数最值</h2><p>梯度下降法，基于这样的观察：如果实值函数F(x)在点a处可微且有定义，那么函数F(x)在a点沿着梯度相反的方向–$\Delta F(a)$下降最快。<br>因此，如果：$b=a-\alpha \Delta F(a) $，那么$F(b)\leq F(a)$。<br>考虑如下序列：$x_0,x_1,x_2……$，使得<br>$$x_{n+1}=x_n-\alpha \Delta F(x_n) \tag{3}$$<br>因此可以得到：$F(x_0) \geq F(x_1)…….$，如果顺利的话序列最终可以收敛到期望的极值。<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-8-3/91157798.jpg" alt=""><br>注意：梯度下降得到的结果可能是局部最优值。如果F(x)是凸函数，则可以保证梯度下降得到的是全局最优值。</p>
+<p><strong> 申明：本节引用来源：<a href="http://www.wengweitao.com/ti-du-xia-jiang-fa.html" target="_blank" rel="external">梯度下降法</a> </strong></p>
+<h1 id="2-Levenberg-Marquardt算法"><a href="#2-Levenberg-Marquardt算法" class="headerlink" title="2. Levenberg-Marquardt算法"></a>2. Levenberg-Marquardt算法</h1><p>梯度下降法和Gauss-Newton都是最优化方法。其区别之处在于：</p>
+<ol>
+<li>梯度下降法在寻找目标函数极小值时，是沿着反梯度方向进行寻找的。梯度的定义就是指向标量场增长最快的方向，在寻找极小值时，先随便定初始点（x0，y0）然后进行迭代不断寻找直到梯度的模达到预设的要求。但是梯度下降法的缺点之处在于：在远离极小值的地方下降很快，而在靠近极小值的地方下降很慢。</li>
+<li>而高斯牛顿法是一种非线性最小二乘最优化方法。其利用了目标函数的泰勒展开式把非线性函数的最小二乘化问题化为每次迭代的线性函数的最小二乘化问题。高斯牛顿法的缺点在于：若初始点距离极小值点过远，迭代步长过大会导致迭代下一代的函数值不一定小于上一代的函数值。</li>
+</ol>
+<p>LM算法在高斯牛顿法中加入了因子μ，当μ大时相当于梯度下降法，μ小时相当于高斯牛顿法。（这儿我也不明白为什么，希望有大牛解答）。在使用Levenberg-Marquart时，先设置一个比较小的μ值，当发现目标函数反而增大时，将μ增大使用梯度下降法快速寻找，然后再将μ减小使用牛顿法进行寻找。<br>为了避免发散，有两种解决方法：</p>
+<ol>
+<li>调整下降步伐： $\beta^{s+1}=\beta^s+\alpha \Delta 0&lt;\alpha&lt;1$；</li>
+<li>调整下降方向：$(J^TJ+\lambda D)\Delta=J^Tr$；</li>
+</ol>
+<p>LM方法的好处是可以调节：<br>如果下降太快，使用较小的λ，使之更接近高斯牛顿法；<br>如果下降太慢，使用较大的λ，使之更接近梯度下降法；</p>
+<p><strong> 申明：本节引用来源：<a href="http://blog.csdn.net/dsbatigol/article/details/12448627" target="_blank" rel="external">【math】梯度下降法(梯度下降法，牛顿法，高斯牛顿法，Levenberg-Marquardt算法)</a> </strong></p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/非线性优化/">非线性优化</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://fangrenziwo.com/2016/08/03/cv-nonlinear-optimazation-02/" data-title="SLAM系列--非线性优化（2） | Fang&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2016/08/14/slam-resources-list/" title="【泡泡机器人】SLAM干货整理">
+  <strong>上一篇：</strong><br/>
+  <span>
+  【泡泡机器人】SLAM干货整理</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2016/07/31/cv-nonlinear-optimazation-01/"  title="SLAM系列--非线性优化（1）">
+ <strong>下一篇：</strong><br/> 
+ <span>SLAM系列--非线性优化（1）
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2016/08/03/cv-nonlinear-optimazation-02/" data-title="SLAM系列--非线性优化（2）" data-url="http://fangrenziwo.com/2016/08/03/cv-nonlinear-optimazation-02/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="顯示側邊欄"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目錄</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-梯度下降法"><span class="toc-number">1.</span> <span class="toc-text">1. 梯度下降法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-梯度的概念"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. 梯度的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-梯度下降"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. 梯度下降</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-梯度方向下降和函数最值"><span class="toc-number">1.3.</span> <span class="toc-text">1.3. 梯度方向下降和函数最值</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-Levenberg-Marquardt算法"><span class="toc-number">2.</span> <span class="toc-text">2. Levenberg-Marquardt算法</span></a></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隱藏側邊欄"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分類</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/SLAM系列/" title="SLAM系列">SLAM系列<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/SLAM系列/" title="SLAM系列">SLAM系列<sup>8</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM资源/" title="SLAM资源">SLAM资源<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/" title="计算机视觉">计算机视觉<sup>10</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/随笔/" title="随笔">随笔<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">標簽</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/SLAM/" title="SLAM">SLAM<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/计算机视觉/" title="计算机视觉">计算机视觉<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/特征检测/" title="特征检测">特征检测<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/非线性优化/" title="非线性优化">非线性优化<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/算法/" title="算法">算法<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/test/" title="test">test<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/链接/" title="链接">链接<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像处理理论/" title="图像处理理论">图像处理理论<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/回环检测/" title="回环检测">回环检测<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/干货/" title="干货">干货<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机姿态/" title="相机姿态">相机姿态<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情鏈接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://blog.csdn.net/zf19921020" target="_blank" title="我的CSDN">我的CSDN</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> 业精于勤荒于嬉，行成于思毁于随 <br/>
+			热爱计算机视觉，热爱Coding...</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/FangGet" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:buptzhaofang@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2016 
+		
+		<a href="/about" target="_blank" title="Fang">Fang</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"fangrenziwo"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?e6d1f421bbc9962127a50488f9ed37d1";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回頂部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

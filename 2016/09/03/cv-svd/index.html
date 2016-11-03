@@ -1,0 +1,576 @@
+
+ <!DOCTYPE HTML>
+<html >
+<head>
+  <meta charset="UTF-8">
+  
+    <title>SLAM系列---SVD分解 | Fang&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="Fang">
+    
+
+    
+    <meta name="description" content="作者：Frank时间：2016-09-03
+
+在SLAM中，无论是计算Homography Matrix，Fundamental Matrix，还是做三角化(Triangulation)时，都会用到最小二乘法。而在最小二乘法中的最常用的解法就是SVD（Singular Value Decomposition）分解。本节就讲述SVD分解的基本概念以及其在最小二乘法中的应用和证明。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SLAM系列---SVD分解">
+<meta property="og:url" content="http://fangrenziwo.com/2016/09/03/cv-svd/index.html">
+<meta property="og:site_name" content="Fang's Blog">
+<meta property="og:description" content="作者：Frank时间：2016-09-03
+
+在SLAM中，无论是计算Homography Matrix，Fundamental Matrix，还是做三角化(Triangulation)时，都会用到最小二乘法。而在最小二乘法中的最常用的解法就是SVD（Singular Value Decomposition）分解。本节就讲述SVD分解的基本概念以及其在最小二乘法中的应用和证明。">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-9-3/96429531.jpg">
+<meta property="og:updated_time" content="2016-09-08T10:42:19.773Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SLAM系列---SVD分解">
+<meta name="twitter:description" content="作者：Frank时间：2016-09-03
+
+在SLAM中，无论是计算Homography Matrix，Fundamental Matrix，还是做三角化(Triangulation)时，都会用到最小二乘法。而在最小二乘法中的最常用的解法就是SVD（Singular Value Decomposition）分解。本节就讲述SVD分解的基本概念以及其在最小二乘法中的应用和证明。">
+<meta name="twitter:image" content="http://o9n30cpt4.bkt.clouddn.com/16-9-3/96429531.jpg">
+
+    
+    
+    <link rel="icon" href="/img/avatar2.png">
+    
+    
+    <link rel="apple-touch-icon" href="/img/avatar.png">
+    <link rel="apple-touch-icon-precomposed" href="/img/avatar.png">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/avatar2.png" alt="Fang&#39;s Blog" title="Fang&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
+				<h2 class="blog-motto">special for SLAM</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜單">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:fangrenziwo.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/09/03/cv-svd/" title="SLAM系列---SVD分解" itemprop="url">SLAM系列---SVD分解</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-09-03T12:34:33.000Z" itemprop="datePublished"> 發表於 2016-09-03</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目錄</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-数学基础"><span class="toc-number">1.</span> <span class="toc-text">1. 数学基础</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-正交矩阵"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. 正交矩阵</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-特征值分解–EVD"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. 特征值分解–EVD</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-奇异值分解–SVD"><span class="toc-number">1.3.</span> <span class="toc-text">1.3. 奇异值分解–SVD</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-最小二乘中的SVD分解"><span class="toc-number">2.</span> <span class="toc-text">2. 最小二乘中的SVD分解</span></a></li></ol>
+		
+		</div>
+		
+		<p><strong><br>作者：Frank<br>时间：2016-09-03
+</strong></p>
+<p>在SLAM中，无论是计算Homography Matrix，Fundamental Matrix，还是做三角化(Triangulation)时，都会用到最小二乘法。而在最小二乘法中的最常用的解法就是SVD（Singular Value Decomposition）分解。本节就讲述SVD分解的基本概念以及其在最小二乘法中的应用和证明。</p>
+<a id="more"></a>
+<h1 id="1-数学基础"><a href="#1-数学基础" class="headerlink" title="1. 数学基础"></a>1. 数学基础</h1><h2 id="1-1-正交矩阵"><a href="#1-1-正交矩阵" class="headerlink" title="1.1. 正交矩阵"></a>1.1. 正交矩阵</h2><p>正交矩阵是在欧几里得空间里的叫法，在酉空间里面叫做酉矩阵，一个正交矩阵对应的变换叫做正交变换，这个变换的特点就是不改变向量的尺寸和向量间的夹角。正交变换的示意图如下所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-9-3/96429531.jpg" alt=""></p>
+<p>假设二维空间中的一个向量$\vec{OA}$，它在标准坐标系也即$e_1$、$e_2$表示的坐标系中的表示为$[a,b]^T$，现在把它用另一组坐标$e_1’$、$e_2’$表示为$[a’,b’]^T$，存在矩阵U使得$[a’,b’]^T=[a,b]^T$，则U即为正交矩阵。从图中可以看出，正交变换只是将变换向量用另一组正交基来表示，在这个过程中并没有对向量做拉伸，也不改变向量的空间位置，假如对两个向量同时做正交变换，那么变换前后这两个向量的夹角显然不会改变。上面的例子只是正交变换的一个方面，即旋转变换，可以把$e_1’$、$e_2’$坐标系看成是$e_1$、$e_2$坐标系经过旋转某个$\theta$角度得到的，假设：<br>$$x=\left[\matrix{a \cr b \cr}\right] \tag{1}$$<br>$$a’=x \times e_1’ =e_1’^T x\tag{2}$$<br>$$a’=x \times e_2’ =e_2’^T x\tag{3}$$</p>
+<p>$a’$和$b’$实际上是x在$e_1’$和$e_2’$轴上的投影大小，所以直接对其做内积可得：<br>$$\left[\matrix{a’ \cr b’ \cr}\right]=\left[\matrix{e_1’^T \cr e_2^T \cr}\right]x \tag{4}$$<br>从图中可以看出：<br>$$e_1’＝\left[\matrix{cos \theta \cr sin \theta \cr}\right] \ e_2’＝\left[\matrix{-sin \theta \cr cos \theta \cr}\right] \tag{5}$$<br>所以可以得到正交矩阵$U$为：<br>$$U=\left[\matrix{cos \theta &amp; sin \theta \cr -sin \theta &amp; cos \theta \cr}\right]\tag{6}$$</p>
+<p>正交矩阵$U$行（列）向量之间都是单位正交向量。上面求得的是一个旋转矩阵，它对向量做旋转变换。<br>旋转矩阵只是正交变换的一方面，正交矩阵的另一方面是反射变换，也即$e_1’$的方向和图中方向相反。<br><strong>总结：</strong>正交矩阵的行（列）向量都是两两正交的单位向量，正交矩阵对应的变换为正交变换，在酉空间里面称为酉变换。它有两种表现：旋转和反射。正交矩阵将标准正交基映射为另一组标准正交基。</p>
+<h2 id="1-2-特征值分解–EVD"><a href="#1-2-特征值分解–EVD" class="headerlink" title="1.2. 特征值分解–EVD"></a>1.2. 特征值分解–EVD</h2><p>在讨论SVD分解之前我们先讨论矩阵的特征值分解(EVD)，在这里，选择一种特殊的矩阵—对称阵（酉空间里面叫heimite矩阵）。对称阵的重要性质是：它总能相似对角化，对称阵不同特征值对应的特征向量两两正交。一个矩阵能相似对角化说明其特征子空间即为其列空间，若不能相似对角化则其特征子空间为列空间的子空间。现在假设存在$m \times m$ 的满秩对称矩阵A，他有m个不同的特征值，设特征值为：<br>$$ \lambda_i, i=1,2…..m \tag{7} $$<br>对应的单位特征向量为$x_i$，则有：<br>$$ \matrix{Ax_1=\lambda_1 x_1 \cr Ax_2=\lambda_2 x_2 \cr … \cr Ax_m=\lambda_m x_m \cr}\tag{8} $$<br>进而：<br>$$\matrix{<br>AU=U\Lambda \cr<br>U=\left[\matrix{x_1&amp;x_2&amp;\cdots &amp; x_m \cr}\right] \cr<br>\Lambda =\left[\matrix{<br>\lambda_1 &amp; \cdots &amp; 0 \cr<br>\vdots &amp; \ddots &amp; \vdots \cr<br>0 &amp; \cdots &amp; \lambda_m \cr<br>}\right]<br>} \tag{9}$$</p>
+<p>所以可以得到A的特征值分解（由于对称矩阵特征向量两两正交，所以U为正交阵，正交阵的逆矩阵等于其转置）<br>$$A=U \Lambda U^{-1} =U \Lambda U^T \tag{10}$$<br>这里假设A有m个不同的特征值，实际上，只要A是对称阵其均有如上分解。<br>矩阵A分解了，相应的，其对应的映射也分解为三个映射。现在假设有$x$向量，用A将其变换到A的列向量空间中，那么首先由$U^T$对x做变换：<br>$$Ax=U\Lambda U^T x \tag{10} $$<br>U是正交阵$U^T$也是正交阵，所以$U^T$对x的变换也是正交变换，它将x用新的坐标系来表示，这个坐标系就是A的所有正交的特征向量构成的坐标系。比如讲x用A的所有特征向量表示为：<br>$$ x=a_1x_1+a_2x_2+….+a_mx_m \tag{11}$$<br>则通过第一个变换就可以把x表示为$\left[ \matrix{a_1 &amp;a_2&amp;…&amp;a_m \cr}\right]^T$<br>$$U\Lambda U^Tx=U \Lambda \left[\matrix{x_1^T \cr x_2^T \cr \vdots \cr x_m^T \cr} \right](a_1x_1+a_2x_2+….+a_mx_m)=U\Lambda \left[\matrix{a_1 \cr a_2 \cr \vdots \cr a_m \cr}\right] \tag{12}$$<br>紧接着，在新的坐标系表示下，由中间的对角矩阵对新的向量进行坐标变换，其结果就是将向量向各个轴方向拉伸或者压缩：<br>$$U\Lambda\left[\matrix{a_1 \cr a_2 \cr \vdots \cr a_m \cr}\right]=U\left[\matrix{\lambda_1 &amp; \cdots &amp; 0 \cr \vdots &amp; \ddots &amp; \vdots \cr}\right]\left[\matrix{a_1 \cr a_2 \cr \vdots \cr a_m \cr}\right]=U\left[ \matrix{\lambda_1a_1 \cr \lambda_2a_2 \cr \vdots \cr \lambda_ma_m \cr}\right] \tag{13} $$</p>
+<p>从式(13)可以看出，如果A不是满秩的话，那么就是说对角矩阵的对角线元素上存在0，这时候就会导致维度退化，这样就会使映射后的向量落入m维空间的子空间中。</p>
+<p>最后一个变换就是U对拉伸或压缩后的向量做变换，由于U和$U’$互为逆矩阵，所以U变换是$U’$变换的逆变换。<br>因此，从对角矩阵分解对应的映射分解来分析一个矩阵的变换特点是非常直观的。假设对称阵特征值全为1那么显然它就是单位阵，如果对称阵的特征值酉个别是0其他全为1，那么它是一个正交投影矩阵，它将m维向量投影到它的列空间中。</p>
+<h2 id="1-3-奇异值分解–SVD"><a href="#1-3-奇异值分解–SVD" class="headerlink" title="1.3. 奇异值分解–SVD"></a>1.3. 奇异值分解–SVD</h2><p>上面的特征值分解的A矩阵式对称阵，根据EVD可以找到一个矩形使得其变换后还是矩形，也即A可以将一组正交基映射到另一组正交基，而对于任意的$M \times N $矩阵，也能找到一组正交基使得经过它变换后还是正交基，而这就是SVD的目的所在。<br>现在假设存在$M \times N $矩阵A，事实上，A矩阵将n维空间中的向量映射到k(k&lt;=m)维空间中，k=Rank(A)。现在的目标就是：在n维空间中找一组正交基，使得经过A变换后还是正交的。假设已经得到了这样一组正交基：<br>$${v_1,v_2,\cdots,v_n} \tag{14} $$<br>则A矩阵将这组正交基映射为：<br>$${Av_1,Av_2,\cdots,Av_n} \tag{15}$$<br>如果要使得他们两两正交，即：<br>$$Av_i \cdot Av_j =(Av_i)^TAv_j=v_i^TA^TAv_j=0 \tag{16}$$<br>根据假设，存在<br>$$v_i^Tv_j=v_iv_j=0 \tag{17}$$<br>所以如果正交基v选择为$A^TA$的特征向量的话，由于$A^TA$是对称阵，v之间两两正交，那么：<br>$$v_i^TA^TAv_j=v_i^T \lambda_jv_j=\lambda_j v_i^T v_j=\lambda_j v_i v_j=0 \tag{18} $$<br>这样就找到了正交基使其映射后还是正交基了。现在，将映射后的正交基单位化。<br>因为：$ Av_i \cdot Av_i=\lambda_i v_i v_i=\lambda_i $，所以有：$|Av_i|^2=\lambda_i \geq 0 $，所以取单位向量$u_i={Av_i \over |Av_i|}={1 \over \sqrt{\lambda_i}}Av_i $，由此可得：<br>$$Av_i= \sigma _i u_i ,\sigma _i(奇异值)=\sqrt{\lambda_i},0 \leq i \leq k, k=Rank(A) \tag{19} $$<br>当$k&lt; i \leq m$时，对$u_1,u_2,\cdots ,u_k$进行扩展成$u_{k+1},\cdots,u_m$，使得$u_1,u_2,\cdots ,u_m$为m维空间中的一组正交基，即将${u_1,u_2,\cdots ,u_k}$正交基扩展成${u_1,u_2,\cdots ,u_m}R^m$空间的单位正交基。同样的，对$v_1,v_2,\cdots ,v_k$进行扩展$v_{k+1},\cdots,v_n$(这n-k个向量存在于A的零空间中，即Ax=0的解空间的基)，使得$v_1,v_2,\cdots ,v_n$为n维空间中的一组正交基，即：在A的零空间中选取$v_{k+1},\cdots,v_n$使得$Av_i=0,i &gt;k$，并取$\sigma _i=0$。则可以得到：<br>$$A=U \sum V^T \tag{20} $$<br>V是$n \times n $的正交阵，U是$m \times m $的正交阵，$\sum$是$m \times n$的对角阵。</p>
+<h1 id="2-最小二乘中的SVD分解"><a href="#2-最小二乘中的SVD分解" class="headerlink" title="2. 最小二乘中的SVD分解"></a>2. 最小二乘中的SVD分解</h1><p>为了求$Ax-b=0$的最优解，需要求取：$min||Ax-b||$，对A做SVD分解，有：<br>$$min||Ax-b||=min||UDV^Tx-b|| \tag{21}$$<br>将目标函数左乘$U^T$，鉴于$U^T$的正定性，有：<br>$$min||UDV^T-b||=min||DV^Tx-U^Tb|| \tag{22}$$<br>令$y=V^Tx,b’=U^Tb$，则有：<br>$$min||Dy-b’||=min||\left[\matrix{d_1&amp;0&amp;\cdots&amp;0 \cr 0&amp;d_2&amp;\cdots&amp;0 \cr \ddots \cr 0&amp; \cdots &amp; d_n \cr 0 \cr}\right]\left[\matrix{y_1 \cr y_2 \cr \vdots \cr y_n \cr}\right]-\left[\matrix{b_1^{‘} \cr b_1^{‘} \cr \vdots \cr b_n^{‘} \cr b_{n+1}^{‘} \cr \vdots \cr b_m^{‘} \cr}\right]|| \tag{23} $$<br>当$b_{n+1}^{‘} \cdots b_m^{‘}$均为0时得到最小值：<br>$$y_i={b_i^{‘} \over d_i} (i=1,2,\cdots ,n) \tag{24}$$</p>
+<p><strong>引用来源：1<a href="http://www.ams.org/samplings/feature-column/fcarc-svd" target="_blank" rel="external">http://www.ams.org/samplings/feature-column/fcarc-svd</a>;<br>2<a href="http://filer.blogbus.com/11139779/resource_11139779_13341356544.pdf" target="_blank" rel="external">http://filer.blogbus.com/11139779/resource_11139779_13341356544.pdf</a>;</strong></p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/SLAM/">SLAM</a><a href="/tags/算法/">算法</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://fangrenziwo.com/2016/09/03/cv-svd/" data-title="SLAM系列---SVD分解 | Fang&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2016/09/08/cv-ransac-epnp/" title="SLAM系列--RANSAC和EPNP算法">
+  <strong>上一篇：</strong><br/>
+  <span>
+  SLAM系列--RANSAC和EPNP算法</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2016/08/14/slam-resources-list/"  title="【泡泡机器人】SLAM干货整理">
+ <strong>下一篇：</strong><br/> 
+ <span>【泡泡机器人】SLAM干货整理
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2016/09/03/cv-svd/" data-title="SLAM系列---SVD分解" data-url="http://fangrenziwo.com/2016/09/03/cv-svd/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="顯示側邊欄"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目錄</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-数学基础"><span class="toc-number">1.</span> <span class="toc-text">1. 数学基础</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-正交矩阵"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. 正交矩阵</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-特征值分解–EVD"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. 特征值分解–EVD</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-奇异值分解–SVD"><span class="toc-number">1.3.</span> <span class="toc-text">1.3. 奇异值分解–SVD</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-最小二乘中的SVD分解"><span class="toc-number">2.</span> <span class="toc-text">2. 最小二乘中的SVD分解</span></a></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隱藏側邊欄"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分類</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/SLAM系列/" title="SLAM系列">SLAM系列<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/SLAM系列/" title="SLAM系列">SLAM系列<sup>8</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM资源/" title="SLAM资源">SLAM资源<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/" title="计算机视觉">计算机视觉<sup>10</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/随笔/" title="随笔">随笔<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">標簽</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/SLAM/" title="SLAM">SLAM<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/计算机视觉/" title="计算机视觉">计算机视觉<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/特征检测/" title="特征检测">特征检测<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/非线性优化/" title="非线性优化">非线性优化<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/算法/" title="算法">算法<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/test/" title="test">test<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/链接/" title="链接">链接<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像处理理论/" title="图像处理理论">图像处理理论<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/回环检测/" title="回环检测">回环检测<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/干货/" title="干货">干货<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机姿态/" title="相机姿态">相机姿态<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情鏈接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://blog.csdn.net/zf19921020" target="_blank" title="我的CSDN">我的CSDN</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> 业精于勤荒于嬉，行成于思毁于随 <br/>
+			热爱计算机视觉，热爱Coding...</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/FangGet" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:buptzhaofang@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2016 
+		
+		<a href="/about" target="_blank" title="Fang">Fang</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"fangrenziwo"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?e6d1f421bbc9962127a50488f9ed37d1";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回頂部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

@@ -1,0 +1,596 @@
+
+ <!DOCTYPE HTML>
+<html >
+<head>
+  <meta charset="UTF-8">
+  
+    <title>SLAM系列--Camera Pose的求解(Direct Method) | Fang&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="Fang">
+    
+
+    
+    <meta name="description" content="作者：Frank时间：2016-09-16
+
+在SLAM前端，即视觉里程计(Visual Odometry)中，主流的求解相机姿态(Camera Pose)的方式有以下两种，一种是基于特征的(Feature-Based)VO，一种是直接法(Direct Method)求VO，本节从比较Feature-Based VO和Direct-Method VO出发，开始讲解利用Direct Method求解">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SLAM系列--Camera Pose的求解(Direct Method)">
+<meta property="og:url" content="http://fangrenziwo.com/2016/09/16/cv-direct-method-camera-pose/index.html">
+<meta property="og:site_name" content="Fang's Blog">
+<meta property="og:description" content="作者：Frank时间：2016-09-16
+
+在SLAM前端，即视觉里程计(Visual Odometry)中，主流的求解相机姿态(Camera Pose)的方式有以下两种，一种是基于特征的(Feature-Based)VO，一种是直接法(Direct Method)求VO，本节从比较Feature-Based VO和Direct-Method VO出发，开始讲解利用Direct Method求解">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-9-16/80095493.jpg">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-9-16/26401005.jpg">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-9-16/5812517.jpg">
+<meta property="og:updated_time" content="2016-09-16T11:49:33.892Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SLAM系列--Camera Pose的求解(Direct Method)">
+<meta name="twitter:description" content="作者：Frank时间：2016-09-16
+
+在SLAM前端，即视觉里程计(Visual Odometry)中，主流的求解相机姿态(Camera Pose)的方式有以下两种，一种是基于特征的(Feature-Based)VO，一种是直接法(Direct Method)求VO，本节从比较Feature-Based VO和Direct-Method VO出发，开始讲解利用Direct Method求解">
+<meta name="twitter:image" content="http://o9n30cpt4.bkt.clouddn.com/16-9-16/80095493.jpg">
+
+    
+    
+    <link rel="icon" href="/img/avatar2.png">
+    
+    
+    <link rel="apple-touch-icon" href="/img/avatar.png">
+    <link rel="apple-touch-icon-precomposed" href="/img/avatar.png">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/avatar2.png" alt="Fang&#39;s Blog" title="Fang&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
+				<h2 class="blog-motto">special for SLAM</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜單">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:fangrenziwo.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/09/16/cv-direct-method-camera-pose/" title="SLAM系列--Camera Pose的求解(Direct Method)" itemprop="url">SLAM系列--Camera Pose的求解(Direct Method)</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-09-16T11:16:16.000Z" itemprop="datePublished"> 發表於 2016-09-16</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目錄</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-VO对比"><span class="toc-number">1.</span> <span class="toc-text">1. VO对比</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-Feature-Based-VO"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. Feature-Based VO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-Direct-Method-VO"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. Direct-Method VO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-两种方式的对比"><span class="toc-number">1.3.</span> <span class="toc-text">1.3. 两种方式的对比</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-Direct-Method"><span class="toc-number">2.</span> <span class="toc-text">2. Direct-Method</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-问题描述"><span class="toc-number">2.1.</span> <span class="toc-text">2.1. 问题描述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-模型建立"><span class="toc-number">2.2.</span> <span class="toc-text">2.2. 模型建立</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-模型求解"><span class="toc-number">2.3.</span> <span class="toc-text">2.3. 模型求解</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<p><strong><br>作者：Frank<br>时间：2016-09-16
+</strong></p>
+<p>在SLAM前端，即视觉里程计(Visual Odometry)中，主流的求解相机姿态(Camera Pose)的方式有以下两种，一种是基于特征的(Feature-Based)VO，一种是直接法(Direct Method)求VO，本节从比较Feature-Based VO和Direct-Method VO出发，开始讲解利用Direct Method求解Camera Pose的过程。</p>
+<a id="more"></a>
+<h1 id="1-VO对比"><a href="#1-VO对比" class="headerlink" title="1. VO对比"></a>1. VO对比</h1><p>Feature-Based VO和Direct-Method VO之间的最大区别就是其求取相机姿态时构建最优化表达式所基于的假设不同。在Feature-Based VO中，是利用最小化图像点的重投影误差来求取的；而在Direct-Method VO中，则是利用最小化图像点和投影后的对应点的图像像素差来得到相机姿态的。</p>
+<h2 id="1-1-Feature-Based-VO"><a href="#1-1-Feature-Based-VO" class="headerlink" title="1.1. Feature-Based VO"></a>1.1. Feature-Based VO</h2><p>Featured-Based VO在很多年来都是VO方向的经典解法。其基本思想是对前后两帧图像做特征提取和匹配，得到一系列特征的匹配对，然后利用匹配对中前帧中的特征点和初始的相机姿态估计，将这些特征点利用初始的姿态投影到第二帧，然后求投影后的点和第二帧中的匹配点之间的误差，并对其做非线性优化，得到最终的相机姿态，其中，特征点的投影和重投影过程利用的公式就是在张正友标定法中用到的投影方程，如下所示：<br> $${1 \over Z_c}\left[ {\matrix{<br>   u  \cr<br>   v  \cr<br>   1  \cr<br> } } \right] = \left[ {\matrix{<br>   {f \over S_x} &amp; r &amp; u_0  \cr<br>   0 &amp; {f \over S_y} &amp; v_0  \cr<br>   0 &amp; 0 &amp; 1  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   R_{3 \times 3} &amp; T_{3 \times 1}  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   X_w  \cr<br>   Y_w  \cr<br>   Z_w  \cr<br>   1  \cr<br> } } \right] = K_{3 \times 3} \cdot \left[ {\matrix{<br>   R_{3 \times 3} &amp; T_{3 \times 1}  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   X_w  \cr<br>   Y_w  \cr<br>   Z_w  \cr<br>   1  \cr<br> } } \right] \tag{1}$$<br> 公式最左边的$\left[ \matrix{<br>   u  \cr<br>   v  \cr<br>   1  \cr<br> }  \right]$表示图像上的特征点所在的齐次坐标，而公式右边则是投影到世界坐标系后对应坐标点的齐次表示。利用该公式可以将第一帧图像上的点先投影到世界坐标系中，然后从世界坐标系中投影回第二帧图像中，之后我们计算投影后的坐标点和匹配子在第二帧坐标点之间的误差来构造能量函数，并对其做非线性优化来最小化重投影误差。其投影和重投影的示意图如下所示：<br> <img src="http://o9n30cpt4.bkt.clouddn.com/16-9-16/80095493.jpg" alt=""><br> 其构造的能量函数为：<br> $$T_{k,k-1}=arg \min \sum_{i}||u^{‘}_i- \pi(p_i)||_{\sum}^2 \tag{2} $$</p>
+<h2 id="1-2-Direct-Method-VO"><a href="#1-2-Direct-Method-VO" class="headerlink" title="1.2. Direct-Method VO"></a>1.2. Direct-Method VO</h2><p> Direct-Method （直接法）是近几年新出现的VO的解法，伴随着SVO，LSD-SLAM等SLAM项目的发布而流行。Direct-Method的思想是其并不会对前后两帧的图像做特征匹配，也许会有特征的提取（如SVO），但避过了耗时的特征匹配过程，而是利用如下假设：在微小的运动中，前后帧对应点之间的灰度变化很微小，即灰度恒定的假设，因此，直接法采用的方式是将当前帧的显著像素点通过式(1)投影到第二帧，然后取投影后的点的像素值，和当前帧对应的像素值，同样构造能量函数，然后对构造的能量函数做非线性优化来最小化图像测量误差。其示意图如下：<br> <img src="http://o9n30cpt4.bkt.clouddn.com/16-9-16/26401005.jpg" alt=""><br> 利用该方式构造的通用能量函数为：<br> $$T_{k,k-1}=arg \min \sum_{i}||I_k(u^{‘}_i)- I_{k-1}(u_i)||_{\sum}^2 \tag{3} $$<br> 其中,$u^{‘}_i= \pi (T \cdot (\pi ^{-1}(u_i) \cdot d))$。</p>
+<h2 id="1-3-两种方式的对比"><a href="#1-3-两种方式的对比" class="headerlink" title="1.3. 两种方式的对比"></a>1.3. 两种方式的对比</h2><p> 下图是一幅关于两种方式的对比图：<br> <img src="http://o9n30cpt4.bkt.clouddn.com/16-9-16/5812517.jpg" alt=""><br> 从图中我们可以知道：</p>
+<ol>
+<li>基于特征匹配的VO能适用于大场景的帧间运动，并且可以利用Bundle Adjustment对Struct和Motion进行优化得到姿态的精确解，这是其优势，但是由于其涉及特征提取和特征匹配，因此其非常耗时，并且对特征匹配而言，其可能存在相当一部分的误匹配，因此还需要对匹配后的结果进行滤除（RANSAC），这也是一个耗时的过程。</li>
+</ol>
+<ol>
+<li>基于直接法的VO因为不需要提取特征，所以能省略这一部分的时间。而且像素恒定的方式能利用上图像中几乎所有的有用信息，因此会更精确，也会更鲁棒。但灰度恒定的假设只能容忍微小的图像运动，因此该方式对相机的运动速度有很大的限制，另一方面，由于该方式利用了几乎所有的像素点，其对于稠密重建和运动的计算和优化非常的耗时，甚至DTAM在PC上也需要GPU和CUDA的配合才能实现实时重建。</li>
+</ol>
+<h1 id="2-Direct-Method"><a href="#2-Direct-Method" class="headerlink" title="2. Direct-Method"></a>2. Direct-Method</h1><p> 直接法的SLAM是利用Minimizing the Photometric error(最小化测量误差)来实现对姿态的求解。其基本假设是：同一个空间点在各视角下，测到的灰度保持恒定不变。</p>
+<h2 id="2-1-问题描述"><a href="#2-1-问题描述" class="headerlink" title="2.1. 问题描述"></a>2.1. 问题描述</h2><p> 对于给定的两幅图像，$I_1$和$I_2$，我们需要求解从$I_1$到$I_2$之间的转换Pose，即$T_{21}$。<br> 假设对于$I_1$中任意像素点$u_i$，我们将它反投影到空间点的坐标为：$p_i$，然后将$p_i$投影到第二个图中，得到$u_i$在第二幅图像中的对应点$u_i^{‘}$，因此，根据假设我们可以得到该像素点的图像测量误差为：$e_i=I_1(u_i)-I_2(u^{‘}_i)$，我们对所有像素点构造器L2范数并对其求和可以得到如下的全局能量函数：<br> $$min J=\sum_{i=1}^N e_i^T e_i \tag{4} $$</p>
+<h2 id="2-2-模型建立"><a href="#2-2-模型建立" class="headerlink" title="2.2. 模型建立"></a>2.2. 模型建立</h2><p> 由像素点的投影关系：<br> $$u_i=\left[\matrix{u \cr v \cr 1 \cr}\right]_i=C(Rp_i+t)=\left[\matrix{f_x &amp; 0 &amp; c_x \cr 0&amp; f_y &amp; c_y \cr 0&amp;0&amp;1 \cr}\right][R,t]\left[\matrix{p_x \cr p_y \cr p_z \cr 1 \cr}\right] \tag{5} $$<br>我们不妨假设$I_1$的相机Pose为I，$I_2$的相机Pose为R,t，那么，我们可以得到如下关系：<br>$$ \matrix{u_i=Cp_i \cr u^{‘}_i=C(Rp_i+t)} \tag{6} $$<br>则目标函数的形式为：<br>$$ min J =\sum _{i=1}^N ||I_1(Cp_i)-I_2(C(Rp_i+t))||_2^2 \tag{7} $$</p>
+<h2 id="2-3-模型求解"><a href="#2-3-模型求解" class="headerlink" title="2.3. 模型求解"></a>2.3. 模型求解</h2><p>根据上述建立的模型，我们的直接法解姿态就变成了以非线性优化方法来解式(7)。而对于目标函数的取值，其只与R和t有关，和其他表示量都没有关系，因此我们只对R和t进行优化；另一方面，在李群上，R和t是没有加法的，而且其也不好求导，因此我们将R和t转换到李代数上求解，而使用李代数$\xi$来表达相机姿态可以得到如下形式：<br>$$T=\left[\matrix{R &amp; t \cr 0^T &amp;1 \cr}\right]=exp(\xi ^\wedge) \tag{8} $$<br>因此目标函数可以转换为：<br>$$ min J =\sum _{i=1}^N ||I_1(Cp_i)-I_2(Cexp(\xi ^\wedge)p_i)||_2^2 \tag{9} $$</p>
+<p>对于该目标函数的求解，我们之前已经大致的介绍过了利用梯度下降法或者Gauss-Newton法和LM方法来进行求解，这里会对这些方法进一步的深化。梯度下降法的思想是利用误差项对自变量求梯度，通过梯度来获得自变量的增量更新。在该目标函数中，我们设单个误差项为：<br>$$ e_i=I_1(Cp_i)-I_2(Cexp(\xi ^\wedge)p_i) \tag{10} $$<br>误差项对自变量的梯度为：$J_i={\partial e_i \over \partial \xi }$， 利用该梯度对误差项进行更新，而Gauss-Newton迭代则是：<br>$$(\sum _{i=1}^N J_i^T J_i) \delta \xi ^* =-\sum _{i=1}^N J_i e_i \tag{11}$$<br>或者可以表示为：$H \delta \xi ^* =-b$，这里是利用$J_i$的转置乘以自身来近似目标函数的二阶导数项以减小计算量。<br>目标函数的非线性优化问题概念本身不难，但是在该目标函数中，$J_i={\partial e_i \over \partial \xi }$的计算则是一个关键的问题。对于单个误差项而言，第一项与$\xi$无关，因此只需要对第二项求导数。这里我们假设<br>$$ \matrix{ q=exp(\xi ^\wedge)p \cr u=Cq \cr} \tag{12} $$<br>其中第一个为变换方程，从世界坐标系变换到本地；第二个为投影方程，从空间点投影到像素点。<br>根据链式法则，有：<br>$$ J_i=-{\partial I_2 \over \partial u}{\partial u \over \partial q}{\partial q \over \partial \xi} \tag{13}$$<br>公式中三项分别为：图像对像素求导，像素对空间点求导和空间点对李代数求导。</p>
+<p>我们对上式从右到左分别进行分析：</p>
+<ol>
+<li><p>对于q，我们对$exp(\xi)$ 左乘一个$exp(\partial \xi ^\wedge)$，得到：<br>$$ {\partial q \over \partial (\partial \xi)}={exp(\partial \xi ^\wedge)exp(\xi ^\wedge)p-exp(\xi ^\wedge)p \over \partial \xi}=(exp(\xi ^\wedge)p)^ \odot \tag{14} $$<br>$\odot$运算符把$ 4 \times 1$的向量变成$4 \times 6$的矩阵：<br>$$q^ \odot =\left[\matrix {q_3 \cr 1 \cr }\right]^ \cdot =\left[\matrix{I_{3 \times 3} &amp; -q_3^\wedge \cr 0_{1 \times 3}^T &amp; 0_{1 \times 3}^T \cr}\right] \tag{15} $$<br>舍弃掉q最后的1，导数变为：<br>$$ {\partial q \over \partial (\partial \xi)}=[I_{3 \times 3}-q_3^\wedge] \tag{16} $$<br>这是一个$3 \times 6$的阵。</p>
+</li>
+<li><p>对于中间项$\partial u \over \partial q $，由<br>$$s \left[\matrix{ u \cr v \cr 1 \cr}\right]=\left[\matrix{f_x &amp; 0&amp;x_x \cr 0 &amp;f_y&amp;c_y \cr 0&amp;0&amp;1 \cr}\right]\left[\matrix{x \cr y \cr z \cr}\right] \tag{17} $$<br>可以得到：<br>$$ \matrix{<br>u={f_x x \over z}-c_x \cr<br>v={f_y y \over z}-c_y \cr<br>} \tag{18} $$<br>由此可得：<br>$$ {\partial u \over \partial q}=\left[\matrix{\partial u \over \partial x &amp; \partial u \over \partial y &amp; \partial u \over \partial z \cr \partial v \over \partial x &amp;\partial v \over \partial y&amp; \partial v \over \partial z \cr}\right] =\left[\matrix{f_x \over z &amp; 0 &amp; -f_x x \over z^2 \cr 0 &amp; f_y \over z &amp; -f_y y \over z^2 \cr}\right] \tag{19} $$</p>
+</li>
+<li><p>对于左边项$ \partial I_2 \over \partial u$，其为像素梯度。<br>$$ {\partial I_2 \over \partial u}=\left[ \matrix{I_2(u+1,v)-I_2(u,v) &amp; I_2(u,v+1)-I_2(u,v) \cr}\right] \tag{20} $$<br>由于[u,v]通常为浮点数，因此需要对图像进行插值。</p>
+</li>
+</ol>
+<p>对于以上三项而言，因为后面两项和图像没有关系，因此通常把后面两项乘到一起，得到如下公式：<br>$${\partial u \over \partial q} {\partial q \over \partial \xi}=\left[\matrix{f_x \over z &amp; 0 &amp; -f_x x \over z^2 \cr 0 &amp; f_y \over z &amp; -f_y y \over z^2 \cr}\right][I_{3 \times 3}-q_3^\wedge] =\left[\matrix{<br>f_x \over z &amp; 0 &amp; -f_x x \over z^2 &amp; f_x xy \over z^2 &amp; -f_x-{f_x x^2 \over z^2} &amp;-f_x y \over z \cr<br>0 &amp; f_y \over z &amp; -f_y y \over z^2 &amp; f_y-{f_y y \over z} &amp; -f_y xy \over z^2  &amp;-f_y y \over z \cr<br>}\right] \tag{21} $$<br>其物理意义为当像素点变化时，图像的灰度值的变化情况。</p>
+<p>计算了上述三项后，我们就得到了梯度的表达式，可以利用该表达式结合GN或者LM方法对相机姿态进行非线性优化了。</p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/相机姿态/">相机姿态</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://fangrenziwo.com/2016/09/16/cv-direct-method-camera-pose/" data-title="SLAM系列--Camera Pose的求解(Direct Method) | Fang&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2016/09/23/cv-depthestimation-and-propagation/" title="SLAM系列--深度估计的更新和传播">
+  <strong>上一篇：</strong><br/>
+  <span>
+  SLAM系列--深度估计的更新和传播</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2016/09/08/cv-ransac-epnp/"  title="SLAM系列--RANSAC和EPNP算法">
+ <strong>下一篇：</strong><br/> 
+ <span>SLAM系列--RANSAC和EPNP算法
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2016/09/16/cv-direct-method-camera-pose/" data-title="SLAM系列--Camera Pose的求解(Direct Method)" data-url="http://fangrenziwo.com/2016/09/16/cv-direct-method-camera-pose/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="顯示側邊欄"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目錄</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-VO对比"><span class="toc-number">1.</span> <span class="toc-text">1. VO对比</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-Feature-Based-VO"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. Feature-Based VO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-Direct-Method-VO"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. Direct-Method VO</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-两种方式的对比"><span class="toc-number">1.3.</span> <span class="toc-text">1.3. 两种方式的对比</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-Direct-Method"><span class="toc-number">2.</span> <span class="toc-text">2. Direct-Method</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-问题描述"><span class="toc-number">2.1.</span> <span class="toc-text">2.1. 问题描述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-模型建立"><span class="toc-number">2.2.</span> <span class="toc-text">2.2. 模型建立</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-模型求解"><span class="toc-number">2.3.</span> <span class="toc-text">2.3. 模型求解</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隱藏側邊欄"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分類</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/SLAM系列/" title="SLAM系列">SLAM系列<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/SLAM系列/" title="SLAM系列">SLAM系列<sup>8</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM资源/" title="SLAM资源">SLAM资源<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/" title="计算机视觉">计算机视觉<sup>10</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/随笔/" title="随笔">随笔<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">標簽</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/SLAM/" title="SLAM">SLAM<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/计算机视觉/" title="计算机视觉">计算机视觉<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/特征检测/" title="特征检测">特征检测<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/非线性优化/" title="非线性优化">非线性优化<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/算法/" title="算法">算法<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/test/" title="test">test<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/链接/" title="链接">链接<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像处理理论/" title="图像处理理论">图像处理理论<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/回环检测/" title="回环检测">回环检测<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/干货/" title="干货">干货<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机姿态/" title="相机姿态">相机姿态<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情鏈接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://blog.csdn.net/zf19921020" target="_blank" title="我的CSDN">我的CSDN</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> 业精于勤荒于嬉，行成于思毁于随 <br/>
+			热爱计算机视觉，热爱Coding...</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/FangGet" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:buptzhaofang@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2016 
+		
+		<a href="/about" target="_blank" title="Fang">Fang</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"fangrenziwo"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?e6d1f421bbc9962127a50488f9ed37d1";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回頂部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

@@ -1,0 +1,650 @@
+
+ <!DOCTYPE HTML>
+<html >
+<head>
+  <meta charset="UTF-8">
+  
+    <title>【泡泡机器人】SLAM干货整理 | Fang&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="Fang">
+    
+
+    
+    <meta name="description" content="作者：Frank时间：2016-08-14
+本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！
+
+持续更新中…
+重要的事情说三遍!">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【泡泡机器人】SLAM干货整理">
+<meta property="og:url" content="http://fangrenziwo.com/2016/08/14/slam-resources-list/index.html">
+<meta property="og:site_name" content="Fang's Blog">
+<meta property="og:description" content="作者：Frank时间：2016-08-14
+本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！
+
+持续更新中…
+重要的事情说三遍!">
+<meta property="og:updated_time" content="2016-10-24T08:18:54.767Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【泡泡机器人】SLAM干货整理">
+<meta name="twitter:description" content="作者：Frank时间：2016-08-14
+本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！
+
+持续更新中…
+重要的事情说三遍!">
+
+    
+    
+    <link rel="icon" href="/img/avatar2.png">
+    
+    
+    <link rel="apple-touch-icon" href="/img/avatar.png">
+    <link rel="apple-touch-icon-precomposed" href="/img/avatar.png">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/avatar2.png" alt="Fang&#39;s Blog" title="Fang&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
+				<h2 class="blog-motto">special for SLAM</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜單">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="hidden" name="q" value="site:fangrenziwo.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/08/14/slam-resources-list/" title="【泡泡机器人】SLAM干货整理" itemprop="url">【泡泡机器人】SLAM干货整理</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-08-14T05:15:42.000Z" itemprop="datePublished"> 發表於 2016-08-14</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">文章目錄</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二课：深度学习及应用"><span class="toc-number">1.</span> <span class="toc-text">【泡泡机器人公开课】第二课：深度学习及应用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】：第三课-SVO-和-LSD-SLAM解析"><span class="toc-number">2.</span> <span class="toc-text">【泡泡机器人公开课】：第三课 SVO 和 LSD_SLAM解析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人原创】SVD之最小二乘（推导与证明）"><span class="toc-number">3.</span> <span class="toc-text">【泡泡机器人原创】SVD之最小二乘（推导与证明）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人原创】利用”对极几何约束”优化图像坐标点"><span class="toc-number">4.</span> <span class="toc-text">【泡泡机器人原创】利用”对极几何约束”优化图像坐标点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第四课：Caffe入门与应用-by-高翔"><span class="toc-number">5.</span> <span class="toc-text">【泡泡机器人公开课】第四课：Caffe入门与应用 by 高翔</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第五课：双目视觉里程计"><span class="toc-number">6.</span> <span class="toc-text">【泡泡机器人公开课】第五课：双目视觉里程计</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第六课：比特币介绍-by-李其乐"><span class="toc-number">7.</span> <span class="toc-text">【泡泡机器人公开课】第六课：比特币介绍 by 李其乐</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课"><span class="toc-number">8.</span> <span class="toc-text">【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第七课：增强现实及其应用"><span class="toc-number">9.</span> <span class="toc-text">【泡泡机器人公开课】第七课：增强现实及其应用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第八课：MEMS-IMU的入门与应用"><span class="toc-number">10.</span> <span class="toc-text">【泡泡机器人公开课】第八课：MEMS IMU的入门与应用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第九课-双目校正及视差图的计算"><span class="toc-number">11.</span> <span class="toc-text">【泡泡机器人公开课】第九课 双目校正及视差图的计算</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十课-IMU-动态背景消除"><span class="toc-number">12.</span> <span class="toc-text">【泡泡机器人公开课】第十课 IMU+动态背景消除</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十一课：COP-SLAM-by-杨俊"><span class="toc-number">13.</span> <span class="toc-text">【泡泡机器人公开课】第十一课：COP-SLAM by 杨俊</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO-by-刘浩敏"><span class="toc-number">14.</span> <span class="toc-text">【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO by 刘浩敏</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十三课：CUDA-优化代码-by-张也冬"><span class="toc-number">15.</span> <span class="toc-text">【泡泡机器人公开课】第十三课：CUDA 优化代码 by 张也冬</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion-论文和代码解析-by-付兴银"><span class="toc-number">16.</span> <span class="toc-text">【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion 论文和代码解析 by 付兴银</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础-by-王京"><span class="toc-number">17.</span> <span class="toc-text">【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础 by 王京</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十六课：rosbridge原理及应用-by-董超"><span class="toc-number">18.</span> <span class="toc-text">【泡泡机器人公开课】第十六课：rosbridge原理及应用 by 董超</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十七课：SLAM-优化与求解-by-刘毅"><span class="toc-number">19.</span> <span class="toc-text">【泡泡机器人公开课】第十七课：SLAM 优化与求解 by 刘毅</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十八课：Direct方法的原理与实现-by-高翔"><span class="toc-number">20.</span> <span class="toc-text">【泡泡机器人公开课】第十八课：Direct方法的原理与实现 by 高翔</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖"><span class="toc-number">21.</span> <span class="toc-text">【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十课：路径规划-by-王超群"><span class="toc-number">22.</span> <span class="toc-text">【泡泡机器人公开课】第二十课：路径规划 by 王超群</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构-by-冯兵"><span class="toc-number">23.</span> <span class="toc-text">【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构 by 冯兵</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十二课：LeastSquare-and-gps-fusion-by-卿李"><span class="toc-number">24.</span> <span class="toc-text">【泡泡机器人公开课】第二十二课：LeastSquare_and_gps_fusion by 卿李</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十三课：Scan-Matching-in-2D-SLAM-by-张明明"><span class="toc-number">25.</span> <span class="toc-text">【泡泡机器人公开课】第二十三课：Scan Matching in 2D SLAM by 张明明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析-by-范帝楷"><span class="toc-number">26.</span> <span class="toc-text">【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析 by 范帝楷</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡优秀资源推荐】机器人公开课推荐-by-Wanda-Mason"><span class="toc-number">27.</span> <span class="toc-text">【泡泡优秀资源推荐】机器人公开课推荐 by Wanda Mason</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十五课：激光SLAM-by-王龙军"><span class="toc-number">28.</span> <span class="toc-text">【泡泡机器人公开课】第二十五课：激光SLAM by 王龙军</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡算法解析】LM算法计算单应矩阵"><span class="toc-number">29.</span> <span class="toc-text">【泡泡算法解析】LM算法计算单应矩阵</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介-by-侯涛"><span class="toc-number">30.</span> <span class="toc-text">【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介 by 侯涛</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）"><span class="toc-number">31.</span> <span class="toc-text">【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十七课：Textureless-Object-Tracking-by-吴天"><span class="toc-number">32.</span> <span class="toc-text">【泡泡机器人公开课】第二十七课：Textureless Object Tracking by 吴天</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十八课：基于光流的视觉控制-by-李平"><span class="toc-number">33.</span> <span class="toc-text">【泡泡机器人公开课】第二十八课：基于光流的视觉控制 by 李平</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十九课：Robust-Camera-Location-Estimation-by-阎骥洲-amp-周恺弟"><span class="toc-number">34.</span> <span class="toc-text">【泡泡机器人公开课】第二十九课：Robust Camera Location Estimation by 阎骥洲 & 周恺弟</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】非线性优化与g2o-by-高翔"><span class="toc-number">35.</span> <span class="toc-text">【泡泡机器人公开课】非线性优化与g2o by 高翔</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人LSD-SLAM专栏解析】一：Sophus-sophus详解"><span class="toc-number">36.</span> <span class="toc-text">【泡泡机器人LSD-SLAM专栏解析】一：Sophus/sophus详解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第三十一课：G2O简介-by-姚二亮"><span class="toc-number">37.</span> <span class="toc-text">【泡泡机器人公开课】第三十一课：G2O简介 by 姚二亮</span></a></li></ol>
+		
+		</div>
+		
+		<p><strong><br>作者：Frank<br>时间：2016-08-14
+</strong><br><strong><br>本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！<br>本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！<br>本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！
+</strong></p>
+<p><strong>持续更新中…</strong></p>
+<p>重要的事情说三遍!<br><a id="more"></a></p>
+<hr>
+<h3 id="【泡泡机器人公开课】第二课：深度学习及应用"><a href="#【泡泡机器人公开课】第二课：深度学习及应用" class="headerlink" title="【泡泡机器人公开课】第二课：深度学习及应用"></a>【泡泡机器人公开课】第二课：深度学习及应用</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483802&amp;idx=1&amp;sn=2283921f15a4cdae56e6bc7757db45d4&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483802&amp;idx=1&amp;sn=2283921f15a4cdae56e6bc7757db45d4&amp;scene=4#wechat_redirect</a> ;<br>ppt下载链接：<a href="http://pan.baidu.com/s/1gfLjpD5" target="_blank" rel="external">http://pan.baidu.com/s/1gfLjpD5</a>;</p>
+<h3 id="【泡泡机器人公开课】：第三课-SVO-和-LSD-SLAM解析"><a href="#【泡泡机器人公开课】：第三课-SVO-和-LSD-SLAM解析" class="headerlink" title="【泡泡机器人公开课】：第三课 SVO 和 LSD_SLAM解析"></a>【泡泡机器人公开课】：第三课 SVO 和 LSD_SLAM解析</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483826&amp;idx=1&amp;sn=a6d810efc21febdf358b417532d3de2f&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483826&amp;idx=1&amp;sn=a6d810efc21febdf358b417532d3de2f&amp;scene=4#wechat_redirect</a>;<br>PPT下载链接：<a href="http://pan.baidu.com/s/1pLcnP7X" target="_blank" rel="external">http://pan.baidu.com/s/1pLcnP7X</a>;<br>源代码下载链接：</p>
+<ol>
+<li><a href="http://pan.baidu.com/s/1gfg7T2j" target="_blank" rel="external">http://pan.baidu.com/s/1gfg7T2j</a>;</li>
+<li><a href="http://pan.baidu.com/s/1eS18CRC" target="_blank" rel="external">http://pan.baidu.com/s/1eS18CRC</a>;</li>
+</ol>
+<p>视频地址：<a href="http://v.qq.com/page/y/7/9/y0312cngs79.html" target="_blank" rel="external">http://v.qq.com/page/y/7/9/y0312cngs79.html</a>;</p>
+<h3 id="【泡泡机器人原创】SVD之最小二乘（推导与证明）"><a href="#【泡泡机器人原创】SVD之最小二乘（推导与证明）" class="headerlink" title="【泡泡机器人原创】SVD之最小二乘（推导与证明）"></a>【泡泡机器人原创】SVD之最小二乘（推导与证明）</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483830&amp;idx=1&amp;sn=a037834525740dcbfae98208a0dee59c&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483830&amp;idx=1&amp;sn=a037834525740dcbfae98208a0dee59c&amp;scene=4#wechat_redirect</a>;</p>
+<h3 id="【泡泡机器人原创】利用”对极几何约束”优化图像坐标点"><a href="#【泡泡机器人原创】利用”对极几何约束”优化图像坐标点" class="headerlink" title="【泡泡机器人原创】利用”对极几何约束”优化图像坐标点"></a>【泡泡机器人原创】利用”对极几何约束”优化图像坐标点</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483833&amp;idx=1&amp;sn=0ef449d24e7bec562cf6a364e60fe1c9&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483833&amp;idx=1&amp;sn=0ef449d24e7bec562cf6a364e60fe1c9&amp;scene=4#wechat_redirect</a>;</p>
+<h3 id="【泡泡机器人公开课】第四课：Caffe入门与应用-by-高翔"><a href="#【泡泡机器人公开课】第四课：Caffe入门与应用-by-高翔" class="headerlink" title="【泡泡机器人公开课】第四课：Caffe入门与应用 by 高翔"></a>【泡泡机器人公开课】第四课：Caffe入门与应用 by 高翔</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483855&amp;idx=1&amp;sn=24f1bea67f4154a2d83a7faa4c003b66&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483855&amp;idx=1&amp;sn=24f1bea67f4154a2d83a7faa4c003b66&amp;scene=4#wechat_redirect</a>;<br>PPT下载地址：<a href="http://pan.baidu.com/s/1c2r3Kli" target="_blank" rel="external">http://pan.baidu.com/s/1c2r3Kli</a>;<br>视频下载地址：<a href="http://pan.baidu.com/s/1bpunBiv" target="_blank" rel="external">http://pan.baidu.com/s/1bpunBiv</a>;</p>
+<h3 id="【泡泡机器人公开课】第五课：双目视觉里程计"><a href="#【泡泡机器人公开课】第五课：双目视觉里程计" class="headerlink" title="【泡泡机器人公开课】第五课：双目视觉里程计"></a>【泡泡机器人公开课】第五课：双目视觉里程计</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483877&amp;idx=1&amp;sn=9bc2fdce3ac37f698f0fdffdcffb63ac&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483877&amp;idx=1&amp;sn=9bc2fdce3ac37f698f0fdffdcffb63ac&amp;scene=4#wechat_redirect</a>;<br>视频链接：<a href="http://v.qq.com/x/page/a0315wr59b3.html" target="_blank" rel="external">http://v.qq.com/x/page/a0315wr59b3.html</a>;<br>PPT链接：<a href="http://pan.baidu.com/s/1mivr2lU" target="_blank" rel="external">http://pan.baidu.com/s/1mivr2lU</a>;<br>源代码链接：<a href="http://pan.baidu.com/s/1boMxWx5" target="_blank" rel="external">http://pan.baidu.com/s/1boMxWx5</a>;<br>相关论文链接：<a href="http://pan.baidu.com/s/1nvtT7HB" target="_blank" rel="external">http://pan.baidu.com/s/1nvtT7HB</a>;</p>
+<h3 id="【泡泡机器人公开课】第六课：比特币介绍-by-李其乐"><a href="#【泡泡机器人公开课】第六课：比特币介绍-by-李其乐" class="headerlink" title="【泡泡机器人公开课】第六课：比特币介绍 by 李其乐"></a>【泡泡机器人公开课】第六课：比特币介绍 by 李其乐</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483908&amp;idx=1&amp;sn=f752f4940138b54400866606791b93e5&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483908&amp;idx=1&amp;sn=f752f4940138b54400866606791b93e5&amp;scene=4#wechat_redirect</a>;<br>PPT下载地址：<a href="http://pan.baidu.com/s/1i4CIyPZ" target="_blank" rel="external">http://pan.baidu.com/s/1i4CIyPZ</a>;</p>
+<h3 id="【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课"><a href="#【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课" class="headerlink" title="【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课"></a>【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483911&amp;idx=1&amp;sn=b816324542d403b3984877e8aa3d54ba&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483911&amp;idx=1&amp;sn=b816324542d403b3984877e8aa3d54ba&amp;scene=4#wechat_redirect</a>;<br>相关下载链接：<a href="http://pan.baidu.com/s/1o8q3Uga" target="_blank" rel="external">http://pan.baidu.com/s/1o8q3Uga</a>;</p>
+<h3 id="【泡泡机器人公开课】第七课：增强现实及其应用"><a href="#【泡泡机器人公开课】第七课：增强现实及其应用" class="headerlink" title="【泡泡机器人公开课】第七课：增强现实及其应用"></a>【泡泡机器人公开课】第七课：增强现实及其应用</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483935&amp;idx=1&amp;sn=fb07357e8d09dadb29cd724a95030edc&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483935&amp;idx=1&amp;sn=fb07357e8d09dadb29cd724a95030edc&amp;scene=4#wechat_redirect</a>;<br>相关视频链接：<a href="http://pan.baidu.com/s/1pLeWImB" target="_blank" rel="external">http://pan.baidu.com/s/1pLeWImB</a>;</p>
+<h3 id="【泡泡机器人公开课】第八课：MEMS-IMU的入门与应用"><a href="#【泡泡机器人公开课】第八课：MEMS-IMU的入门与应用" class="headerlink" title="【泡泡机器人公开课】第八课：MEMS IMU的入门与应用"></a>【泡泡机器人公开课】第八课：MEMS IMU的入门与应用</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483992&amp;idx=1&amp;sn=7347f23709ceab22d6048f63386bb55d&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483992&amp;idx=1&amp;sn=7347f23709ceab22d6048f63386bb55d&amp;scene=4#wechat_redirect</a>;<br>PPT下载地址：<a href="http://pan.baidu.com/s/1dFOCAKp" target="_blank" rel="external">http://pan.baidu.com/s/1dFOCAKp</a>;<br>视频下载地址：</p>
+<ol>
+<li><a href="http://pan.baidu.com/s/1jI4P8Ei" target="_blank" rel="external">http://pan.baidu.com/s/1jI4P8Ei</a>;</li>
+<li><a href="http://pan.baidu.com/s/1qYMorYO" target="_blank" rel="external">http://pan.baidu.com/s/1qYMorYO</a>;</li>
+</ol>
+<p>ceres-solver-1.11.0.tar.gz：<a href="http://pan.baidu.com/s/1qYvjUCO" target="_blank" rel="external">http://pan.baidu.com/s/1qYvjUCO</a>;<br>imu_tk：<a href="http://pan.baidu.com/s/1dFqgGvB" target="_blank" rel="external">http://pan.baidu.com/s/1dFqgGvB</a>;</p>
+<h3 id="【泡泡机器人公开课】第九课-双目校正及视差图的计算"><a href="#【泡泡机器人公开课】第九课-双目校正及视差图的计算" class="headerlink" title="【泡泡机器人公开课】第九课 双目校正及视差图的计算"></a>【泡泡机器人公开课】第九课 双目校正及视差图的计算</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484041&amp;idx=1&amp;sn=c0ef401462f5c2838078549855296437&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484041&amp;idx=1&amp;sn=c0ef401462f5c2838078549855296437&amp;scene=4#wechat_redirect</a>;<br>代码链接：<a href="http://pan.baidu.com/s/1nuYVHax" target="_blank" rel="external">http://pan.baidu.com/s/1nuYVHax</a>;<br>PPT链接：<a href="http://pan.baidu.com/s/1csUXiu" target="_blank" rel="external">http://pan.baidu.com/s/1csUXiu</a>;<br>相关论文链接：<a href="http://pan.baidu.com/s/1hstyG2g" target="_blank" rel="external">http://pan.baidu.com/s/1hstyG2g</a>;</p>
+<h3 id="【泡泡机器人公开课】第十课-IMU-动态背景消除"><a href="#【泡泡机器人公开课】第十课-IMU-动态背景消除" class="headerlink" title="【泡泡机器人公开课】第十课 IMU+动态背景消除"></a>【泡泡机器人公开课】第十课 IMU+动态背景消除</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484088&amp;idx=1&amp;sn=947a4657a45c04fbe91fd2c98c21c361&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484088&amp;idx=1&amp;sn=947a4657a45c04fbe91fd2c98c21c361&amp;scene=4#wechat_redirect</a>;<br>PPT下载地址：<a href="http://pan.baidu.com/s/1gfPpj39" target="_blank" rel="external">http://pan.baidu.com/s/1gfPpj39</a> ;</p>
+<h3 id="【泡泡机器人公开课】第十一课：COP-SLAM-by-杨俊"><a href="#【泡泡机器人公开课】第十一课：COP-SLAM-by-杨俊" class="headerlink" title="【泡泡机器人公开课】第十一课：COP-SLAM by 杨俊"></a>【泡泡机器人公开课】第十一课：COP-SLAM by 杨俊</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484089&amp;idx=1&amp;sn=46fa58c66ae9739be9d7874a940bed07&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484089&amp;idx=1&amp;sn=46fa58c66ae9739be9d7874a940bed07&amp;scene=4#wechat_redirect</a>;<br>PPT 链接：<a href="http://pan.baidu.com/s/1qXYjVAW" target="_blank" rel="external">http://pan.baidu.com/s/1qXYjVAW</a>;<br>文章链接：<a href="http://pan.baidu.com/s/1pKDnqe3" target="_blank" rel="external">http://pan.baidu.com/s/1pKDnqe3</a>;<br>代码链接：<a href="http://pan.baidu.com/s/1eSx6Np4" target="_blank" rel="external">http://pan.baidu.com/s/1eSx6Np4</a>;</p>
+<h3 id="【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO-by-刘浩敏"><a href="#【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO-by-刘浩敏" class="headerlink" title="【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO by 刘浩敏"></a>【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO by 刘浩敏</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484121&amp;idx=1&amp;sn=3de23086f10f44e361b74851c7288a26&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484121&amp;idx=1&amp;sn=3de23086f10f44e361b74851c7288a26&amp;scene=4#wechat_redirect</a>;<br>PPT 链接：(<a href="http://pan.baidu.com/s/1dFNX953)[http://pan.baidu.com/s/1dFNX953" target="_blank" rel="external">http://pan.baidu.com/s/1dFNX953)[http://pan.baidu.com/s/1dFNX953</a>]; 密码：gq8d<br>视频链接：<a href="http://pan.baidu.com/s/1dFNX953" target="_blank" rel="external">http://pan.baidu.com/s/1dFNX953</a>; 密码：8niq</p>
+<h3 id="【泡泡机器人公开课】第十三课：CUDA-优化代码-by-张也冬"><a href="#【泡泡机器人公开课】第十三课：CUDA-优化代码-by-张也冬" class="headerlink" title="【泡泡机器人公开课】第十三课：CUDA 优化代码 by 张也冬"></a>【泡泡机器人公开课】第十三课：CUDA 优化代码 by 张也冬</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484187&amp;idx=1&amp;sn=5bb6f9a8c25eb9e0974b49c9af17b34a&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484187&amp;idx=1&amp;sn=5bb6f9a8c25eb9e0974b49c9af17b34a&amp;scene=4#wechat_redirect</a>;<br>PPT链接：<a href="http://pan.baidu.com/s/1nvtVsBB" target="_blank" rel="external">http://pan.baidu.com/s/1nvtVsBB</a>;<br>泡泡机器人B站视频链接：<a href="http://space.bilibili.com/38737757/#!/index" target="_blank" rel="external">http://space.bilibili.com/38737757/#!/index</a>;</p>
+<h3 id="【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion-论文和代码解析-by-付兴银"><a href="#【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion-论文和代码解析-by-付兴银" class="headerlink" title="【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion 论文和代码解析 by 付兴银"></a>【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion 论文和代码解析 by 付兴银</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484215&amp;idx=1&amp;sn=4829d54ba0cda4b17156ac055fd40feb&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484215&amp;idx=1&amp;sn=4829d54ba0cda4b17156ac055fd40feb&amp;scene=4#wechat_redirect</a>;<br>PPT链接：<a href="http://pan.baidu.com/s/1miHEdHe" target="_blank" rel="external">http://pan.baidu.com/s/1miHEdHe</a> 密码：zw5x<br>视频链接：<a href="http://pan.baidu.com/s/1slktRAX" target="_blank" rel="external">http://pan.baidu.com/s/1slktRAX</a> 密码：d9to</p>
+<h3 id="【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础-by-王京"><a href="#【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础-by-王京" class="headerlink" title="【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础 by 王京"></a>【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础 by 王京</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484257&amp;idx=1&amp;sn=fd5abed8d720eab2629fc30800f2ae9b&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484257&amp;idx=1&amp;sn=fd5abed8d720eab2629fc30800f2ae9b&amp;scene=4#wechat_redirect</a>;<br>PPT链接：<a href="https://pan.baidu.com/s/1cLw1YY" target="_blank" rel="external">https://pan.baidu.com/s/1cLw1YY</a>;<br>视频链接：<a href="https://pan.baidu.com/s/1pKOJ3b9" target="_blank" rel="external">https://pan.baidu.com/s/1pKOJ3b9</a>;</p>
+<h3 id="【泡泡机器人公开课】第十六课：rosbridge原理及应用-by-董超"><a href="#【泡泡机器人公开课】第十六课：rosbridge原理及应用-by-董超" class="headerlink" title="【泡泡机器人公开课】第十六课：rosbridge原理及应用 by 董超"></a>【泡泡机器人公开课】第十六课：rosbridge原理及应用 by 董超</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484267&amp;idx=1&amp;sn=8b92b8c7ce96179a3ae9612624e396fd&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484267&amp;idx=1&amp;sn=8b92b8c7ce96179a3ae9612624e396fd&amp;scene=4#wechat_redirect</a>;<br>视频链接：<a href="http://pan.baidu.com/s/1hrImwxI" target="_blank" rel="external">http://pan.baidu.com/s/1hrImwxI</a> 密码：86gq<br>PPT链接：<a href="http://pan.baidu.com/s/1c2Nu0PM" target="_blank" rel="external">http://pan.baidu.com/s/1c2Nu0PM</a> 密码：vgrb</p>
+<h3 id="【泡泡机器人公开课】第十七课：SLAM-优化与求解-by-刘毅"><a href="#【泡泡机器人公开课】第十七课：SLAM-优化与求解-by-刘毅" class="headerlink" title="【泡泡机器人公开课】第十七课：SLAM 优化与求解 by 刘毅"></a>【泡泡机器人公开课】第十七课：SLAM 优化与求解 by 刘毅</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484300&amp;idx=1&amp;sn=7f41d8405f0fe6468d9ac7b5be0794d5&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484300&amp;idx=1&amp;sn=7f41d8405f0fe6468d9ac7b5be0794d5&amp;scene=0#wechat_redirect</a>；<br>视频链接：<a href="http://v.qq.com/x/page/z0326un10oh.html" target="_blank" rel="external">http://v.qq.com/x/page/z0326un10oh.html</a>；<br>PPT链接：<a href="https://pan.baidu.com/s/1pK84MCz" target="_blank" rel="external">https://pan.baidu.com/s/1pK84MCz</a>；</p>
+<h3 id="【泡泡机器人公开课】第十八课：Direct方法的原理与实现-by-高翔"><a href="#【泡泡机器人公开课】第十八课：Direct方法的原理与实现-by-高翔" class="headerlink" title="【泡泡机器人公开课】第十八课：Direct方法的原理与实现 by 高翔"></a>【泡泡机器人公开课】第十八课：Direct方法的原理与实现 by 高翔</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484362&amp;idx=1&amp;sn=ce669369fc43e784b7869189995cd72a&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484362&amp;idx=1&amp;sn=ce669369fc43e784b7869189995cd72a&amp;scene=0#wechat_redirect</a>;<br>视频链接：<a href="http://v.qq.com/x/page/n03275fhbs5.html" target="_blank" rel="external">http://v.qq.com/x/page/n03275fhbs5.html</a>;</p>
+<h3 id="【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖"><a href="#【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖" class="headerlink" title="【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖"></a>【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484390&amp;idx=1&amp;sn=da6e117df899a9e89fd10e5cdaf6dcee&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484390&amp;idx=1&amp;sn=da6e117df899a9e89fd10e5cdaf6dcee&amp;scene=0#wechat_redirect</a>;<br>视频链接：<a href="http://v.qq.com/x/page/c0327u9p00i.html" target="_blank" rel="external">http://v.qq.com/x/page/c0327u9p00i.html</a>;<br>PPT链接：<a href="https://pan.baidu.com/s/1qXNwpys" target="_blank" rel="external">https://pan.baidu.com/s/1qXNwpys</a>;</p>
+<h3 id="【泡泡机器人公开课】第二十课：路径规划-by-王超群"><a href="#【泡泡机器人公开课】第二十课：路径规划-by-王超群" class="headerlink" title="【泡泡机器人公开课】第二十课：路径规划 by 王超群"></a>【泡泡机器人公开课】第二十课：路径规划 by 王超群</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484428&amp;idx=1&amp;sn=d29fb8e02f6821b157b1f9e7a94864bc&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484428&amp;idx=1&amp;sn=d29fb8e02f6821b157b1f9e7a94864bc&amp;scene=0#wechat_redirect</a>;<br>视频链接：<a href="http://pan.baidu.com/s/1o7Ftdii" target="_blank" rel="external">http://pan.baidu.com/s/1o7Ftdii</a> 密码：c8jj ;<br>PPT链接：<a href="http://pan.baidu.com/s/1boJdr8V" target="_blank" rel="external">http://pan.baidu.com/s/1boJdr8V</a> 密码：e9u5 ;</p>
+<h3 id="【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构-by-冯兵"><a href="#【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构-by-冯兵" class="headerlink" title="【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构 by 冯兵"></a>【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构 by 冯兵</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484455&amp;idx=1&amp;sn=31f7e02cc2761d3a4b5df5514e74c7ad&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484455&amp;idx=1&amp;sn=31f7e02cc2761d3a4b5df5514e74c7ad&amp;scene=0#wechat_redirect</a>;<br>视频链接：<a href="http://pan.baidu.com/s/1gfwkQQ3" target="_blank" rel="external">http://pan.baidu.com/s/1gfwkQQ3</a> 密码：y9pe ;<br>PPT链接：<a href="http://pan.baidu.com/s/1dFoNzpR" target="_blank" rel="external">http://pan.baidu.com/s/1dFoNzpR</a> 密码：9rh6 ;</p>
+<h3 id="【泡泡机器人公开课】第二十二课：LeastSquare-and-gps-fusion-by-卿李"><a href="#【泡泡机器人公开课】第二十二课：LeastSquare-and-gps-fusion-by-卿李" class="headerlink" title="【泡泡机器人公开课】第二十二课：LeastSquare_and_gps_fusion by 卿李"></a>【泡泡机器人公开课】第二十二课：LeastSquare_and_gps_fusion by 卿李</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484515&amp;idx=1&amp;sn=44facda4a8613f247bd039db1f8b6bed&amp;chksm=ec10ba67db67337104fd112218f1134dac8304f07ae584c7779cb1b42bbd2ed1f9f841d2d4e0&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484515&amp;idx=1&amp;sn=44facda4a8613f247bd039db1f8b6bed&amp;chksm=ec10ba67db67337104fd112218f1134dac8304f07ae584c7779cb1b42bbd2ed1f9f841d2d4e0&amp;scene=0#wechat_redirect</a>;<br>视频链接：<a href="http://pan.baidu.com/s/1hsI3EoW" target="_blank" rel="external">http://pan.baidu.com/s/1hsI3EoW</a> 密码：iteq<br>PPT链接：<a href="http://pan.baidu.com/s/1qY8dWvE" target="_blank" rel="external">http://pan.baidu.com/s/1qY8dWvE</a> 密码：saf1 ;</p>
+<h3 id="【泡泡机器人公开课】第二十三课：Scan-Matching-in-2D-SLAM-by-张明明"><a href="#【泡泡机器人公开课】第二十三课：Scan-Matching-in-2D-SLAM-by-张明明" class="headerlink" title="【泡泡机器人公开课】第二十三课：Scan Matching in 2D SLAM by 张明明"></a>【泡泡机器人公开课】第二十三课：Scan Matching in 2D SLAM by 张明明</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484537&amp;idx=1&amp;sn=86200d961cf933896a9781bbe58442cc&amp;chksm=ec10ba7ddb67336ba920a3c6b7e6414a0131bb775d6695e526d25dc6d377e31578684e83f802&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484537&amp;idx=1&amp;sn=86200d961cf933896a9781bbe58442cc&amp;chksm=ec10ba7ddb67336ba920a3c6b7e6414a0131bb775d6695e526d25dc6d377e31578684e83f802&amp;scene=0#wechat_redirect</a><br>PPT链接：<a href="http://pan.baidu.com/s/1kVuHdnL" target="_blank" rel="external">http://pan.baidu.com/s/1kVuHdnL</a> 密码：prjj<br>视频链接：<a href="http://pan.baidu.com/s/1i4KnvFJ" target="_blank" rel="external">http://pan.baidu.com/s/1i4KnvFJ</a> 密码：98ab ;</p>
+<h3 id="【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析-by-范帝楷"><a href="#【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析-by-范帝楷" class="headerlink" title="【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析 by 范帝楷"></a>【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析 by 范帝楷</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484541&amp;idx=1&amp;sn=8060afdf47b520f12f13c01f28f7901c&amp;chksm=ec10ba79db67336fe6bfb3912576ba287e14fc27ed2e4bcdc9cddc305f66f9762de24be23dca&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484541&amp;idx=1&amp;sn=8060afdf47b520f12f13c01f28f7901c&amp;chksm=ec10ba79db67336fe6bfb3912576ba287e14fc27ed2e4bcdc9cddc305f66f9762de24be23dca&amp;scene=0#wechat_redirect</a><br>视频链接：<a href="http://pan.baidu.com/s/1bIzXlc" target="_blank" rel="external">http://pan.baidu.com/s/1bIzXlc</a>  密码：kkmy ;</p>
+<h3 id="【泡泡优秀资源推荐】机器人公开课推荐-by-Wanda-Mason"><a href="#【泡泡优秀资源推荐】机器人公开课推荐-by-Wanda-Mason" class="headerlink" title="【泡泡优秀资源推荐】机器人公开课推荐 by Wanda Mason"></a>【泡泡优秀资源推荐】机器人公开课推荐 by Wanda Mason</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484544&amp;idx=1&amp;sn=493a4cf1812a3a7f9d1c34e339ca2739&amp;chksm=ec10ba84db6733923b78940806b8fd2ec5cb48779af5d59491d593b0cd746e731b6950a3b3b9&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484544&amp;idx=1&amp;sn=493a4cf1812a3a7f9d1c34e339ca2739&amp;chksm=ec10ba84db6733923b78940806b8fd2ec5cb48779af5d59491d593b0cd746e731b6950a3b3b9&amp;scene=0#wechat_redirect</a></p>
+<h3 id="【泡泡机器人公开课】第二十五课：激光SLAM-by-王龙军"><a href="#【泡泡机器人公开课】第二十五课：激光SLAM-by-王龙军" class="headerlink" title="【泡泡机器人公开课】第二十五课：激光SLAM by 王龙军"></a>【泡泡机器人公开课】第二十五课：激光SLAM by 王龙军</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484587&amp;idx=1&amp;sn=82c66613817bd6f50f58cd309dc48a6a&amp;chksm=ec10baafdb6733b9ce69ef19f27087ab8ebfc40d479fc5f0469c301d414c3745d6abb02e2d8b&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484587&amp;idx=1&amp;sn=82c66613817bd6f50f58cd309dc48a6a&amp;chksm=ec10baafdb6733b9ce69ef19f27087ab8ebfc40d479fc5f0469c301d414c3745d6abb02e2d8b&amp;scene=0#wechat_redirect</a><br>视频链接：<a href="http://pan.baidu.com/s/1bVrqDg" target="_blank" rel="external">http://pan.baidu.com/s/1bVrqDg</a> 密码：q0va<br>PPT链接：<a href="http://pan.baidu.com/s/1i57CFA1" target="_blank" rel="external">http://pan.baidu.com/s/1i57CFA1</a> 密码：e2pb ;</p>
+<h3 id="【泡泡算法解析】LM算法计算单应矩阵"><a href="#【泡泡算法解析】LM算法计算单应矩阵" class="headerlink" title="【泡泡算法解析】LM算法计算单应矩阵"></a>【泡泡算法解析】LM算法计算单应矩阵</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484602&amp;idx=1&amp;sn=b6d4b9d24af02a1e8de7f30e7f17f525&amp;chksm=ec10babedb6733a8c5b4ff4877b250394797efff616647778885515991daf25e27f2cd0f9914&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484602&amp;idx=1&amp;sn=b6d4b9d24af02a1e8de7f30e7f17f525&amp;chksm=ec10babedb6733a8c5b4ff4877b250394797efff616647778885515991daf25e27f2cd0f9914&amp;scene=0#wechat_redirect</a> ;</p>
+<h3 id="【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介-by-侯涛"><a href="#【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介-by-侯涛" class="headerlink" title="【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介 by 侯涛"></a>【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介 by 侯涛</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484644&amp;idx=1&amp;sn=b754a96b2132612323beb27a5950da1f&amp;chksm=ec10bae0db6733f6b301b72b228769f8067c7987a0dd511727f05ef8bdfb631ff41b67b98119&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484644&amp;idx=1&amp;sn=b754a96b2132612323beb27a5950da1f&amp;chksm=ec10bae0db6733f6b301b72b228769f8067c7987a0dd511727f05ef8bdfb631ff41b67b98119&amp;scene=0#wechat_redirect</a><br>视频链接：<a href="http://pan.baidu.com/s/1miydyaO" target="_blank" rel="external">http://pan.baidu.com/s/1miydyaO</a> 密码：wgw0<br>PPT链接：<a href="http://pan.baidu.com/s/1dFwVJyD" target="_blank" rel="external">http://pan.baidu.com/s/1dFwVJyD</a> 密码：6036 ;</p>
+<h3 id="【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）"><a href="#【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）" class="headerlink" title="【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）"></a>【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484653&amp;idx=1&amp;sn=a1a19398ae89bf9824a65f3b836ed8da&amp;chksm=ec10bae9db6733ff6d9dc3765fcfe08cd0dd997afc319054b94eb8c451af9c73346e1ac8d4ea&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484653&amp;idx=1&amp;sn=a1a19398ae89bf9824a65f3b836ed8da&amp;chksm=ec10bae9db6733ff6d9dc3765fcfe08cd0dd997afc319054b94eb8c451af9c73346e1ac8d4ea&amp;scene=0#wechat_redirect</a></p>
+<h3 id="【泡泡机器人公开课】第二十七课：Textureless-Object-Tracking-by-吴天"><a href="#【泡泡机器人公开课】第二十七课：Textureless-Object-Tracking-by-吴天" class="headerlink" title="【泡泡机器人公开课】第二十七课：Textureless Object Tracking by 吴天"></a>【泡泡机器人公开课】第二十七课：Textureless Object Tracking by 吴天</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484681&amp;idx=1&amp;sn=e7aee8f849b71c14aa35cf7ee631d40c&amp;chksm=ec10bb0ddb67321b9407ed6006a9cc803787a6553d6f0ca5e6a452f7bfade96701e034ade562&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484681&amp;idx=1&amp;sn=e7aee8f849b71c14aa35cf7ee631d40c&amp;chksm=ec10bb0ddb67321b9407ed6006a9cc803787a6553d6f0ca5e6a452f7bfade96701e034ade562&amp;scene=0#wechat_redirect</a>;<br>链接：<a href="http://pan.baidu.com/s/1jIO5VIe" target="_blank" rel="external">http://pan.baidu.com/s/1jIO5VIe</a> 密码：7d36</p>
+<h3 id="【泡泡机器人公开课】第二十八课：基于光流的视觉控制-by-李平"><a href="#【泡泡机器人公开课】第二十八课：基于光流的视觉控制-by-李平" class="headerlink" title="【泡泡机器人公开课】第二十八课：基于光流的视觉控制 by 李平"></a>【泡泡机器人公开课】第二十八课：基于光流的视觉控制 by 李平</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484761&amp;idx=1&amp;sn=54e83a99f124ec4e030225013f309f4f&amp;chksm=ec10bb5ddb67324b2dfb559695844a753287f5e3860171c09cc425bf59380fd2d75679576896&amp;scene=0#rd" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484761&amp;idx=1&amp;sn=54e83a99f124ec4e030225013f309f4f&amp;chksm=ec10bb5ddb67324b2dfb559695844a753287f5e3860171c09cc425bf59380fd2d75679576896&amp;scene=0#rd</a>;<br>公开课资源链接：<a href="http://pan.baidu.com/s/1i5qIpTj" target="_blank" rel="external">http://pan.baidu.com/s/1i5qIpTj</a>  密码：lbnt</p>
+<h3 id="【泡泡机器人公开课】第二十九课：Robust-Camera-Location-Estimation-by-阎骥洲-amp-周恺弟"><a href="#【泡泡机器人公开课】第二十九课：Robust-Camera-Location-Estimation-by-阎骥洲-amp-周恺弟" class="headerlink" title="【泡泡机器人公开课】第二十九课：Robust Camera Location Estimation by 阎骥洲 &amp; 周恺弟"></a>【泡泡机器人公开课】第二十九课：Robust Camera Location Estimation by 阎骥洲 &amp; 周恺弟</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484798&amp;idx=1&amp;sn=a4ee2bb8850df98593811325b769a1ba&amp;chksm=ec10bb7adb67326caeb61fbe2092fecb83286250ca4ec0f31a48374774962bfffb8c0542e814&amp;scene=0#rd" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484798&amp;idx=1&amp;sn=a4ee2bb8850df98593811325b769a1ba&amp;chksm=ec10bb7adb67326caeb61fbe2092fecb83286250ca4ec0f31a48374774962bfffb8c0542e814&amp;scene=0#rd</a>;<br>PPT链接：<a href="https://pan.baidu.com/s/1nvS3ZJF" target="_blank" rel="external">https://pan.baidu.com/s/1nvS3ZJF</a><br>视频连接：<a href="https://pan.baidu.com/s/1o8CmWqe" target="_blank" rel="external">https://pan.baidu.com/s/1o8CmWqe</a></p>
+<h3 id="【泡泡机器人公开课】非线性优化与g2o-by-高翔"><a href="#【泡泡机器人公开课】非线性优化与g2o-by-高翔" class="headerlink" title="【泡泡机器人公开课】非线性优化与g2o by 高翔"></a>【泡泡机器人公开课】非线性优化与g2o by 高翔</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484843&amp;idx=1&amp;sn=823fd03386f710e7eb5a5125056f7613&amp;chksm=ec10bbafdb6732b954d8f5e38b09e441c6620d970b0466dff468916c51b6f2daa68922f820c3&amp;scene=0#rd" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484843&amp;idx=1&amp;sn=823fd03386f710e7eb5a5125056f7613&amp;chksm=ec10bbafdb6732b954d8f5e38b09e441c6620d970b0466dff468916c51b6f2daa68922f820c3&amp;scene=0#rd</a>;<br>PPT链接：<a href="http://pan.baidu.com/s/1kVRSyk3" target="_blank" rel="external">http://pan.baidu.com/s/1kVRSyk3</a> 密码：2iqk<br>视频链接：<a href="http://pan.baidu.com/s/1nuKg5ML" target="_blank" rel="external">http://pan.baidu.com/s/1nuKg5ML</a> 密码：qfgp</p>
+<h3 id="【泡泡机器人LSD-SLAM专栏解析】一：Sophus-sophus详解"><a href="#【泡泡机器人LSD-SLAM专栏解析】一：Sophus-sophus详解" class="headerlink" title="【泡泡机器人LSD-SLAM专栏解析】一：Sophus/sophus详解"></a>【泡泡机器人LSD-SLAM专栏解析】一：Sophus/sophus详解</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484909&amp;idx=1&amp;sn=2bffe514383b6a01cb04e296723d89ba&amp;chksm=ec10bbe9db6732ff580bffed1a2c910a76d8ea7df564e307bb4893c80514b3a43c30b0a0221f&amp;scene=0#rd" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484909&amp;idx=1&amp;sn=2bffe514383b6a01cb04e296723d89ba&amp;chksm=ec10bbe9db6732ff580bffed1a2c910a76d8ea7df564e307bb4893c80514b3a43c30b0a0221f&amp;scene=0#rd</a></p>
+<h3 id="【泡泡机器人公开课】第三十一课：G2O简介-by-姚二亮"><a href="#【泡泡机器人公开课】第三十一课：G2O简介-by-姚二亮" class="headerlink" title="【泡泡机器人公开课】第三十一课：G2O简介 by 姚二亮"></a>【泡泡机器人公开课】第三十一课：G2O简介 by 姚二亮</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484910&amp;idx=1&amp;sn=b60d1c612a320cbdad374f950d48b449&amp;chksm=ec10bbeadb6732fc24b68cf03de678a0c99dc714190ca01516469da25bd916dd6c9430decd1e&amp;scene=0#rd" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484910&amp;idx=1&amp;sn=b60d1c612a320cbdad374f950d48b449&amp;chksm=ec10bbeadb6732fc24b68cf03de678a0c99dc714190ca01516469da25bd916dd6c9430decd1e&amp;scene=0#rd</a>;<br>PPT链接链接：<a href="http://pan.baidu.com/s/1jHXJVgy" target="_blank" rel="external">http://pan.baidu.com/s/1jHXJVgy</a> 密码：tmrd<br>视频连接链接：<a href="http://pan.baidu.com/s/1qYcXvm0" target="_blank" rel="external">http://pan.baidu.com/s/1qYcXvm0</a> 密码：7zf4</p>
+<p>欢迎关注 @泡泡机器人SLAM 微信公众号</p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/SLAM资源/">SLAM资源</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/干货/">干货</a><a href="/tags/链接/">链接</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://fangrenziwo.com/2016/08/14/slam-resources-list/" data-title="【泡泡机器人】SLAM干货整理 | Fang&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+ <div class="prev" >
+ <a href="/2016/09/03/cv-svd/" title="SLAM系列---SVD分解">
+  <strong>上一篇：</strong><br/>
+  <span>
+  SLAM系列---SVD分解</span>
+</a>
+</div>
+
+
+<div class="next">
+<a href="/2016/08/03/cv-nonlinear-optimazation-02/"  title="SLAM系列--非线性优化（2）">
+ <strong>下一篇：</strong><br/> 
+ <span>SLAM系列--非线性优化（2）
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2016/08/14/slam-resources-list/" data-title="【泡泡机器人】SLAM干货整理" data-url="http://fangrenziwo.com/2016/08/14/slam-resources-list/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="顯示側邊欄"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">文章目錄</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二课：深度学习及应用"><span class="toc-number">1.</span> <span class="toc-text">【泡泡机器人公开课】第二课：深度学习及应用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】：第三课-SVO-和-LSD-SLAM解析"><span class="toc-number">2.</span> <span class="toc-text">【泡泡机器人公开课】：第三课 SVO 和 LSD_SLAM解析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人原创】SVD之最小二乘（推导与证明）"><span class="toc-number">3.</span> <span class="toc-text">【泡泡机器人原创】SVD之最小二乘（推导与证明）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人原创】利用”对极几何约束”优化图像坐标点"><span class="toc-number">4.</span> <span class="toc-text">【泡泡机器人原创】利用”对极几何约束”优化图像坐标点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第四课：Caffe入门与应用-by-高翔"><span class="toc-number">5.</span> <span class="toc-text">【泡泡机器人公开课】第四课：Caffe入门与应用 by 高翔</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第五课：双目视觉里程计"><span class="toc-number">6.</span> <span class="toc-text">【泡泡机器人公开课】第五课：双目视觉里程计</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第六课：比特币介绍-by-李其乐"><span class="toc-number">7.</span> <span class="toc-text">【泡泡机器人公开课】第六课：比特币介绍 by 李其乐</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课"><span class="toc-number">8.</span> <span class="toc-text">【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第七课：增强现实及其应用"><span class="toc-number">9.</span> <span class="toc-text">【泡泡机器人公开课】第七课：增强现实及其应用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第八课：MEMS-IMU的入门与应用"><span class="toc-number">10.</span> <span class="toc-text">【泡泡机器人公开课】第八课：MEMS IMU的入门与应用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第九课-双目校正及视差图的计算"><span class="toc-number">11.</span> <span class="toc-text">【泡泡机器人公开课】第九课 双目校正及视差图的计算</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十课-IMU-动态背景消除"><span class="toc-number">12.</span> <span class="toc-text">【泡泡机器人公开课】第十课 IMU+动态背景消除</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十一课：COP-SLAM-by-杨俊"><span class="toc-number">13.</span> <span class="toc-text">【泡泡机器人公开课】第十一课：COP-SLAM by 杨俊</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO-by-刘浩敏"><span class="toc-number">14.</span> <span class="toc-text">【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO by 刘浩敏</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十三课：CUDA-优化代码-by-张也冬"><span class="toc-number">15.</span> <span class="toc-text">【泡泡机器人公开课】第十三课：CUDA 优化代码 by 张也冬</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion-论文和代码解析-by-付兴银"><span class="toc-number">16.</span> <span class="toc-text">【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion 论文和代码解析 by 付兴银</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础-by-王京"><span class="toc-number">17.</span> <span class="toc-text">【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础 by 王京</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十六课：rosbridge原理及应用-by-董超"><span class="toc-number">18.</span> <span class="toc-text">【泡泡机器人公开课】第十六课：rosbridge原理及应用 by 董超</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十七课：SLAM-优化与求解-by-刘毅"><span class="toc-number">19.</span> <span class="toc-text">【泡泡机器人公开课】第十七课：SLAM 优化与求解 by 刘毅</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十八课：Direct方法的原理与实现-by-高翔"><span class="toc-number">20.</span> <span class="toc-text">【泡泡机器人公开课】第十八课：Direct方法的原理与实现 by 高翔</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖"><span class="toc-number">21.</span> <span class="toc-text">【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十课：路径规划-by-王超群"><span class="toc-number">22.</span> <span class="toc-text">【泡泡机器人公开课】第二十课：路径规划 by 王超群</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构-by-冯兵"><span class="toc-number">23.</span> <span class="toc-text">【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构 by 冯兵</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十二课：LeastSquare-and-gps-fusion-by-卿李"><span class="toc-number">24.</span> <span class="toc-text">【泡泡机器人公开课】第二十二课：LeastSquare_and_gps_fusion by 卿李</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十三课：Scan-Matching-in-2D-SLAM-by-张明明"><span class="toc-number">25.</span> <span class="toc-text">【泡泡机器人公开课】第二十三课：Scan Matching in 2D SLAM by 张明明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析-by-范帝楷"><span class="toc-number">26.</span> <span class="toc-text">【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析 by 范帝楷</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡优秀资源推荐】机器人公开课推荐-by-Wanda-Mason"><span class="toc-number">27.</span> <span class="toc-text">【泡泡优秀资源推荐】机器人公开课推荐 by Wanda Mason</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十五课：激光SLAM-by-王龙军"><span class="toc-number">28.</span> <span class="toc-text">【泡泡机器人公开课】第二十五课：激光SLAM by 王龙军</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡算法解析】LM算法计算单应矩阵"><span class="toc-number">29.</span> <span class="toc-text">【泡泡算法解析】LM算法计算单应矩阵</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介-by-侯涛"><span class="toc-number">30.</span> <span class="toc-text">【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介 by 侯涛</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）"><span class="toc-number">31.</span> <span class="toc-text">【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十七课：Textureless-Object-Tracking-by-吴天"><span class="toc-number">32.</span> <span class="toc-text">【泡泡机器人公开课】第二十七课：Textureless Object Tracking by 吴天</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十八课：基于光流的视觉控制-by-李平"><span class="toc-number">33.</span> <span class="toc-text">【泡泡机器人公开课】第二十八课：基于光流的视觉控制 by 李平</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第二十九课：Robust-Camera-Location-Estimation-by-阎骥洲-amp-周恺弟"><span class="toc-number">34.</span> <span class="toc-text">【泡泡机器人公开课】第二十九课：Robust Camera Location Estimation by 阎骥洲 & 周恺弟</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】非线性优化与g2o-by-高翔"><span class="toc-number">35.</span> <span class="toc-text">【泡泡机器人公开课】非线性优化与g2o by 高翔</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人LSD-SLAM专栏解析】一：Sophus-sophus详解"><span class="toc-number">36.</span> <span class="toc-text">【泡泡机器人LSD-SLAM专栏解析】一：Sophus/sophus详解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#【泡泡机器人公开课】第三十一课：G2O简介-by-姚二亮"><span class="toc-number">37.</span> <span class="toc-text">【泡泡机器人公开课】第三十一课：G2O简介 by 姚二亮</span></a></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="隱藏側邊欄"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">分類</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/SLAM系列/" title="SLAM系列">SLAM系列<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/SLAM系列/" title="SLAM系列">SLAM系列<sup>8</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM资源/" title="SLAM资源">SLAM资源<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/" title="计算机视觉">计算机视觉<sup>10</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/随笔/" title="随笔">随笔<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">標簽</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/SLAM/" title="SLAM">SLAM<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/计算机视觉/" title="计算机视觉">计算机视觉<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/特征检测/" title="特征检测">特征检测<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/非线性优化/" title="非线性优化">非线性优化<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/算法/" title="算法">算法<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/test/" title="test">test<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/链接/" title="链接">链接<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像处理理论/" title="图像处理理论">图像处理理论<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/回环检测/" title="回环检测">回环检测<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/干货/" title="干货">干货<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机姿态/" title="相机姿态">相机姿态<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">友情鏈接</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://blog.csdn.net/zf19921020" target="_blank" title="我的CSDN">我的CSDN</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> 业精于勤荒于嬉，行成于思毁于随 <br/>
+			热爱计算机视觉，热爱Coding...</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/FangGet" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:buptzhaofang@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2016 
+		
+		<a href="/about" target="_blank" title="Fang">Fang</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"fangrenziwo"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?e6d1f421bbc9962127a50488f9ed37d1";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="返回頂部"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

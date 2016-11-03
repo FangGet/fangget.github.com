@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+    
+    <entry>
+      <title><![CDATA[SLAM系列--回环检测DBoW2原理]]></title>
+      <url>http://fangrenziwo.com/2016/10/26/cv-loop-closing/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-10-25
+</strong></p>
+<p>在SLAM系统中，当相机姿态被逐帧的计算出来之后，就可以通过对相机姿态的叠加得到相机在空间中的位姿。然而由于相机姿态中或多或少的存在噪声，因此当相机回到重复场景的时候，相机的姿态和重复帧所对应的姿态并不重合，从而导致三角化后得到的地图点出现错位。因此在SLAM系统中，需要利用算法对相机运动过程中可能出现的重复场景进行检测，即回环检测算法。在ORB-SLAM和Kintinuous中都使用了DBoW2作为回环检测算法，因此在本部分对DBoW2算法进行简要的介绍。<br><a id="more"></a></p>
+<h1 id="1-理论基础"><a href="#1-理论基础" class="headerlink" title="1. 理论基础"></a>1. 理论基础</h1><p>BoW(Bag of Words)是视觉词袋算法。而在DBoW2中是利用K-means++算法来建立关于词袋的K-D树。而K-means++算法是在K-means算法基础上进行的改进，因此首先对K-means算法进行介绍。</p>
+<h2 id="1-1-K-means算法"><a href="#1-1-K-means算法" class="headerlink" title="1.1. K-means算法"></a>1.1. K-means算法</h2><p>K-means算法是在聚类分析中使用最广泛的基本算法之一。它把n个对象根据他们自身的属性分为k个聚类，聚类形成的基本准则是：同一聚类中的对象相似度很高；而不同聚类中的对象相似度较小。聚类的基本形成过程如下所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-10-25/21720673.jpg" alt=""><br>K-means方法需要两个输入，一个是需要形成的聚类的数量，另一个是初始化的中心点。<br>算法的基本流程是随机选择K个初始点，计算所有数据点和中心点的最小距离，并按照该距离将所有的数据点归为距离最小的类中；在该次聚类结束后，计算每一类的中心点并将其作为新的初始点并重复前述步骤。这样不断的进行“划分–更新–划分–更新”，直到每个蔟的中心不再移动为止。<br>以上就是K-means算法，算法的过程比较简单，但算法存在以下两个缺陷：</p>
+<ol>
+<li><p>聚类中心的个数K需要事先给定，但在实际中这K值得选定是很难进行估计的。因此在很多时候，事先并不知道给定的数据集应该分成多少个类别才合适；</p>
+</li>
+<li><p>K-means需要人为的进行初始聚类中心的选取，而聚类中心不同的初始化过程对于聚类的最终划分结果是有很大影响的，可能会导致完全不同的分类结果。</p>
+</li>
+</ol>
+<p>针对上述第二个缺陷，可以使用K-means++算法来解决。</p>
+<h2 id="1-2-K-means-算法"><a href="#1-2-K-means-算法" class="headerlink" title="1.2. K-means++算法"></a>1.2. K-means++算法</h2><p>K-means++算法相对K-means算法，其主要区别在于聚类中心的初始化算法不同，在K-means++中对初始聚类 中心选取的原则是：聚类中心之间的相互距离要尽可能的远。其初始化点选取的流程如下所示：</p>
+<ol>
+<li>从输入的数据点几何中随机选取一个点作为第一个聚类中心；</li>
+<li>对于数据集中的每一个点x,计算它与最近聚类中心的距离D(x);</li>
+<li>选择一个新的数据点作为新的聚类中心，选择的原则是，对于D(x)较大的点，其被选取作为聚类中心的概率较大；</li>
+<li>重复步骤2和3直到k个聚类中心被选出来；</li>
+<li>利用这k个初始的聚类中心来运行标准的K-meangs算法。</li>
+</ol>
+<p>以上就是K-means++中初始聚类中心的选取算法，而从步骤中不难看出，在上述算法中最重要的就是步骤3中如何将D(x)反映到被选择的概率上，在DBoW2中使用的算法如下：</p>
+<ol>
+<li>先从数据库中随机挑K个随机点作为种子点；</li>
+<li>对弈每个点，首先计算其和最近的一个种子点的距离D(x)并保存在一个数组中，然后把这些距离加起来得到Sum(D(x))；</li>
+<li><p>然后再取一个随机值，用权重的方式来取计算下一个种子点，这个算法的实现是，先取一个能落在Sum(D(x))中的随机值Random，然后用Random-=D(x)，直到其$ \leq 0$，此时的点就是下一个种子点；</p>
+</li>
+<li><p>重复步骤2和步骤3直到K个聚类中心被选出来；</p>
+</li>
+<li>利用这k个初始的聚类中心来运行标准的K-means算法；</li>
+</ol>
+<h1 id="2-DBoW2算法原理"><a href="#2-DBoW2算法原理" class="headerlink" title="2. DBoW2算法原理"></a>2. DBoW2算法原理</h1><h2 id="2-1-算法基础"><a href="#2-1-算法基础" class="headerlink" title="2.1. 算法基础"></a>2.1. 算法基础</h2><p>DBoW2是利用BoVW来表示图像，将图像进行结构化描述。BoVW的思想是将图像特征整合成视觉单词，将图像特征空间转化为离散的视觉词典，将新的图像特征映射到视觉字典中最近邻视觉词典，再通过计算视觉字典间距离计算图像的相似度，从而完成识别、图像分类、检索等任务。<br>基于图像的闭环检测系统，将当前采集的图像和之前数据集中所采集到的图像进行比较。每幅图像通过该图像的显著视觉特征描述，并用于图像相似性比较。描述符提取图像特征，将图像$I_u$表示为一个n维的描述符几何$D:I_u\rightarrow {d_1 \cdots d_n}$。 提取特征后，每幅图像由一系列的视觉单词组成，每个描述符提取的特征点$d_i$都关联到视觉字典中的一个视觉单词$\hat{d}_i$，视觉词典表示为：$V={\hat{d}_1 \cdots \hat{d}_n}$。视觉词典V通过BoVW建模方法，对相似描述符聚类进行构建。每一个视觉单词的描述符向量都被认为是一个关联的视觉词表。在构建好视觉词典之后，对群集进行中心化。通过在群集中心构建K-D树，并执行最近邻knn矢量对所有描述符量子化，实现对群集的简化。<br>为了测量两幅图像$I_u$和$I_v$之间的相似度，可以通过计算它们之间的余弦距离获得，每一幅图像$I_u$由不同权重$w_i$的词汇$\hat{d}_i$聚集而成，权重$w_i$是每个词汇在全部图像集中发生的频率。每个词汇的权重由式：<br>$$ w_i =log_{10}(N / n_i) \tag{1} $$<br>计算得到。式中，N是存储的所有图像，$n_i$是$d_i$中包含图像的数量。如果视觉词典中包含|V|个不同的词汇，可以形成图像的矢量为：<br>$$ \overrightarrow{I}_u=[u_1 \cdots u_{|V|}]^T \tag{2} $$<br>其中图像中包含的词汇权重如下：<br>$$ u_i = \left\{ \matrix{w_i &amp; d_i \epsilon I_u \cr<br>0 &amp; otherwise \cr } \right . \tag{3} $$<br>在得到每个词汇的权重后，即可求出整幅图像的权重，之后利用相似函数计算图像$I_u$和$I_v$间的相似度，相似度计算公式如下所示：<br>$$ S(I_u,I_v)={\sum _{i=0}^{|v|} {u_i v_i} \over \sqrt{\sum _{i=0}^{|v|} u_i^2}\sqrt{\sum _{i=0}^{|v|} v_i^2}} \tag{4} $$</p>
+<h2 id="2-2-算法流程"><a href="#2-2-算法流程" class="headerlink" title="2.2. 算法流程"></a>2.2. 算法流程</h2><h3 id="2-2-1-Bag-of-Words-词典建立"><a href="#2-2-1-Bag-of-Words-词典建立" class="headerlink" title="2.2.1. Bag of Words 词典建立"></a>2.2.1. Bag of Words 词典建立</h3><p>在DBoW2中，首先需要建立视觉词典，其建立过程如下所示：</p>
+<ol>
+<li>从训练图像中离线抽取特征；</li>
+<li>将抽取的特征用K-means++算法聚类，将描述子空间划分为K类；</li>
+<li>将划分的每个子空间，继续利用K-means++算法做聚类；</li>
+<li>按照上述循环，将描述子建立树形结构，如下图所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-10-26/38514683.jpg" alt=""></li>
+</ol>
+<p>字典树在建立过程中，每个叶子也就是每个word都记录了该word在所有训练图像中出现的频率。出现的频率越高，说明该word的区分度越小，频率计算公式如下所示：<br>$$ idf(i)=log{N \over n_i} \tag{5} $$</p>
+<h3 id="2-2-2-在线更新字典树"><a href="#2-2-2-在线更新字典树" class="headerlink" title="2.2.2. 在线更新字典树"></a>2.2.2. 在线更新字典树</h3><p>当在字典树种需要插入一幅新图像$I_t$时，图像中提取的特征描述子按照汉明距离从字典树的根部节点开始逐级向下到达叶子节点，可以计算每个叶子节点也就是每个word在图像$I_t$中出现的频率：<br>$$ tf(i,I_t)={n_{iI_t} \over n_{I_t}} \tag{6} $$<br>其中$n_{iI_t}$表示word在图像中出现的次数，$n_{I_t}$表示图像中描述子的总数在树构建过程中每个叶子节点存储了inverse index(倒排序索引)，存储了到达叶子节点的图像$I_t$的ID和图像$I_t$描述子矢量中第i维的值：$v_{i,t}=tf(i,I_t) \times idf(i)$。<br>对于一幅图像中所有的描述子，做上述操作，可以得到每个word的值，将这些值构成图像的描述矢量$v_t$。对两幅图像比较计算其相似度时，两幅图像的相似度计算公式如下：<br>$$s(v_1,v_2)=1-{1 \over 2}\left| {v_1 \over |v_1|}-{v_2 \over |v_2|} \right| \tag{7} $$<br>两幅图像越相似得分越高。字典树出了存储了倒排序索引，还存储了直接索引。直接索引是为了方便两幅图像间的图像特征搜索，建立特征之间的对应，计算两帧间的位姿转换。</p>
+<h3 id="2-2-3-数据库查询"><a href="#2-2-3-数据库查询" class="headerlink" title="2.2.3. 数据库查询"></a>2.2.3. 数据库查询</h3><p>由于在计算相似度时，相似度的大小和字典树、图像等有一定的关系，这里采用归一化的方式，消除这两种因素的影响，归一化相似度计算公式公式如下所示：<br>$$ \eta(v_t,v_{t_j})={s(v_t,v_{t_j}) \over s(v_t,v_{t-\Delta t})} \tag{8} $$<br>其中$v_{t-\Delta t}$表示上一帧图像，上式的含义是上一帧图像和当前帧图像是最为相似的，用和上一帧图像计算的相似度来归一化和字典树中图像计算的相似度。当$s(v_t,v_{t-\Delta t})$较小时（机器人做旋转时），会把总体的得分拉的很高，在DBoW2的论文中为了剔除这种因素，引入了阈值$\alpha$，当前帧和上一帧图像相似度小于$\alpha$时不做回环检测。</p>
+<h3 id="2-2-4-相似度匹配组"><a href="#2-2-4-相似度匹配组" class="headerlink" title="2.2.4. 相似度匹配组"></a>2.2.4. 相似度匹配组</h3><p>假设图像$v_t$和图像$v_{n_i}$之间的相似度很大，那么和图像$v_{n_i}$周围的图像也会有很高的相似度，这里将相邻的得分都很高的图像组成一起构成一个集合，得分是这个集合中图像得分的总和。</p>
+<h3 id="2-2-5-局部一致性"><a href="#2-2-5-局部一致性" class="headerlink" title="2.2.5. 局部一致性"></a>2.2.5. 局部一致性</h3><p>假设图像$v_t$ 和集合$V_{t_1}$之间的相似度很大，那么图像$v_{tk\Delta t}$和$V_{tk}$之间的相似度应该也很大，相当于两串图像之间会有重叠，利用这个条件作为图像局部一致性的约束。</p>
+<h3 id="2-2-6-有效几何约束"><a href="#2-2-6-有效几何约束" class="headerlink" title="2.2.6. 有效几何约束"></a>2.2.6. 有效几何约束</h3><p>对于一幅新图像$I_i$，用字典树建立对图像的描述，并且计算和字典树种以前存储的图像之间的得分。倒排序索引能加快待比较的图像的搜索速度。由于在倒排序索引中存储了哪些图像也到达该叶子节点，在选择待比较的图像时，只需要比较到达相同叶子节点的图像，不需要和存储的每幅图像进行比较，从而加快了比较速度。而直接索引能加快特征比较速度。假设图像$I_i$和图像$I_j$得分最高，在两幅图像特征匹配时，只需要比较直接索引中属于同一个节点的图像特征，节点指字典树的一层，如果是叶子节点层，那么选择的是同一个word的特征做匹配。</p>
+<p>** 引用来源：</p>
+<ol>
+<li><a href="http://blog.csdn.net/fuxingyin/article/details/51489160" target="_blank" rel="external">DBoW2 回环检测/重定位 算法解析</a>;</li>
+<li><a href="http://www.cnblogs.com/zjiaxing/p/5616701.html" target="_blank" rel="external">视觉slam闭环检测之-DBoW2 -视觉词袋构建</a>;</li>
+</ol>
+<p>论文来源：</p>
+<ol>
+<li><a href="http://webdiis.unizar.es/~dorian/papers/IROS2011_Galvez.pdf" target="_blank" rel="external">Real-Time Loop Detection with Bags of Binary Words</a>;</li>
+<li><a href="http://doriangalvez.com/papers/GalvezTRO12.pdf" target="_blank" rel="external">Bags of Binary Words for Fast Place Recognition in Image Sequences</a></li>
+</ol>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本节到此结束，因为DBoW本身的原理和算法都比较简单也比较固定，所以引用了较多其他大神博客上的内容，在此表示感谢。DBoW2在SLAM应用中作为回环检测部分的应用较为广泛，值得深入学习。</p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SLAM移植系列---LSDSLAM]]></title>
+      <url>http://fangrenziwo.com/2016/10/15/transplant-lsd-slam-start/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-10-15
+</strong></p>
+<p>从本节开始，在SLAM理论学习之外，会开始对一些主流的SLAM框架进行移植，因为毕业设计的研究方向也是这个，所以之后会对主流的SLAM框架进行移植。之前在业余时间移植过ORBSLAM到Android上，之后会基于LSDSLAM出的在Android上运行的论文，来实现LSDSLAM在Android上的移植，同时熟悉一些移动端的优化方法。</p>
+<center><br><strong><br>转载请注明出处
+</strong><br></center>]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SLAM系列--深度估计的更新和传播]]></title>
+      <url>http://fangrenziwo.com/2016/09/23/cv-depthestimation-and-propagation/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-09-22
+</strong></p>
+<p>ORBSLAM原作者的新论文<a href="http://www.roboticsproceedings.org/rss11/p41.pdf" target="_blank" rel="external">《Probabilistic Semi Dense Mapping from Highly Accurate Feature-Based Method Monocular SLAM》</a>结合了原来自身的ORBSLAM的流程和LSD-SLAM中利用概率统计的方式实现半稠密的深度重建，群里的贺所长根据这篇论文和ORBSLAM2的源码，实现了在ORB上的半稠密重建过程。这几天对这份代码进行了仔细的研究，受益颇多，这里就结合该论文讲述下半稠密的重建步骤。<br>贺所长的博客：<a href="http://blog.csdn.net/heyijia0327/article/details/52464278" target="_blank" rel="external">http://blog.csdn.net/heyijia0327/article/details/52464278</a><br>Semi-Dense ORB：<a href="https://github.com/HeYijia/ORB_SLAM2" target="_blank" rel="external">https://github.com/HeYijia/ORB_SLAM2</a></p>
+<a id="more"></a>
+<h1 id="1-ORB-SLAM"><a href="#1-ORB-SLAM" class="headerlink" title="1.ORB-SLAM"></a>1.ORB-SLAM</h1><h2 id="1-1-ORB-SLAM简介"><a href="#1-1-ORB-SLAM简介" class="headerlink" title="1.1. ORB-SLAM简介"></a>1.1. ORB-SLAM简介</h2><p>ORB-SLAM是一种基于ORB特征的SLAM算法。该算法由Raul Mur-Artal，J. M. M. Montiel和Juan D. Tardos于2015年发表的。ORB-SLAM基于PTAM原有的架构思想，增加了Map的初始化部分和重复场景的Loop Closing部分，优化了关键帧的选取和地图构建的方法，在处理速度、追踪效果和地图精度上都取得了不错的效果。ORB-SLAM利用了几乎所有的当前的主流方法，而且开源的代码写的非常规范，对于做SLAM方向的有很大的借鉴意义。<br>原始的ORB-SLAM构建的Map是稀疏的，它一开始基于Monocular Camera，后来扩展到Stereo和RGB-D sensor上。以下所有的讲述都是基于Monocular(单目)的ORB进行讲述。<br>ORB-SLAM算法的一大特点是在所有步骤上统一使用ORB特征检测。ORB特征是一种非常快速的特征提取方法。具有旋转不变形，并可以利用金字塔构建出尺度不变性。使用统一的ORB特征有助于SLAM算法在特征提取和追踪、关键帧选取、三维重建和闭环检测等步骤中保持内在的一致性。</p>
+<h2 id="1-2-ORB-SLAM系统架构"><a href="#1-2-ORB-SLAM系统架构" class="headerlink" title="1.2. ORB-SLAM系统架构"></a>1.2. ORB-SLAM系统架构</h2><p>以下是ORB-SLAM的系统架构：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-9-22/17880010.jpg" alt=""><br>ORB-SLAM利用三个线程分别进行追踪、地图构建和闭环检测。</p>
+<h3 id="1-2-1-追踪"><a href="#1-2-1-追踪" class="headerlink" title="1.2.1. 追踪"></a>1.2.1. 追踪</h3><p>ORB-SLAM中的追踪过程如下：</p>
+<ol>
+<li>ORB特征提取；</li>
+<li>初始姿态估计（匀速度运动估计模型）；</li>
+<li>姿态优化（Track Local Map,利用邻近的地图点寻找更多的特征匹配，优化姿态）；</li>
+<li>选取关键帧</li>
+</ol>
+<h3 id="1-2-2-地图构建"><a href="#1-2-2-地图构建" class="headerlink" title="1.2.2. 地图构建"></a>1.2.2. 地图构建</h3><p>ORB-SLAM中的地图构建过程如下：</p>
+<ol>
+<li>加入关键帧（更新图）；</li>
+<li>验证最近加入的地图点（Outlier Removal）；</li>
+<li>生成新的地图点（三角法）；</li>
+<li>局部BA（该关键帧和邻近关键帧，去除Outlier）；</li>
+<li>验证关键帧（去除重复帧）；</li>
+</ol>
+<h3 id="1-2-3-闭环检测"><a href="#1-2-3-闭环检测" class="headerlink" title="1.2.3. 闭环检测"></a>1.2.3. 闭环检测</h3><p>ORB-SLAM中的闭环检测过程如下：</p>
+<ol>
+<li>选取相似帧（Bag of Words）；</li>
+<li>检测闭环（计算相似变换，RANSAC计算内点数）；</li>
+<li>融合三维点，更新图；</li>
+<li>图优化，更新地图所有点；</li>
+</ol>
+<h1 id="2-Probabilistic-Semi-Dense-SLAM"><a href="#2-Probabilistic-Semi-Dense-SLAM" class="headerlink" title="2. Probabilistic Semi Dense SLAM"></a>2. Probabilistic Semi Dense SLAM</h1><p>半稠密的ORB-SLAM是在原ORB-SLAM的基础上增加了一个半稠密的线程，对于原来的系统几乎没有影响，以下是Semi-Dense系统的架构：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-9-22/76867085.jpg" alt=""><br>图中虚线框中的流程和原ORB-SLAM的流程是一模一样的，只是在左下角部分增加了一个Semi-Dense Mapping的线程。</p>
+<h2 id="2-1-Semi-Dense流程"><a href="#2-1-Semi-Dense流程" class="headerlink" title="2.1. Semi-Dense流程"></a>2.1. Semi-Dense流程</h2><p>ORB-SLAM中的Semi-Dense Mapping流程如下：</p>
+<ol>
+<li><p>对于每一帧关键帧$K_i$，我们都去其图像求梯度图像，只有在梯度值满足门限要求的像素点才会被拿来进行计算，对于每一个这样的像素点$p_j$，对其在临近的N帧关键帧中做极线搜索和匹配，得到N个对于逆深度的假设；</p>
+</li>
+<li><p>考虑到极线匹配中可能存在的图像的噪声、视差和二义性，我们将逆深度表示为服从高斯分布的点；</p>
+</li>
+<li><p>由于我们的关键帧$K_i$和帧间旋转位移R，T都是通过特征提取和匹配后计算出来的，因此得到的是大基线的搜索区域。因此首先需要对得到的所有的逆深度假设进行Outlier并对保留下来的结果进行融合得到一个服从$N(\rho _p,\sigma _{\rho _p}^2)$分布的逆深度假设；</p>
+</li>
+<li><p>在得到了梯度区间的所有点的深度估计后，我门对整个逆深度图进行平滑，对每个像素点和其周围的像素点做均值处理，并判定该像素点和其周围的像素点是否兼容（判定方式同3）；</p>
+</li>
+<li><p>在当前关键帧和它邻近关键帧的逆深度图都计算完成后，对当前帧和其邻近帧之间的一致性进行判定，对判定后的深度图做Gauss-Newton优化，得到最终的深度图结果。</p>
+</li>
+</ol>
+<p>接下来的步骤会大致按照上述流程进行详细的讲述。</p>
+<h2 id="2-2-详细流程"><a href="#2-2-详细流程" class="headerlink" title="2.2. 详细流程"></a>2.2. 详细流程</h2><h3 id="2-2-1-立体搜索限制"><a href="#2-2-1-立体搜索限制" class="headerlink" title="2.2.1. 立体搜索限制"></a>2.2.1. 立体搜索限制</h3><p>对于每一个关键帧，因为都是经过原ORB-SLAM流程计算的，所以其有对应特征点的及其深度。我们能从所有特征点的深度中得到深度倒数（逆深度参数化）的最大值$\rho _{max}$和最小值$\rho {min}$利用这些值我们可以构造一个服从高斯分布的特征方程：$N(\rho _0,\sigma _{\rho_0}^2)$，其中$\rho_{max}=\rho _0 +2\sigma _{\rho_0}$，$\rho_{min}=\rho _0 -2\sigma _{\rho_0}$。同时，我们维护一个N帧的最近邻关键帧（这些关键帧之间有最多的重叠地图点）。同时，所有的流程都会延迟10帧左右，这样可以使得当前帧不但能使用前帧进行重建，同时也能使用后帧来进行重建。</p>
+<h2 id="2-2-2-极线搜索"><a href="#2-2-2-极线搜索" class="headerlink" title="2.2.2. 极线搜索"></a>2.2.2. 极线搜索</h2><p>极线搜索的示意图如下所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-9-22/24770208.jpg" alt=""><br>对于关键帧$K_i$中的某个像素点p，首先p的梯度必须大于门限值$\lambda _G$。对于满足该条件的p，我们会对其沿着极线$I_j$在$K_i$的每一个邻近帧$K_j$中进行搜索，并将其限制在范围$[\rho {min},\rho {max}]$之间。同时，极线$I_j$是通过$K_i$和$K_j$之间的基础矩阵$F_{ji}$计算得到的，为了简化步骤，将该方程表示为水平坐标$u_j$的方程：<br>$$ \matrix{<br>    x_j F_{ji} x_p=x_j^T I_j=0 \cr<br>    v_j =m \cdot u_j +n \cr<br>}\tag{1} $$<br>之前提过ORB是基于长基线的极线搜索，因此在进行极线搜索之前我们需要对像素点p先进行滤除，假设关键帧$K_i$的梯度图像为G，梯度的方向为$\Theta$，则像素点p对应的图像像素点为$I_p$，梯度为$G_p$，梯度的方向为$\Theta_p$，则其滤除规则为：</p>
+<ol>
+<li><p>$p_j$必须在高梯度值区域，即：$G(u_j)&gt;\lambda_G$；</p>
+</li>
+<li><p>梯度的方向不能和极线的方向垂直，即$|\Theta (u_j)-(\Theta _L +\pi)|&lt;\lambda<br>_L$，其中$\Theta_L$表示极线的角度；</p>
+</li>
+<li><p>$p-j$梯度的方向应该和$p_i$保持一致，即$|\Theta (u_j)-(\Theta_ (p_i)+\Delta \theta_{j,i})|&lt;\lambda _\theta $，其中$\Delta \theta_{j,i}$表示两帧间的ORB特征点的平均旋转角度；</p>
+</li>
+</ol>
+<p>当邻近帧上的对应特征点满足上述三个条件后，其可以用来进行下一步计算。为了对剩余的像素点进行比较，我们定义一个相似性误差$e(u_j)$：<br>$$ \matrix{<br>    e(u_j)={r_I^2 \over \sigma _I^2}+{r_G^2 \over \sigma _G^2} \cr<br>    r_I=I_p-I_(u_j) \cr<br>    r_G=G_p-G(u_j) \cr<br>} \tag{2} $$</p>
+<p>其中$r_I$是图像误差,$r_G$是梯度误差；$\sigma _I$和$\sigma_G$是对应的标准差。因为梯度是由亮度得到的方程，所以有$\sigma_G^2=\theta \sigma_I^2$。如果使用Scharr计算梯度的话$\theta=0.23$则相似性误差可以表示为：<br>$$e(u_j)=(r_I^2+{1\over \theta}r_G^2){1 \over \sigma_I^2} \tag{3}$$<br>我们选择能最小化该误差的坐标$u_0$得到对应的残差$r_{I_0}$和$r_{G_0}$。然后计算误差的偏导数：<br>$$ {\partial e \over \partial u_j}={-2(r_Ig+{1 \over \theta}r_G q) \over \sigma _I^2} \tag{4}$$<br>其中g是亮度梯度，q是亮度梯度的方差，即：<br>$$g \approx {I(u_j+1)-I(u_j-1) \over 2},q \approx {G(u_j+1)-G(u_j-1) \over 2} \tag{5} $$<br>对式(2)进行一阶泰勒展开，并让式(4)等于0，可以得到亚像素精度的像素更新值：<br>$$u_0^{*}=u_0+{g(u_0)r_I(u_0)+{1 \over \theta}q(u_0)r_G(u_0) \over g^2(u_0)+{1 \over \theta}q^2(u_0)} \tag{6} $$<br>由此可以得到：<br>$$ \sigma _{u_0^{*}}^2={2\sigma_I^2 \over g^2(u_0)+{1 \over \theta}q^2(u_0)} \tag{7} $$<br>$K_i$中的像素点p对应的逆深度$\rho_p$是关于$u_j$的方程，因此我们可以得到（也可以通过将世界坐标系中点投影到相机坐标系中得到）：<br>$$\rho _p(u_j)={r_z^{ji}{\bar X} _p(u_j-c_x)-f_x r_x^{ji}{\bar X} \over -t_z^{ji}(u_j-c_x)+f_xt_x^{ji}} \tag{8} $$<br>其中$r_z^{ji}$和$r_x^{ji}$分别表示旋转矩阵$R_{ji}$的第三和第一行；$t_z^{ji}$和$t_x^{ji}$表示平移矩阵$t_{ji}$的第三个和第一个元素，${\bar X} _p=K^{-1}x_p$表示通过像素p的投影点，K是校正参数，$f_x$和$c_x$是焦距和光心坐标。从式(8)我们可以推导出逆深度假设$N(\rho _j,\sigma _{\rho_j}^2)$，其表达式如下所示：<br>$$ \matrix{<br>    \rho_j=\rho_p(u_0^{*})  \cr<br>    \sigma _{\rho _j}=max(|\rho_p(u_0^{*}+\sigma _{u_0^{*}})-\rho _j|,|\rho_p(u_0^{*}-\sigma _{u_0^{*}})-\rho _j|) \cr<br>} \tag{9} $$</p>
+<h3 id="2-2-3-逆深度假设的融合"><a href="#2-2-3-逆深度假设的融合" class="headerlink" title="2.2.3. 逆深度假设的融合"></a>2.2.3. 逆深度假设的融合</h3><p>通过2.2.2节的极线搜索，我们得到了当前关键帧的中某个像素点从邻近帧或者的多个关于深度的逆深度假设值$\rho _j$.假设当前得到的逆深度假设有M个，我们需要从这M个中找到最少$\lambda N$个相互兼容的假设，并将其进行融合。假设之间是否兼容的判定标准是检查二者之间兼容性的$\chi$分布测试是否大于95%。判定准则如下：<br>$${(\rho _a -\rho _b)^2 \over \sigma _a ^2}+{(\rho _a -\rho _b)^2 \over \sigma _b ^2}&lt;5.99   \tag{10}$$</p>
+<p>我们从M个假设中任意选取一个，并与其他所有的假设做比较，如果兼容的个数$ n &gt; \theta N$，则将这n个假设进行融合，得到关于像素点P的逆深度高斯分布$N(\rho_p,\sigma _{\rho _p}^2)$:<br>$$ \rho _p ={ {\sum _{n} {1 \over \sigma _{\rho _j}^2} \rho _j} \over {\sum _{n} {1 \over \sigma _{\rho_j}^2}}},\sigma _{\rho_p}^2={1 \over {\sum _{n} {1 \over \sigma _{\rho_j}^2}}} \tag{11} $$</p>
+<h3 id="2-2-4-帧内深度检查、平滑和增长"><a href="#2-2-4-帧内深度检查、平滑和增长" class="headerlink" title="2.2.4. 帧内深度检查、平滑和增长"></a>2.2.4. 帧内深度检查、平滑和增长</h3><p>在计算完半稠密的逆深度图之后，我们需要对该逆深度图进行过滤、平滑和增长。首先我们计算包围某个逆深度点的8个邻近点和该逆深度点的兼容性，其计算过程同式(10)。如果兼容的邻近点大于2，则保留该点，否则，丢弃该点。所有被保留的逆深度点都会利用式（11）和它兼容的邻近点求平均以平滑该逆深度点。在该步骤之后进行一个增长步骤，对于那些满足梯度要求但是不存在深度的像素段，如果其邻近的8个点中至少存在2个点存在逆深度，则该点设置为邻近点逆深度的平均值。该步骤可以让重建的深度图更稠密。</p>
+<h3 id="2-2-5-帧间深度检验和平滑"><a href="#2-2-5-帧间深度检验和平滑" class="headerlink" title="2.2.5. 帧间深度检验和平滑"></a>2.2.5. 帧间深度检验和平滑</h3><p>当关键帧$K_i$的邻近关键帧都计算完毕之后，开始对逆深度图$K_i$中所有的逆深度分布的一致性进行检验。对于$K_i$中背个存在逆深度的像素点p，将其对应的3D点投影到每一个邻近关键帧$K_j$中，并按照下式计算对应的逆深度：<br>$$ \matrix{<br>    x_j=KR_{ji}{1 \over \rho _p} {\bar X} _p ++Kt_{ji} \cr<br>    \rho _j={\rho _p \over r_z^{ji}{\bar X} _p+\rho _p t_z^{ji}} \cr<br>} \tag{12}$$<br>由于得到的$x_j$可能不为整数，我们寻找包围$x_j$的四个像素点$p_{j,n}$中和该点兼容的逆深度，其兼容性检验方程为：<br>$$ {(\rho _j -\rho _{j,n}) \over \sigma _{\rho_{j,n}}^2}&lt;3.84 \tag{13} $$<br>当在4个点中至少有一个点满足检验条件时，该邻近帧中点的深度就将被保留。当在所有邻近帧中至少有$\lambda N$帧满足前述检验条件，则该关键帧中的逆深度值得以保留。<br>最后一步，我们对所有兼容的像素点进行Gauss-Newton优化来最小化如下定义的深度误差：<br>$$ d_p^{*}=min \sum_{j,n}(d_{j,n}-d_p r_z^{ji}{\bar X}-t_z^{ji})^2{1 \over d_{j,n}^4\sigma _{\rho _{j,n}}^2} \tag{14} $$<br>这里我们的优化变量是深度而非逆深度，因为传播方程(12)是关于深度的线性方程，并且优化增量$d_p^{*}$能在一次迭代就得到结果。</p>
+<h2 id="2-3-总结"><a href="#2-3-总结" class="headerlink" title="2.3. 总结"></a>2.3. 总结</h2><p>经过上述步骤后，帧间的深度会从前帧传播到后帧，然后我们就可以通过三角化得到半稠密的重建地图，以下是半稠密重建的结果：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-9-23/94189671.jpg" alt=""></p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SLAM系列--Camera Pose的求解(Direct Method)]]></title>
+      <url>http://fangrenziwo.com/2016/09/16/cv-direct-method-camera-pose/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-09-16
+</strong></p>
+<p>在SLAM前端，即视觉里程计(Visual Odometry)中，主流的求解相机姿态(Camera Pose)的方式有以下两种，一种是基于特征的(Feature-Based)VO，一种是直接法(Direct Method)求VO，本节从比较Feature-Based VO和Direct-Method VO出发，开始讲解利用Direct Method求解Camera Pose的过程。</p>
+<a id="more"></a>
+<h1 id="1-VO对比"><a href="#1-VO对比" class="headerlink" title="1. VO对比"></a>1. VO对比</h1><p>Feature-Based VO和Direct-Method VO之间的最大区别就是其求取相机姿态时构建最优化表达式所基于的假设不同。在Feature-Based VO中，是利用最小化图像点的重投影误差来求取的；而在Direct-Method VO中，则是利用最小化图像点和投影后的对应点的图像像素差来得到相机姿态的。</p>
+<h2 id="1-1-Feature-Based-VO"><a href="#1-1-Feature-Based-VO" class="headerlink" title="1.1. Feature-Based VO"></a>1.1. Feature-Based VO</h2><p>Featured-Based VO在很多年来都是VO方向的经典解法。其基本思想是对前后两帧图像做特征提取和匹配，得到一系列特征的匹配对，然后利用匹配对中前帧中的特征点和初始的相机姿态估计，将这些特征点利用初始的姿态投影到第二帧，然后求投影后的点和第二帧中的匹配点之间的误差，并对其做非线性优化，得到最终的相机姿态，其中，特征点的投影和重投影过程利用的公式就是在张正友标定法中用到的投影方程，如下所示：<br> $${1 \over Z_c}\left[ {\matrix{<br>   u  \cr<br>   v  \cr<br>   1  \cr<br> } } \right] = \left[ {\matrix{<br>   {f \over S_x} &amp; r &amp; u_0  \cr<br>   0 &amp; {f \over S_y} &amp; v_0  \cr<br>   0 &amp; 0 &amp; 1  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   R_{3 \times 3} &amp; T_{3 \times 1}  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   X_w  \cr<br>   Y_w  \cr<br>   Z_w  \cr<br>   1  \cr<br> } } \right] = K_{3 \times 3} \cdot \left[ {\matrix{<br>   R_{3 \times 3} &amp; T_{3 \times 1}  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   X_w  \cr<br>   Y_w  \cr<br>   Z_w  \cr<br>   1  \cr<br> } } \right] \tag{1}$$<br> 公式最左边的$\left[ \matrix{<br>   u  \cr<br>   v  \cr<br>   1  \cr<br> }  \right]$表示图像上的特征点所在的齐次坐标，而公式右边则是投影到世界坐标系后对应坐标点的齐次表示。利用该公式可以将第一帧图像上的点先投影到世界坐标系中，然后从世界坐标系中投影回第二帧图像中，之后我们计算投影后的坐标点和匹配子在第二帧坐标点之间的误差来构造能量函数，并对其做非线性优化来最小化重投影误差。其投影和重投影的示意图如下所示：<br> <img src="http://o9n30cpt4.bkt.clouddn.com/16-9-16/80095493.jpg" alt=""><br> 其构造的能量函数为：<br> $$T_{k,k-1}=arg \min \sum_{i}||u^{‘}_i- \pi(p_i)||_{\sum}^2 \tag{2} $$</p>
+<h2 id="1-2-Direct-Method-VO"><a href="#1-2-Direct-Method-VO" class="headerlink" title="1.2. Direct-Method VO"></a>1.2. Direct-Method VO</h2><p> Direct-Method （直接法）是近几年新出现的VO的解法，伴随着SVO，LSD-SLAM等SLAM项目的发布而流行。Direct-Method的思想是其并不会对前后两帧的图像做特征匹配，也许会有特征的提取（如SVO），但避过了耗时的特征匹配过程，而是利用如下假设：在微小的运动中，前后帧对应点之间的灰度变化很微小，即灰度恒定的假设，因此，直接法采用的方式是将当前帧的显著像素点通过式(1)投影到第二帧，然后取投影后的点的像素值，和当前帧对应的像素值，同样构造能量函数，然后对构造的能量函数做非线性优化来最小化图像测量误差。其示意图如下：<br> <img src="http://o9n30cpt4.bkt.clouddn.com/16-9-16/26401005.jpg" alt=""><br> 利用该方式构造的通用能量函数为：<br> $$T_{k,k-1}=arg \min \sum_{i}||I_k(u^{‘}_i)- I_{k-1}(u_i)||_{\sum}^2 \tag{3} $$<br> 其中,$u^{‘}_i= \pi (T \cdot (\pi ^{-1}(u_i) \cdot d))$。</p>
+<h2 id="1-3-两种方式的对比"><a href="#1-3-两种方式的对比" class="headerlink" title="1.3. 两种方式的对比"></a>1.3. 两种方式的对比</h2><p> 下图是一幅关于两种方式的对比图：<br> <img src="http://o9n30cpt4.bkt.clouddn.com/16-9-16/5812517.jpg" alt=""><br> 从图中我们可以知道：</p>
+<ol>
+<li>基于特征匹配的VO能适用于大场景的帧间运动，并且可以利用Bundle Adjustment对Struct和Motion进行优化得到姿态的精确解，这是其优势，但是由于其涉及特征提取和特征匹配，因此其非常耗时，并且对特征匹配而言，其可能存在相当一部分的误匹配，因此还需要对匹配后的结果进行滤除（RANSAC），这也是一个耗时的过程。</li>
+</ol>
+<ol>
+<li>基于直接法的VO因为不需要提取特征，所以能省略这一部分的时间。而且像素恒定的方式能利用上图像中几乎所有的有用信息，因此会更精确，也会更鲁棒。但灰度恒定的假设只能容忍微小的图像运动，因此该方式对相机的运动速度有很大的限制，另一方面，由于该方式利用了几乎所有的像素点，其对于稠密重建和运动的计算和优化非常的耗时，甚至DTAM在PC上也需要GPU和CUDA的配合才能实现实时重建。</li>
+</ol>
+<h1 id="2-Direct-Method"><a href="#2-Direct-Method" class="headerlink" title="2. Direct-Method"></a>2. Direct-Method</h1><p> 直接法的SLAM是利用Minimizing the Photometric error(最小化测量误差)来实现对姿态的求解。其基本假设是：同一个空间点在各视角下，测到的灰度保持恒定不变。</p>
+<h2 id="2-1-问题描述"><a href="#2-1-问题描述" class="headerlink" title="2.1. 问题描述"></a>2.1. 问题描述</h2><p> 对于给定的两幅图像，$I_1$和$I_2$，我们需要求解从$I_1$到$I_2$之间的转换Pose，即$T_{21}$。<br> 假设对于$I_1$中任意像素点$u_i$，我们将它反投影到空间点的坐标为：$p_i$，然后将$p_i$投影到第二个图中，得到$u_i$在第二幅图像中的对应点$u_i^{‘}$，因此，根据假设我们可以得到该像素点的图像测量误差为：$e_i=I_1(u_i)-I_2(u^{‘}_i)$，我们对所有像素点构造器L2范数并对其求和可以得到如下的全局能量函数：<br> $$min J=\sum_{i=1}^N e_i^T e_i \tag{4} $$</p>
+<h2 id="2-2-模型建立"><a href="#2-2-模型建立" class="headerlink" title="2.2. 模型建立"></a>2.2. 模型建立</h2><p> 由像素点的投影关系：<br> $$u_i=\left[\matrix{u \cr v \cr 1 \cr}\right]_i=C(Rp_i+t)=\left[\matrix{f_x &amp; 0 &amp; c_x \cr 0&amp; f_y &amp; c_y \cr 0&amp;0&amp;1 \cr}\right][R,t]\left[\matrix{p_x \cr p_y \cr p_z \cr 1 \cr}\right] \tag{5} $$<br>我们不妨假设$I_1$的相机Pose为I，$I_2$的相机Pose为R,t，那么，我们可以得到如下关系：<br>$$ \matrix{u_i=Cp_i \cr u^{‘}_i=C(Rp_i+t)} \tag{6} $$<br>则目标函数的形式为：<br>$$ min J =\sum _{i=1}^N ||I_1(Cp_i)-I_2(C(Rp_i+t))||_2^2 \tag{7} $$</p>
+<h2 id="2-3-模型求解"><a href="#2-3-模型求解" class="headerlink" title="2.3. 模型求解"></a>2.3. 模型求解</h2><p>根据上述建立的模型，我们的直接法解姿态就变成了以非线性优化方法来解式(7)。而对于目标函数的取值，其只与R和t有关，和其他表示量都没有关系，因此我们只对R和t进行优化；另一方面，在李群上，R和t是没有加法的，而且其也不好求导，因此我们将R和t转换到李代数上求解，而使用李代数$\xi$来表达相机姿态可以得到如下形式：<br>$$T=\left[\matrix{R &amp; t \cr 0^T &amp;1 \cr}\right]=exp(\xi ^\wedge) \tag{8} $$<br>因此目标函数可以转换为：<br>$$ min J =\sum _{i=1}^N ||I_1(Cp_i)-I_2(Cexp(\xi ^\wedge)p_i)||_2^2 \tag{9} $$</p>
+<p>对于该目标函数的求解，我们之前已经大致的介绍过了利用梯度下降法或者Gauss-Newton法和LM方法来进行求解，这里会对这些方法进一步的深化。梯度下降法的思想是利用误差项对自变量求梯度，通过梯度来获得自变量的增量更新。在该目标函数中，我们设单个误差项为：<br>$$ e_i=I_1(Cp_i)-I_2(Cexp(\xi ^\wedge)p_i) \tag{10} $$<br>误差项对自变量的梯度为：$J_i={\partial e_i \over \partial \xi }$， 利用该梯度对误差项进行更新，而Gauss-Newton迭代则是：<br>$$(\sum _{i=1}^N J_i^T J_i) \delta \xi ^* =-\sum _{i=1}^N J_i e_i \tag{11}$$<br>或者可以表示为：$H \delta \xi ^* =-b$，这里是利用$J_i$的转置乘以自身来近似目标函数的二阶导数项以减小计算量。<br>目标函数的非线性优化问题概念本身不难，但是在该目标函数中，$J_i={\partial e_i \over \partial \xi }$的计算则是一个关键的问题。对于单个误差项而言，第一项与$\xi$无关，因此只需要对第二项求导数。这里我们假设<br>$$ \matrix{ q=exp(\xi ^\wedge)p \cr u=Cq \cr} \tag{12} $$<br>其中第一个为变换方程，从世界坐标系变换到本地；第二个为投影方程，从空间点投影到像素点。<br>根据链式法则，有：<br>$$ J_i=-{\partial I_2 \over \partial u}{\partial u \over \partial q}{\partial q \over \partial \xi} \tag{13}$$<br>公式中三项分别为：图像对像素求导，像素对空间点求导和空间点对李代数求导。</p>
+<p>我们对上式从右到左分别进行分析：</p>
+<ol>
+<li><p>对于q，我们对$exp(\xi)$ 左乘一个$exp(\partial \xi ^\wedge)$，得到：<br>$$ {\partial q \over \partial (\partial \xi)}={exp(\partial \xi ^\wedge)exp(\xi ^\wedge)p-exp(\xi ^\wedge)p \over \partial \xi}=(exp(\xi ^\wedge)p)^ \odot \tag{14} $$<br>$\odot$运算符把$ 4 \times 1$的向量变成$4 \times 6$的矩阵：<br>$$q^ \odot =\left[\matrix {q_3 \cr 1 \cr }\right]^ \cdot =\left[\matrix{I_{3 \times 3} &amp; -q_3^\wedge \cr 0_{1 \times 3}^T &amp; 0_{1 \times 3}^T \cr}\right] \tag{15} $$<br>舍弃掉q最后的1，导数变为：<br>$$ {\partial q \over \partial (\partial \xi)}=[I_{3 \times 3}-q_3^\wedge] \tag{16} $$<br>这是一个$3 \times 6$的阵。</p>
+</li>
+<li><p>对于中间项$\partial u \over \partial q $，由<br>$$s \left[\matrix{ u \cr v \cr 1 \cr}\right]=\left[\matrix{f_x &amp; 0&amp;x_x \cr 0 &amp;f_y&amp;c_y \cr 0&amp;0&amp;1 \cr}\right]\left[\matrix{x \cr y \cr z \cr}\right] \tag{17} $$<br>可以得到：<br>$$ \matrix{<br>u={f_x x \over z}-c_x \cr<br>v={f_y y \over z}-c_y \cr<br>} \tag{18} $$<br>由此可得：<br>$$ {\partial u \over \partial q}=\left[\matrix{\partial u \over \partial x &amp; \partial u \over \partial y &amp; \partial u \over \partial z \cr \partial v \over \partial x &amp;\partial v \over \partial y&amp; \partial v \over \partial z \cr}\right] =\left[\matrix{f_x \over z &amp; 0 &amp; -f_x x \over z^2 \cr 0 &amp; f_y \over z &amp; -f_y y \over z^2 \cr}\right] \tag{19} $$</p>
+</li>
+<li><p>对于左边项$ \partial I_2 \over \partial u$，其为像素梯度。<br>$$ {\partial I_2 \over \partial u}=\left[ \matrix{I_2(u+1,v)-I_2(u,v) &amp; I_2(u,v+1)-I_2(u,v) \cr}\right] \tag{20} $$<br>由于[u,v]通常为浮点数，因此需要对图像进行插值。</p>
+</li>
+</ol>
+<p>对于以上三项而言，因为后面两项和图像没有关系，因此通常把后面两项乘到一起，得到如下公式：<br>$${\partial u \over \partial q} {\partial q \over \partial \xi}=\left[\matrix{f_x \over z &amp; 0 &amp; -f_x x \over z^2 \cr 0 &amp; f_y \over z &amp; -f_y y \over z^2 \cr}\right][I_{3 \times 3}-q_3^\wedge] =\left[\matrix{<br>f_x \over z &amp; 0 &amp; -f_x x \over z^2 &amp; f_x xy \over z^2 &amp; -f_x-{f_x x^2 \over z^2} &amp;-f_x y \over z \cr<br>0 &amp; f_y \over z &amp; -f_y y \over z^2 &amp; f_y-{f_y y \over z} &amp; -f_y xy \over z^2  &amp;-f_y y \over z \cr<br>}\right] \tag{21} $$<br>其物理意义为当像素点变化时，图像的灰度值的变化情况。</p>
+<p>计算了上述三项后，我们就得到了梯度的表达式，可以利用该表达式结合GN或者LM方法对相机姿态进行非线性优化了。</p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SLAM系列--RANSAC和EPNP算法]]></title>
+      <url>http://fangrenziwo.com/2016/09/08/cv-ransac-epnp/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-09-03
+</strong></p>
+<p>在Feature-Based SLAM中， 在利用特征检测算子对前后两帧进行了特征检测和匹配后，得到的结果可能有很大的误差，因为可能会存在误匹配的情况，这会使得计算获取的位姿精度降低，因此我们需要对匹配结果进行滤波和优化，而在此过程中最经典的就是利用RANSAC(RANdom SAmple Consensus ，随机采样一致性)算法。而在优化了匹配结果后，我们需要利用该结果来计算两帧之间的相对运动（即旋转R和平移t），而这部分可以利用本节将要讲述的EPNP算法来进行求解。因此，本节会按照上述的顺序先介绍RANSAC算法的基本原理，然后再介绍EPNP算法的原理。<br><a id="more"></a></p>
+<h1 id="1-RANSAC算法"><a href="#1-RANSAC算法" class="headerlink" title="1. RANSAC算法"></a>1. RANSAC算法</h1><h2 id="1-1-RANSAC算法基础"><a href="#1-1-RANSAC算法基础" class="headerlink" title="1.1. RANSAC算法基础"></a>1.1. RANSAC算法基础</h2><h3 id="1-1-1-算法的基本假设"><a href="#1-1-1-算法的基本假设" class="headerlink" title="1.1.1. 算法的基本假设"></a>1.1.1. 算法的基本假设</h3><ol>
+<li>数据是由”局内点”组成，例如：数据的分布可以用一些模型参数来解释；</li>
+<li>“局外点”是不能适应该模型的数据；</li>
+<li>除此之外的数据属于噪声。</li>
+</ol>
+<p>局外点产生的原因有：噪声的极值；错误的测量方法；对数据的错误假设。<br>RANSAC也做了以下假设：给定一组（通常很小的）局内点，存在一个可以估计模型参数的过程，而该模型能够解释或者适用于局内点。</p>
+<h3 id="1-1-2-算法示例"><a href="#1-1-2-算法示例" class="headerlink" title="1.1.2. 算法示例"></a>1.1.2. 算法示例</h3><p>一个简单的例子就是从一组观测数据中找出合适的二维直线。假设观测数据中包含局内点和局外点，其中局内点近似的被直线所通过，而局外点远离直线。简单的最小二乘法不能找到适应于局内点的直线，原因是最小二乘法尽量去适应包括局外点在内的所有点。相反，RANSAC能得出一个仅仅利用局内点计算出模型，并且概率还足够高。但是，RANSAC并不能保证结果一定正确，为了保证算法有足够高的合理概率，我们必须小心的选择算法的参数。图示如下所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-9-8/40415416.jpg" alt="">  <img src="http://o9n30cpt4.bkt.clouddn.com/16-9-8/29105637.jpg" alt=""></p>
+<p>上一张图表示包含很多局外点的数据集，而右图则是RANSAC找到的直线（局外点并不会影响结果）。</p>
+<h3 id="1-1-3-算法概述"><a href="#1-1-3-算法概述" class="headerlink" title="1.1.3. 算法概述"></a>1.1.3. 算法概述</h3><p>RANSAC算法的输入是一组观测数据，一个可以解释或者适应于观测数据的参数化模型，一些可信的参数。<br>RANSAC通过反复选择数据中的一组随机子集来达成目标。被选取的子集被假设为局内点，并用下述方法进行验证：</p>
+<ol>
+<li>有一个模型适应于假设的局内点，即所有的未知参数都能从假设的局内点计算得出；</li>
+<li>用1中得到的模型去测试所有的其他数据，如果某个点适应于估计的模型，认为它也是局内点。</li>
+<li>如果有足够多的点被归类于假设的局内点，那么估计的模型就足够合理；</li>
+<li>然后，用所有假设的局内点去重新估计模型，因为它仅仅被初始的假设局内点估计过；</li>
+<li>最后，通过估计局内点与模型的错误率来评估模型。</li>
+</ol>
+<p>这个过程被重复执行固定的次数，每次产生的模型要么因为局内点太少而被舍弃，要么因为比现在的模型更好而被选用。</p>
+<h3 id="1-1-4-RANSAC的优劣"><a href="#1-1-4-RANSAC的优劣" class="headerlink" title="1.1.4. RANSAC的优劣"></a>1.1.4. RANSAC的优劣</h3><p>RANSAC的优点：是能鲁棒的估计模型参数。例如，它能从包含大量局外点的数据集中估计出高精度的参数。<br>RANSAC的缺点：计算参数的迭代次数没有上限，如果设置迭代次数的上限，得到的结果可能不是最优的结果，甚至可能得到错误的结果。RANSAC只有一定的概率得到可信的模型，概率与迭代次数成正比。另一个缺点是它要求设置跟问题相关的阈值。而且RANSAC只能从特定的数据集中估计出一个模型，如果存在两个（或多个）模型，RANSAC不能找到别的模型。<br>总之，在一组包含局内点的数据集中，采用不断迭代的方法寻找参数模型。</p>
+<h2 id="1-2-RANSAC算法用于消除图像误匹配原理"><a href="#1-2-RANSAC算法用于消除图像误匹配原理" class="headerlink" title="1.2. RANSAC算法用于消除图像误匹配原理"></a>1.2. RANSAC算法用于消除图像误匹配原理</h2><h3 id="1-2-1-算法原理"><a href="#1-2-1-算法原理" class="headerlink" title="1.2.1. 算法原理"></a>1.2.1. 算法原理</h3><p>利用RANSAC算法来消除图像误匹配的原理，是利用RANSAC算法来寻找一个最佳单应性矩阵，矩阵大小为$3 \times 3$，目的是找到一个最优的参数矩阵，使得满足该矩阵的数据点数最多，通常令$ h_{33}=1$，由于单应性矩阵有8个位置参数，所以需要8个线性方程求解。对应到点位置信息上，一组点对可以列出两个方程，则至少包含4组匹配点对。，公式如下所示：（也可以 关于张正友标定 的讲述中找到该部分）<br>$$ s \left[\matrix{ x’ \cr y’ \cr 1 \cr}\right]=\left[\matrix{h_{11}&amp;h_{12}&amp;h_{13} \cr h_{21}&amp;h_{22}&amp;h_{23} \cr h_{31}&amp;h_{32}&amp;1 \cr}\right] \left[\matrix{x \cr y \cr 1 \cr}\right] \tag{1} $$</p>
+<p>其中，$(x,y) $表示目标图像的角点位置，$(x’,y’)$为场景图像角点位置。s为尺度参数。</p>
+<p>RANSAC算法从匹配数据集中随机抽取四个样本并保证这四个样本之间不共线。计算出单应性矩阵，然后利用这个模型测试所有数据，并计算满足这个模型数据点的个数和投影误差（即代价函数）若此模型为最优模型，则对应的代价函数最小：<br>$$\sum_{i=1}^{n}((x_i^{‘}{h_{11}x_i+h_{12}y_i+h_{13} \over h_{31}x_i+h_{32}y_i+h_{33} })^2+(y_i^{‘}{h_{21}x_i+h_{22}y_i+h_{23} \over h_{31}x_i+h_{32}y_i+h_{33} })^2) \tag{2} $$</p>
+<h3 id="1-2-2-算法步骤"><a href="#1-2-2-算法步骤" class="headerlink" title="1.2.2. 算法步骤"></a>1.2.2. 算法步骤</h3><ol>
+<li>随机从数据集中随机抽出4个样本数据（此四个样本之间不共线）计算出变换矩阵H，记为模型M；</li>
+<li>计算数据集中所有数据与模型M的投影误差，若误差小于阈值，加入内点集I；</li>
+<li>如果当前内点集元素个数大于最优内点集$I_{best}$，则更新$I_{best}=I$，同事更新迭代次数k；</li>
+<li>如果迭代次数大于k，则退出；否则迭代次数加1，并重复上述步骤；</li>
+</ol>
+<p>注：迭代次数k在不大于最大迭代次数的情况下，是在不断更新而不是固定的。<br>$$ k={log(1-p) \over log(1-w^m)} \tag{3} $$<br>其中，p为置信度，一般取为0.995，w为内点的比例，m为计算模型所需要的最小样本数；</p>
+<p>** 转载来源：<a href="http://www.cnblogs.com/xrwang/archive/2011/03/09/ransac-1.html" target="_blank" rel="external">随机抽样一致性算法（RANSAC）</a>;</p>
+<h1 id="2-EPnP算法"><a href="#2-EPnP算法" class="headerlink" title="2. EPnP算法"></a>2. EPnP算法</h1><p>PnP是利用已知匹配点对以及相机内参来求解相机位姿的算法，而EPnP则是针对$n \geq 3$情况下相机位姿求解的O(n)时间的算法。</p>
+<h2 id="2-1-基本表示"><a href="#2-1-基本表示" class="headerlink" title="2.1. 基本表示"></a>2.1. 基本表示</h2><p>相机坐标用$F^c$表示，世界坐标系用$F^w$表示，任何一点可以用四个控制点$c_j$表示，其中，世界坐标系中的点$p_i^w$可以表示为：<br>$$p_i^w=\sum_{j=1}^{4} \alpha _{ij} c_j^w , with \sum_{j=1}^{4}\alpha _{ij}=1 \tag{4} $$<br>对于相机坐标系中的点$ p_i^c$,有：<br>$$ p_i^c=\sum_{j=1}^{4} \alpha _{ij} c_j^c , with \sum_{j=1}^{4}\alpha _{ij}=1 \tag{5} $$<br>对于上面的公式来说，首先需要说明的是$ \alpha _{ij}$确实存在，因为$c_j^w$构成的方程组是非正定的，所以一定存在解。<br>理论上来说，控制点可以随便选择，这里选择控制点为参考点的中心，其他的点在PCA得到的主轴上单位长度处，从而提高算法的稳定性。</p>
+<h2 id="2-2-控制点在相机坐标系的坐标"><a href="#2-2-控制点在相机坐标系的坐标" class="headerlink" title="2.2. 控制点在相机坐标系的坐标"></a>2.2. 控制点在相机坐标系的坐标</h2><p>根据投影方程得到世界坐标系中参考点坐标和相机坐标系中参考点的约束关系：<br>$$ \forall i, w_i\left[\matrix{u_i \cr v_i \cr 1 \cr}\right]=A p_i^c=A\sum_{j=1}^{4}\alpha _{ij}c_j^c \tag{6} $$<br>写成矩阵的形式为：<br>$$ \forall i, w_i\left[\matrix{u_i \cr v_i \cr 1 \cr}\right]=\left[\matrix{f_u &amp; 0 &amp; u_c \cr 0 &amp; f_v &amp; v_c \cr 0 &amp; 0 &amp; 1 \cr}\right] \sum_{j=1}^{4} \alpha _{ij} \left[\matrix{x_j^c \cr y_j^c \cr z_j^c \cr}\right] \tag{7} $$</p>
+<p>将等式拆解，从第三行得到：<br>$$ w_i=\sum _{j=1}^{4} \alpha_{ij} z_j^c \tag{8} $$<br>将$w_i$代入一二行，可以得到如下等式：<br>$$ \matrix{<br>\sum_{j=1}^{4} \alpha _{ij} f_u x_j^c + \alpha _{ij} (u_c-u_i)z_j^c =0 \cr<br>\sum_{j=1}^{4} \alpha _{ij} f_v y_j^c + \alpha _{ij} (v_c-v_i)z_j^c =0 \cr<br>} \tag{9} $$</p>
+<p>因此，可以得到如下线性方程组：<br>$$ x={\left[\matrix{c_1^{cT} &amp; c_2^{cT} &amp; c_3^{cT} &amp; c_4^{cT} \cr}\right]}^T \tag{10} $$</p>
+<p>上面的方程中，四个控制点总共12个未知变量，M为$2n \times 12 $的矩阵。因此，x属于M的右零空间，$v_i$为矩阵M的右奇异向量，可以通过求解$M^TM$的零空间的特征值得到。<br>$$ x=\sum_{i=1}^{N} \beta _i v_i \tag{11} $$</p>
+<p>说明：使用$M^TM$比使用M计算量更小，因为$M^TM$的求解释常数复杂度，而M是$O(n^3)$的复杂度，但是计算$M^TM$的复杂度是$O(n)$的。</p>
+<h2 id="2-3-选择合适的线性组合"><a href="#2-3-选择合适的线性组合" class="headerlink" title="2.3. 选择合适的线性组合"></a>2.3. 选择合适的线性组合</h2><p>上面的求解的x中，需要确定$\beta _i$，也就是确定合适的线性组合。根据参考点的位置不同，矩阵$M^TM$的零空间维度可能为N=1-&gt;4维。求解$\beta$的策略是控制点在坐标系$F^w$和$F^c$中，两两之间的距离是相同的，而x的3K+1-&gt;3K分量表示不用控制点在相机坐标系中的坐标，总共有$C_4^2=6$个约束。<br>如果N=1，则根据约束有：<br>$$||\beta v^{|i|}-\beta v^{|j|}||^2=||c_i^w-c_j^w||^2 \tag{12} $$<br>所以：<br>$$\beta ={\sum _{|i,j| \in |i;4|} ||v^{|i|}-v^{|j|}|| \cdot ||c_i^w-c_j^w||} \over \sum _{|i,j| \in |i;4|} ||v^{|i|}-v^{|j|}||^2 \tag{13} $$<br>如果N=2，<br>$$||\beta _1 v_1^{[i]}+\beta _2 v_2^{[i]}-(\beta _1 v_1^{[j]}+\beta _2 v_2^{[j]})||^2=||c_i^w-c_j^w||^2 \tag{14}$$<br>由于$\beta_1$和$\beta_2$只以二次项出现在方程中，记$\beta =\left[\matrix{\beta_1^2 &amp; \beta_1 \beta_2 &amp; \beta_2^2 \cr}\right]^T$，$\rho$的每一项为$||c_i^w-c_j^w||^2$，得到相面的方程：<br>$$ L\beta =\rho \tag{15} $$<br>其中L是由$v_1$和$v_2$构成的$6 \times 3$的矩阵。<br>上面的方程可以通过$\beta=(L^TL)-1L^T \rho$得到，然后通过选择合适的符号从$\beta_1^2 , \beta_1 \beta_2 , \beta_2^2 $使得所有的$p_i^c$有正的z坐标。<br>如果N=3则和N=2差不多，唯一的区别在于使用的是L的逆，而不是伪逆，此时的L是$6 \times 6$的矩阵。<br>前面的步骤可以得到目标点在相机坐标系中的闭式解，作为G-N优化的初始值，优化的变量为$\beta=\left[\matrix{\beta_1,\beta_2,\cdots , \beta_N \cr}\right]^T$，目标函数为：<br>$$ Error(\beta) = \sum_{(i,j)s.t.i&lt;j}(||c_i^c-c_j^c||^2-||c_i^w-c_j^w||^2) \tag{16} $$<br>该优化过程和参考点的数目无关，优化步骤和时间是常数。</p>
+<h2 id="2-4-计算R-t"><a href="#2-4-计算R-t" class="headerlink" title="2.4. 计算R,t"></a>2.4. 计算R,t</h2><p>前面的两步计算不同维数的零空间的误差，选择误差最小维数对应的$\beta$，从而得到x，恢复出控制点在相机坐标系中的坐标并根据质心坐标系数得到参考点在相机坐标系中的坐标。剩下的工作就是已知一组点云在两个坐标系中的坐标，求两个坐标系的位姿变换。步骤如下：</p>
+<ol>
+<li>求中心点，$p_c^c={\sum p_c^i \over N},p_w^c={\sum p_w^i \over N}$；</li>
+<li>去中心，$q_c^i=p_c^i-p_c^c,q_w^i=p_w^i-p_w^c$；</li>
+<li>计算H矩阵，$H=\sum_{i=1}^{N}q_c^i q_w^{iT} $；</li>
+<li>对H进行SVD分解，$H=U \Lambda V^T $；</li>
+<li>计算$X=VU^T$，如果$det(x)=1$，则$R=X$，$t=P_c^c -R P_w^c$。否则$R(2,\cdot)=-R(2,\cdot)$；</li>
+</ol>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+
+
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SLAM系列---SVD分解]]></title>
+      <url>http://fangrenziwo.com/2016/09/03/cv-svd/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-09-03
+</strong></p>
+<p>在SLAM中，无论是计算Homography Matrix，Fundamental Matrix，还是做三角化(Triangulation)时，都会用到最小二乘法。而在最小二乘法中的最常用的解法就是SVD（Singular Value Decomposition）分解。本节就讲述SVD分解的基本概念以及其在最小二乘法中的应用和证明。</p>
+<a id="more"></a>
+<h1 id="1-数学基础"><a href="#1-数学基础" class="headerlink" title="1. 数学基础"></a>1. 数学基础</h1><h2 id="1-1-正交矩阵"><a href="#1-1-正交矩阵" class="headerlink" title="1.1. 正交矩阵"></a>1.1. 正交矩阵</h2><p>正交矩阵是在欧几里得空间里的叫法，在酉空间里面叫做酉矩阵，一个正交矩阵对应的变换叫做正交变换，这个变换的特点就是不改变向量的尺寸和向量间的夹角。正交变换的示意图如下所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-9-3/96429531.jpg" alt=""></p>
+<p>假设二维空间中的一个向量$\vec{OA}$，它在标准坐标系也即$e_1$、$e_2$表示的坐标系中的表示为$[a,b]^T$，现在把它用另一组坐标$e_1’$、$e_2’$表示为$[a’,b’]^T$，存在矩阵U使得$[a’,b’]^T=[a,b]^T$，则U即为正交矩阵。从图中可以看出，正交变换只是将变换向量用另一组正交基来表示，在这个过程中并没有对向量做拉伸，也不改变向量的空间位置，假如对两个向量同时做正交变换，那么变换前后这两个向量的夹角显然不会改变。上面的例子只是正交变换的一个方面，即旋转变换，可以把$e_1’$、$e_2’$坐标系看成是$e_1$、$e_2$坐标系经过旋转某个$\theta$角度得到的，假设：<br>$$x=\left[\matrix{a \cr b \cr}\right] \tag{1}$$<br>$$a’=x \times e_1’ =e_1’^T x\tag{2}$$<br>$$a’=x \times e_2’ =e_2’^T x\tag{3}$$</p>
+<p>$a’$和$b’$实际上是x在$e_1’$和$e_2’$轴上的投影大小，所以直接对其做内积可得：<br>$$\left[\matrix{a’ \cr b’ \cr}\right]=\left[\matrix{e_1’^T \cr e_2^T \cr}\right]x \tag{4}$$<br>从图中可以看出：<br>$$e_1’＝\left[\matrix{cos \theta \cr sin \theta \cr}\right] \ e_2’＝\left[\matrix{-sin \theta \cr cos \theta \cr}\right] \tag{5}$$<br>所以可以得到正交矩阵$U$为：<br>$$U=\left[\matrix{cos \theta &amp; sin \theta \cr -sin \theta &amp; cos \theta \cr}\right]\tag{6}$$</p>
+<p>正交矩阵$U$行（列）向量之间都是单位正交向量。上面求得的是一个旋转矩阵，它对向量做旋转变换。<br>旋转矩阵只是正交变换的一方面，正交矩阵的另一方面是反射变换，也即$e_1’$的方向和图中方向相反。<br><strong>总结：</strong>正交矩阵的行（列）向量都是两两正交的单位向量，正交矩阵对应的变换为正交变换，在酉空间里面称为酉变换。它有两种表现：旋转和反射。正交矩阵将标准正交基映射为另一组标准正交基。</p>
+<h2 id="1-2-特征值分解–EVD"><a href="#1-2-特征值分解–EVD" class="headerlink" title="1.2. 特征值分解–EVD"></a>1.2. 特征值分解–EVD</h2><p>在讨论SVD分解之前我们先讨论矩阵的特征值分解(EVD)，在这里，选择一种特殊的矩阵—对称阵（酉空间里面叫heimite矩阵）。对称阵的重要性质是：它总能相似对角化，对称阵不同特征值对应的特征向量两两正交。一个矩阵能相似对角化说明其特征子空间即为其列空间，若不能相似对角化则其特征子空间为列空间的子空间。现在假设存在$m \times m$ 的满秩对称矩阵A，他有m个不同的特征值，设特征值为：<br>$$ \lambda_i, i=1,2…..m \tag{7} $$<br>对应的单位特征向量为$x_i$，则有：<br>$$ \matrix{Ax_1=\lambda_1 x_1 \cr Ax_2=\lambda_2 x_2 \cr … \cr Ax_m=\lambda_m x_m \cr}\tag{8} $$<br>进而：<br>$$\matrix{<br>AU=U\Lambda \cr<br>U=\left[\matrix{x_1&amp;x_2&amp;\cdots &amp; x_m \cr}\right] \cr<br>\Lambda =\left[\matrix{<br>\lambda_1 &amp; \cdots &amp; 0 \cr<br>\vdots &amp; \ddots &amp; \vdots \cr<br>0 &amp; \cdots &amp; \lambda_m \cr<br>}\right]<br>} \tag{9}$$</p>
+<p>所以可以得到A的特征值分解（由于对称矩阵特征向量两两正交，所以U为正交阵，正交阵的逆矩阵等于其转置）<br>$$A=U \Lambda U^{-1} =U \Lambda U^T \tag{10}$$<br>这里假设A有m个不同的特征值，实际上，只要A是对称阵其均有如上分解。<br>矩阵A分解了，相应的，其对应的映射也分解为三个映射。现在假设有$x$向量，用A将其变换到A的列向量空间中，那么首先由$U^T$对x做变换：<br>$$Ax=U\Lambda U^T x \tag{10} $$<br>U是正交阵$U^T$也是正交阵，所以$U^T$对x的变换也是正交变换，它将x用新的坐标系来表示，这个坐标系就是A的所有正交的特征向量构成的坐标系。比如讲x用A的所有特征向量表示为：<br>$$ x=a_1x_1+a_2x_2+….+a_mx_m \tag{11}$$<br>则通过第一个变换就可以把x表示为$\left[ \matrix{a_1 &amp;a_2&amp;…&amp;a_m \cr}\right]^T$<br>$$U\Lambda U^Tx=U \Lambda \left[\matrix{x_1^T \cr x_2^T \cr \vdots \cr x_m^T \cr} \right](a_1x_1+a_2x_2+….+a_mx_m)=U\Lambda \left[\matrix{a_1 \cr a_2 \cr \vdots \cr a_m \cr}\right] \tag{12}$$<br>紧接着，在新的坐标系表示下，由中间的对角矩阵对新的向量进行坐标变换，其结果就是将向量向各个轴方向拉伸或者压缩：<br>$$U\Lambda\left[\matrix{a_1 \cr a_2 \cr \vdots \cr a_m \cr}\right]=U\left[\matrix{\lambda_1 &amp; \cdots &amp; 0 \cr \vdots &amp; \ddots &amp; \vdots \cr}\right]\left[\matrix{a_1 \cr a_2 \cr \vdots \cr a_m \cr}\right]=U\left[ \matrix{\lambda_1a_1 \cr \lambda_2a_2 \cr \vdots \cr \lambda_ma_m \cr}\right] \tag{13} $$</p>
+<p>从式(13)可以看出，如果A不是满秩的话，那么就是说对角矩阵的对角线元素上存在0，这时候就会导致维度退化，这样就会使映射后的向量落入m维空间的子空间中。</p>
+<p>最后一个变换就是U对拉伸或压缩后的向量做变换，由于U和$U’$互为逆矩阵，所以U变换是$U’$变换的逆变换。<br>因此，从对角矩阵分解对应的映射分解来分析一个矩阵的变换特点是非常直观的。假设对称阵特征值全为1那么显然它就是单位阵，如果对称阵的特征值酉个别是0其他全为1，那么它是一个正交投影矩阵，它将m维向量投影到它的列空间中。</p>
+<h2 id="1-3-奇异值分解–SVD"><a href="#1-3-奇异值分解–SVD" class="headerlink" title="1.3. 奇异值分解–SVD"></a>1.3. 奇异值分解–SVD</h2><p>上面的特征值分解的A矩阵式对称阵，根据EVD可以找到一个矩形使得其变换后还是矩形，也即A可以将一组正交基映射到另一组正交基，而对于任意的$M \times N $矩阵，也能找到一组正交基使得经过它变换后还是正交基，而这就是SVD的目的所在。<br>现在假设存在$M \times N $矩阵A，事实上，A矩阵将n维空间中的向量映射到k(k&lt;=m)维空间中，k=Rank(A)。现在的目标就是：在n维空间中找一组正交基，使得经过A变换后还是正交的。假设已经得到了这样一组正交基：<br>$${v_1,v_2,\cdots,v_n} \tag{14} $$<br>则A矩阵将这组正交基映射为：<br>$${Av_1,Av_2,\cdots,Av_n} \tag{15}$$<br>如果要使得他们两两正交，即：<br>$$Av_i \cdot Av_j =(Av_i)^TAv_j=v_i^TA^TAv_j=0 \tag{16}$$<br>根据假设，存在<br>$$v_i^Tv_j=v_iv_j=0 \tag{17}$$<br>所以如果正交基v选择为$A^TA$的特征向量的话，由于$A^TA$是对称阵，v之间两两正交，那么：<br>$$v_i^TA^TAv_j=v_i^T \lambda_jv_j=\lambda_j v_i^T v_j=\lambda_j v_i v_j=0 \tag{18} $$<br>这样就找到了正交基使其映射后还是正交基了。现在，将映射后的正交基单位化。<br>因为：$ Av_i \cdot Av_i=\lambda_i v_i v_i=\lambda_i $，所以有：$|Av_i|^2=\lambda_i \geq 0 $，所以取单位向量$u_i={Av_i \over |Av_i|}={1 \over \sqrt{\lambda_i}}Av_i $，由此可得：<br>$$Av_i= \sigma _i u_i ,\sigma _i(奇异值)=\sqrt{\lambda_i},0 \leq i \leq k, k=Rank(A) \tag{19} $$<br>当$k&lt; i \leq m$时，对$u_1,u_2,\cdots ,u_k$进行扩展成$u_{k+1},\cdots,u_m$，使得$u_1,u_2,\cdots ,u_m$为m维空间中的一组正交基，即将${u_1,u_2,\cdots ,u_k}$正交基扩展成${u_1,u_2,\cdots ,u_m}R^m$空间的单位正交基。同样的，对$v_1,v_2,\cdots ,v_k$进行扩展$v_{k+1},\cdots,v_n$(这n-k个向量存在于A的零空间中，即Ax=0的解空间的基)，使得$v_1,v_2,\cdots ,v_n$为n维空间中的一组正交基，即：在A的零空间中选取$v_{k+1},\cdots,v_n$使得$Av_i=0,i &gt;k$，并取$\sigma _i=0$。则可以得到：<br>$$A=U \sum V^T \tag{20} $$<br>V是$n \times n $的正交阵，U是$m \times m $的正交阵，$\sum$是$m \times n$的对角阵。</p>
+<h1 id="2-最小二乘中的SVD分解"><a href="#2-最小二乘中的SVD分解" class="headerlink" title="2. 最小二乘中的SVD分解"></a>2. 最小二乘中的SVD分解</h1><p>为了求$Ax-b=0$的最优解，需要求取：$min||Ax-b||$，对A做SVD分解，有：<br>$$min||Ax-b||=min||UDV^Tx-b|| \tag{21}$$<br>将目标函数左乘$U^T$，鉴于$U^T$的正定性，有：<br>$$min||UDV^T-b||=min||DV^Tx-U^Tb|| \tag{22}$$<br>令$y=V^Tx,b’=U^Tb$，则有：<br>$$min||Dy-b’||=min||\left[\matrix{d_1&amp;0&amp;\cdots&amp;0 \cr 0&amp;d_2&amp;\cdots&amp;0 \cr \ddots \cr 0&amp; \cdots &amp; d_n \cr 0 \cr}\right]\left[\matrix{y_1 \cr y_2 \cr \vdots \cr y_n \cr}\right]-\left[\matrix{b_1^{‘} \cr b_1^{‘} \cr \vdots \cr b_n^{‘} \cr b_{n+1}^{‘} \cr \vdots \cr b_m^{‘} \cr}\right]|| \tag{23} $$<br>当$b_{n+1}^{‘} \cdots b_m^{‘}$均为0时得到最小值：<br>$$y_i={b_i^{‘} \over d_i} (i=1,2,\cdots ,n) \tag{24}$$</p>
+<p><strong>引用来源：1<a href="http://www.ams.org/samplings/feature-column/fcarc-svd" target="_blank" rel="external">http://www.ams.org/samplings/feature-column/fcarc-svd</a>;<br>2<a href="http://filer.blogbus.com/11139779/resource_11139779_13341356544.pdf" target="_blank" rel="external">http://filer.blogbus.com/11139779/resource_11139779_13341356544.pdf</a>;</strong></p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[【泡泡机器人】SLAM干货整理]]></title>
+      <url>http://fangrenziwo.com/2016/08/14/slam-resources-list/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-08-14
+</strong><br><strong><br>本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！<br>本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！<br>本文所有内容均整理自 @泡泡机器人SLAM 微信公众号！
+</strong></p>
+<p><strong>持续更新中…</strong></p>
+<p>重要的事情说三遍!<br><a id="more"></a></p>
+<hr>
+<h3 id="【泡泡机器人公开课】第二课：深度学习及应用"><a href="#【泡泡机器人公开课】第二课：深度学习及应用" class="headerlink" title="【泡泡机器人公开课】第二课：深度学习及应用"></a>【泡泡机器人公开课】第二课：深度学习及应用</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483802&amp;idx=1&amp;sn=2283921f15a4cdae56e6bc7757db45d4&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483802&amp;idx=1&amp;sn=2283921f15a4cdae56e6bc7757db45d4&amp;scene=4#wechat_redirect</a> ;<br>ppt下载链接：<a href="http://pan.baidu.com/s/1gfLjpD5" target="_blank" rel="external">http://pan.baidu.com/s/1gfLjpD5</a>;</p>
+<h3 id="【泡泡机器人公开课】：第三课-SVO-和-LSD-SLAM解析"><a href="#【泡泡机器人公开课】：第三课-SVO-和-LSD-SLAM解析" class="headerlink" title="【泡泡机器人公开课】：第三课 SVO 和 LSD_SLAM解析"></a>【泡泡机器人公开课】：第三课 SVO 和 LSD_SLAM解析</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483826&amp;idx=1&amp;sn=a6d810efc21febdf358b417532d3de2f&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483826&amp;idx=1&amp;sn=a6d810efc21febdf358b417532d3de2f&amp;scene=4#wechat_redirect</a>;<br>PPT下载链接：<a href="http://pan.baidu.com/s/1pLcnP7X" target="_blank" rel="external">http://pan.baidu.com/s/1pLcnP7X</a>;<br>源代码下载链接：</p>
+<ol>
+<li><a href="http://pan.baidu.com/s/1gfg7T2j" target="_blank" rel="external">http://pan.baidu.com/s/1gfg7T2j</a>;</li>
+<li><a href="http://pan.baidu.com/s/1eS18CRC" target="_blank" rel="external">http://pan.baidu.com/s/1eS18CRC</a>;</li>
+</ol>
+<p>视频地址：<a href="http://v.qq.com/page/y/7/9/y0312cngs79.html" target="_blank" rel="external">http://v.qq.com/page/y/7/9/y0312cngs79.html</a>;</p>
+<h3 id="【泡泡机器人原创】SVD之最小二乘（推导与证明）"><a href="#【泡泡机器人原创】SVD之最小二乘（推导与证明）" class="headerlink" title="【泡泡机器人原创】SVD之最小二乘（推导与证明）"></a>【泡泡机器人原创】SVD之最小二乘（推导与证明）</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483830&amp;idx=1&amp;sn=a037834525740dcbfae98208a0dee59c&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483830&amp;idx=1&amp;sn=a037834525740dcbfae98208a0dee59c&amp;scene=4#wechat_redirect</a>;</p>
+<h3 id="【泡泡机器人原创】利用”对极几何约束”优化图像坐标点"><a href="#【泡泡机器人原创】利用”对极几何约束”优化图像坐标点" class="headerlink" title="【泡泡机器人原创】利用”对极几何约束”优化图像坐标点"></a>【泡泡机器人原创】利用”对极几何约束”优化图像坐标点</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483833&amp;idx=1&amp;sn=0ef449d24e7bec562cf6a364e60fe1c9&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483833&amp;idx=1&amp;sn=0ef449d24e7bec562cf6a364e60fe1c9&amp;scene=4#wechat_redirect</a>;</p>
+<h3 id="【泡泡机器人公开课】第四课：Caffe入门与应用-by-高翔"><a href="#【泡泡机器人公开课】第四课：Caffe入门与应用-by-高翔" class="headerlink" title="【泡泡机器人公开课】第四课：Caffe入门与应用 by 高翔"></a>【泡泡机器人公开课】第四课：Caffe入门与应用 by 高翔</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483855&amp;idx=1&amp;sn=24f1bea67f4154a2d83a7faa4c003b66&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483855&amp;idx=1&amp;sn=24f1bea67f4154a2d83a7faa4c003b66&amp;scene=4#wechat_redirect</a>;<br>PPT下载地址：<a href="http://pan.baidu.com/s/1c2r3Kli" target="_blank" rel="external">http://pan.baidu.com/s/1c2r3Kli</a>;<br>视频下载地址：<a href="http://pan.baidu.com/s/1bpunBiv" target="_blank" rel="external">http://pan.baidu.com/s/1bpunBiv</a>;</p>
+<h3 id="【泡泡机器人公开课】第五课：双目视觉里程计"><a href="#【泡泡机器人公开课】第五课：双目视觉里程计" class="headerlink" title="【泡泡机器人公开课】第五课：双目视觉里程计"></a>【泡泡机器人公开课】第五课：双目视觉里程计</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483877&amp;idx=1&amp;sn=9bc2fdce3ac37f698f0fdffdcffb63ac&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483877&amp;idx=1&amp;sn=9bc2fdce3ac37f698f0fdffdcffb63ac&amp;scene=4#wechat_redirect</a>;<br>视频链接：<a href="http://v.qq.com/x/page/a0315wr59b3.html" target="_blank" rel="external">http://v.qq.com/x/page/a0315wr59b3.html</a>;<br>PPT链接：<a href="http://pan.baidu.com/s/1mivr2lU" target="_blank" rel="external">http://pan.baidu.com/s/1mivr2lU</a>;<br>源代码链接：<a href="http://pan.baidu.com/s/1boMxWx5" target="_blank" rel="external">http://pan.baidu.com/s/1boMxWx5</a>;<br>相关论文链接：<a href="http://pan.baidu.com/s/1nvtT7HB" target="_blank" rel="external">http://pan.baidu.com/s/1nvtT7HB</a>;</p>
+<h3 id="【泡泡机器人公开课】第六课：比特币介绍-by-李其乐"><a href="#【泡泡机器人公开课】第六课：比特币介绍-by-李其乐" class="headerlink" title="【泡泡机器人公开课】第六课：比特币介绍 by 李其乐"></a>【泡泡机器人公开课】第六课：比特币介绍 by 李其乐</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483908&amp;idx=1&amp;sn=f752f4940138b54400866606791b93e5&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483908&amp;idx=1&amp;sn=f752f4940138b54400866606791b93e5&amp;scene=4#wechat_redirect</a>;<br>PPT下载地址：<a href="http://pan.baidu.com/s/1i4CIyPZ" target="_blank" rel="external">http://pan.baidu.com/s/1i4CIyPZ</a>;</p>
+<h3 id="【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课"><a href="#【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课" class="headerlink" title="【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课"></a>【泡泡机器人整理干货】：宾夕法尼亚大学SLAM公开课</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483911&amp;idx=1&amp;sn=b816324542d403b3984877e8aa3d54ba&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483911&amp;idx=1&amp;sn=b816324542d403b3984877e8aa3d54ba&amp;scene=4#wechat_redirect</a>;<br>相关下载链接：<a href="http://pan.baidu.com/s/1o8q3Uga" target="_blank" rel="external">http://pan.baidu.com/s/1o8q3Uga</a>;</p>
+<h3 id="【泡泡机器人公开课】第七课：增强现实及其应用"><a href="#【泡泡机器人公开课】第七课：增强现实及其应用" class="headerlink" title="【泡泡机器人公开课】第七课：增强现实及其应用"></a>【泡泡机器人公开课】第七课：增强现实及其应用</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483935&amp;idx=1&amp;sn=fb07357e8d09dadb29cd724a95030edc&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483935&amp;idx=1&amp;sn=fb07357e8d09dadb29cd724a95030edc&amp;scene=4#wechat_redirect</a>;<br>相关视频链接：<a href="http://pan.baidu.com/s/1pLeWImB" target="_blank" rel="external">http://pan.baidu.com/s/1pLeWImB</a>;</p>
+<h3 id="【泡泡机器人公开课】第八课：MEMS-IMU的入门与应用"><a href="#【泡泡机器人公开课】第八课：MEMS-IMU的入门与应用" class="headerlink" title="【泡泡机器人公开课】第八课：MEMS IMU的入门与应用"></a>【泡泡机器人公开课】第八课：MEMS IMU的入门与应用</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483992&amp;idx=1&amp;sn=7347f23709ceab22d6048f63386bb55d&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247483992&amp;idx=1&amp;sn=7347f23709ceab22d6048f63386bb55d&amp;scene=4#wechat_redirect</a>;<br>PPT下载地址：<a href="http://pan.baidu.com/s/1dFOCAKp" target="_blank" rel="external">http://pan.baidu.com/s/1dFOCAKp</a>;<br>视频下载地址：</p>
+<ol>
+<li><a href="http://pan.baidu.com/s/1jI4P8Ei" target="_blank" rel="external">http://pan.baidu.com/s/1jI4P8Ei</a>;</li>
+<li><a href="http://pan.baidu.com/s/1qYMorYO" target="_blank" rel="external">http://pan.baidu.com/s/1qYMorYO</a>;</li>
+</ol>
+<p>ceres-solver-1.11.0.tar.gz：<a href="http://pan.baidu.com/s/1qYvjUCO" target="_blank" rel="external">http://pan.baidu.com/s/1qYvjUCO</a>;<br>imu_tk：<a href="http://pan.baidu.com/s/1dFqgGvB" target="_blank" rel="external">http://pan.baidu.com/s/1dFqgGvB</a>;</p>
+<h3 id="【泡泡机器人公开课】第九课-双目校正及视差图的计算"><a href="#【泡泡机器人公开课】第九课-双目校正及视差图的计算" class="headerlink" title="【泡泡机器人公开课】第九课 双目校正及视差图的计算"></a>【泡泡机器人公开课】第九课 双目校正及视差图的计算</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484041&amp;idx=1&amp;sn=c0ef401462f5c2838078549855296437&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484041&amp;idx=1&amp;sn=c0ef401462f5c2838078549855296437&amp;scene=4#wechat_redirect</a>;<br>代码链接：<a href="http://pan.baidu.com/s/1nuYVHax" target="_blank" rel="external">http://pan.baidu.com/s/1nuYVHax</a>;<br>PPT链接：<a href="http://pan.baidu.com/s/1csUXiu" target="_blank" rel="external">http://pan.baidu.com/s/1csUXiu</a>;<br>相关论文链接：<a href="http://pan.baidu.com/s/1hstyG2g" target="_blank" rel="external">http://pan.baidu.com/s/1hstyG2g</a>;</p>
+<h3 id="【泡泡机器人公开课】第十课-IMU-动态背景消除"><a href="#【泡泡机器人公开课】第十课-IMU-动态背景消除" class="headerlink" title="【泡泡机器人公开课】第十课 IMU+动态背景消除"></a>【泡泡机器人公开课】第十课 IMU+动态背景消除</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484088&amp;idx=1&amp;sn=947a4657a45c04fbe91fd2c98c21c361&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484088&amp;idx=1&amp;sn=947a4657a45c04fbe91fd2c98c21c361&amp;scene=4#wechat_redirect</a>;<br>PPT下载地址：<a href="http://pan.baidu.com/s/1gfPpj39" target="_blank" rel="external">http://pan.baidu.com/s/1gfPpj39</a> ;</p>
+<h3 id="【泡泡机器人公开课】第十一课：COP-SLAM-by-杨俊"><a href="#【泡泡机器人公开课】第十一课：COP-SLAM-by-杨俊" class="headerlink" title="【泡泡机器人公开课】第十一课：COP-SLAM by 杨俊"></a>【泡泡机器人公开课】第十一课：COP-SLAM by 杨俊</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484089&amp;idx=1&amp;sn=46fa58c66ae9739be9d7874a940bed07&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484089&amp;idx=1&amp;sn=46fa58c66ae9739be9d7874a940bed07&amp;scene=4#wechat_redirect</a>;<br>PPT 链接：<a href="http://pan.baidu.com/s/1qXYjVAW" target="_blank" rel="external">http://pan.baidu.com/s/1qXYjVAW</a>;<br>文章链接：<a href="http://pan.baidu.com/s/1pKDnqe3" target="_blank" rel="external">http://pan.baidu.com/s/1pKDnqe3</a>;<br>代码链接：<a href="http://pan.baidu.com/s/1eSx6Np4" target="_blank" rel="external">http://pan.baidu.com/s/1eSx6Np4</a>;</p>
+<h3 id="【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO-by-刘浩敏"><a href="#【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO-by-刘浩敏" class="headerlink" title="【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO by 刘浩敏"></a>【泡泡机器人公开课】第十二课：SLAM综述ORB-LSD-SVO by 刘浩敏</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484121&amp;idx=1&amp;sn=3de23086f10f44e361b74851c7288a26&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484121&amp;idx=1&amp;sn=3de23086f10f44e361b74851c7288a26&amp;scene=4#wechat_redirect</a>;<br>PPT 链接：(<a href="http://pan.baidu.com/s/1dFNX953)[http://pan.baidu.com/s/1dFNX953" target="_blank" rel="external">http://pan.baidu.com/s/1dFNX953)[http://pan.baidu.com/s/1dFNX953</a>]; 密码：gq8d<br>视频链接：<a href="http://pan.baidu.com/s/1dFNX953" target="_blank" rel="external">http://pan.baidu.com/s/1dFNX953</a>; 密码：8niq</p>
+<h3 id="【泡泡机器人公开课】第十三课：CUDA-优化代码-by-张也冬"><a href="#【泡泡机器人公开课】第十三课：CUDA-优化代码-by-张也冬" class="headerlink" title="【泡泡机器人公开课】第十三课：CUDA 优化代码 by 张也冬"></a>【泡泡机器人公开课】第十三课：CUDA 优化代码 by 张也冬</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484187&amp;idx=1&amp;sn=5bb6f9a8c25eb9e0974b49c9af17b34a&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484187&amp;idx=1&amp;sn=5bb6f9a8c25eb9e0974b49c9af17b34a&amp;scene=4#wechat_redirect</a>;<br>PPT链接：<a href="http://pan.baidu.com/s/1nvtVsBB" target="_blank" rel="external">http://pan.baidu.com/s/1nvtVsBB</a>;<br>泡泡机器人B站视频链接：<a href="http://space.bilibili.com/38737757/#!/index" target="_blank" rel="external">http://space.bilibili.com/38737757/#!/index</a>;</p>
+<h3 id="【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion-论文和代码解析-by-付兴银"><a href="#【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion-论文和代码解析-by-付兴银" class="headerlink" title="【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion 论文和代码解析 by 付兴银"></a>【泡泡机器人公开课】第十四课：KinectFusion、ElasticFusion 论文和代码解析 by 付兴银</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484215&amp;idx=1&amp;sn=4829d54ba0cda4b17156ac055fd40feb&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484215&amp;idx=1&amp;sn=4829d54ba0cda4b17156ac055fd40feb&amp;scene=4#wechat_redirect</a>;<br>PPT链接：<a href="http://pan.baidu.com/s/1miHEdHe" target="_blank" rel="external">http://pan.baidu.com/s/1miHEdHe</a> 密码：zw5x<br>视频链接：<a href="http://pan.baidu.com/s/1slktRAX" target="_blank" rel="external">http://pan.baidu.com/s/1slktRAX</a> 密码：d9to</p>
+<h3 id="【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础-by-王京"><a href="#【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础-by-王京" class="headerlink" title="【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础 by 王京"></a>【泡泡机器人公开课】第十五课：视觉SLAM中的矩阵李群基础 by 王京</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484257&amp;idx=1&amp;sn=fd5abed8d720eab2629fc30800f2ae9b&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484257&amp;idx=1&amp;sn=fd5abed8d720eab2629fc30800f2ae9b&amp;scene=4#wechat_redirect</a>;<br>PPT链接：<a href="https://pan.baidu.com/s/1cLw1YY" target="_blank" rel="external">https://pan.baidu.com/s/1cLw1YY</a>;<br>视频链接：<a href="https://pan.baidu.com/s/1pKOJ3b9" target="_blank" rel="external">https://pan.baidu.com/s/1pKOJ3b9</a>;</p>
+<h3 id="【泡泡机器人公开课】第十六课：rosbridge原理及应用-by-董超"><a href="#【泡泡机器人公开课】第十六课：rosbridge原理及应用-by-董超" class="headerlink" title="【泡泡机器人公开课】第十六课：rosbridge原理及应用 by 董超"></a>【泡泡机器人公开课】第十六课：rosbridge原理及应用 by 董超</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484267&amp;idx=1&amp;sn=8b92b8c7ce96179a3ae9612624e396fd&amp;scene=4#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484267&amp;idx=1&amp;sn=8b92b8c7ce96179a3ae9612624e396fd&amp;scene=4#wechat_redirect</a>;<br>视频链接：<a href="http://pan.baidu.com/s/1hrImwxI" target="_blank" rel="external">http://pan.baidu.com/s/1hrImwxI</a> 密码：86gq<br>PPT链接：<a href="http://pan.baidu.com/s/1c2Nu0PM" target="_blank" rel="external">http://pan.baidu.com/s/1c2Nu0PM</a> 密码：vgrb</p>
+<h3 id="【泡泡机器人公开课】第十七课：SLAM-优化与求解-by-刘毅"><a href="#【泡泡机器人公开课】第十七课：SLAM-优化与求解-by-刘毅" class="headerlink" title="【泡泡机器人公开课】第十七课：SLAM 优化与求解 by 刘毅"></a>【泡泡机器人公开课】第十七课：SLAM 优化与求解 by 刘毅</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484300&amp;idx=1&amp;sn=7f41d8405f0fe6468d9ac7b5be0794d5&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484300&amp;idx=1&amp;sn=7f41d8405f0fe6468d9ac7b5be0794d5&amp;scene=0#wechat_redirect</a>；<br>视频链接：<a href="http://v.qq.com/x/page/z0326un10oh.html" target="_blank" rel="external">http://v.qq.com/x/page/z0326un10oh.html</a>；<br>PPT链接：<a href="https://pan.baidu.com/s/1pK84MCz" target="_blank" rel="external">https://pan.baidu.com/s/1pK84MCz</a>；</p>
+<h3 id="【泡泡机器人公开课】第十八课：Direct方法的原理与实现-by-高翔"><a href="#【泡泡机器人公开课】第十八课：Direct方法的原理与实现-by-高翔" class="headerlink" title="【泡泡机器人公开课】第十八课：Direct方法的原理与实现 by 高翔"></a>【泡泡机器人公开课】第十八课：Direct方法的原理与实现 by 高翔</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484362&amp;idx=1&amp;sn=ce669369fc43e784b7869189995cd72a&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484362&amp;idx=1&amp;sn=ce669369fc43e784b7869189995cd72a&amp;scene=0#wechat_redirect</a>;<br>视频链接：<a href="http://v.qq.com/x/page/n03275fhbs5.html" target="_blank" rel="external">http://v.qq.com/x/page/n03275fhbs5.html</a>;</p>
+<h3 id="【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖"><a href="#【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖" class="headerlink" title="【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖"></a>【泡泡机器人公开课】第十九课：图像技术在AR中的实践-by张颖</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484390&amp;idx=1&amp;sn=da6e117df899a9e89fd10e5cdaf6dcee&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484390&amp;idx=1&amp;sn=da6e117df899a9e89fd10e5cdaf6dcee&amp;scene=0#wechat_redirect</a>;<br>视频链接：<a href="http://v.qq.com/x/page/c0327u9p00i.html" target="_blank" rel="external">http://v.qq.com/x/page/c0327u9p00i.html</a>;<br>PPT链接：<a href="https://pan.baidu.com/s/1qXNwpys" target="_blank" rel="external">https://pan.baidu.com/s/1qXNwpys</a>;</p>
+<h3 id="【泡泡机器人公开课】第二十课：路径规划-by-王超群"><a href="#【泡泡机器人公开课】第二十课：路径规划-by-王超群" class="headerlink" title="【泡泡机器人公开课】第二十课：路径规划 by 王超群"></a>【泡泡机器人公开课】第二十课：路径规划 by 王超群</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484428&amp;idx=1&amp;sn=d29fb8e02f6821b157b1f9e7a94864bc&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484428&amp;idx=1&amp;sn=d29fb8e02f6821b157b1f9e7a94864bc&amp;scene=0#wechat_redirect</a>;<br>视频链接：<a href="http://pan.baidu.com/s/1o7Ftdii" target="_blank" rel="external">http://pan.baidu.com/s/1o7Ftdii</a> 密码：c8jj ;<br>PPT链接：<a href="http://pan.baidu.com/s/1boJdr8V" target="_blank" rel="external">http://pan.baidu.com/s/1boJdr8V</a> 密码：e9u5 ;</p>
+<h3 id="【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构-by-冯兵"><a href="#【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构-by-冯兵" class="headerlink" title="【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构 by 冯兵"></a>【泡泡机器人公开课】第二十一课：ORB-SLAM简单重构 by 冯兵</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484455&amp;idx=1&amp;sn=31f7e02cc2761d3a4b5df5514e74c7ad&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484455&amp;idx=1&amp;sn=31f7e02cc2761d3a4b5df5514e74c7ad&amp;scene=0#wechat_redirect</a>;<br>视频链接：<a href="http://pan.baidu.com/s/1gfwkQQ3" target="_blank" rel="external">http://pan.baidu.com/s/1gfwkQQ3</a> 密码：y9pe ;<br>PPT链接：<a href="http://pan.baidu.com/s/1dFoNzpR" target="_blank" rel="external">http://pan.baidu.com/s/1dFoNzpR</a> 密码：9rh6 ;</p>
+<h3 id="【泡泡机器人公开课】第二十二课：LeastSquare-and-gps-fusion-by-卿李"><a href="#【泡泡机器人公开课】第二十二课：LeastSquare-and-gps-fusion-by-卿李" class="headerlink" title="【泡泡机器人公开课】第二十二课：LeastSquare_and_gps_fusion by 卿李"></a>【泡泡机器人公开课】第二十二课：LeastSquare_and_gps_fusion by 卿李</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484515&amp;idx=1&amp;sn=44facda4a8613f247bd039db1f8b6bed&amp;chksm=ec10ba67db67337104fd112218f1134dac8304f07ae584c7779cb1b42bbd2ed1f9f841d2d4e0&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484515&amp;idx=1&amp;sn=44facda4a8613f247bd039db1f8b6bed&amp;chksm=ec10ba67db67337104fd112218f1134dac8304f07ae584c7779cb1b42bbd2ed1f9f841d2d4e0&amp;scene=0#wechat_redirect</a>;<br>视频链接：<a href="http://pan.baidu.com/s/1hsI3EoW" target="_blank" rel="external">http://pan.baidu.com/s/1hsI3EoW</a> 密码：iteq<br>PPT链接：<a href="http://pan.baidu.com/s/1qY8dWvE" target="_blank" rel="external">http://pan.baidu.com/s/1qY8dWvE</a> 密码：saf1 ;</p>
+<h3 id="【泡泡机器人公开课】第二十三课：Scan-Matching-in-2D-SLAM-by-张明明"><a href="#【泡泡机器人公开课】第二十三课：Scan-Matching-in-2D-SLAM-by-张明明" class="headerlink" title="【泡泡机器人公开课】第二十三课：Scan Matching in 2D SLAM by 张明明"></a>【泡泡机器人公开课】第二十三课：Scan Matching in 2D SLAM by 张明明</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484537&amp;idx=1&amp;sn=86200d961cf933896a9781bbe58442cc&amp;chksm=ec10ba7ddb67336ba920a3c6b7e6414a0131bb775d6695e526d25dc6d377e31578684e83f802&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484537&amp;idx=1&amp;sn=86200d961cf933896a9781bbe58442cc&amp;chksm=ec10ba7ddb67336ba920a3c6b7e6414a0131bb775d6695e526d25dc6d377e31578684e83f802&amp;scene=0#wechat_redirect</a><br>PPT链接：<a href="http://pan.baidu.com/s/1kVuHdnL" target="_blank" rel="external">http://pan.baidu.com/s/1kVuHdnL</a> 密码：prjj<br>视频链接：<a href="http://pan.baidu.com/s/1i4KnvFJ" target="_blank" rel="external">http://pan.baidu.com/s/1i4KnvFJ</a> 密码：98ab ;</p>
+<h3 id="【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析-by-范帝楷"><a href="#【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析-by-范帝楷" class="headerlink" title="【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析 by 范帝楷"></a>【泡泡机器人公开课】第二十四课：LSD-SLAM深度解析 by 范帝楷</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484541&amp;idx=1&amp;sn=8060afdf47b520f12f13c01f28f7901c&amp;chksm=ec10ba79db67336fe6bfb3912576ba287e14fc27ed2e4bcdc9cddc305f66f9762de24be23dca&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484541&amp;idx=1&amp;sn=8060afdf47b520f12f13c01f28f7901c&amp;chksm=ec10ba79db67336fe6bfb3912576ba287e14fc27ed2e4bcdc9cddc305f66f9762de24be23dca&amp;scene=0#wechat_redirect</a><br>视频链接：<a href="http://pan.baidu.com/s/1bIzXlc" target="_blank" rel="external">http://pan.baidu.com/s/1bIzXlc</a>  密码：kkmy ;</p>
+<h3 id="【泡泡优秀资源推荐】机器人公开课推荐-by-Wanda-Mason"><a href="#【泡泡优秀资源推荐】机器人公开课推荐-by-Wanda-Mason" class="headerlink" title="【泡泡优秀资源推荐】机器人公开课推荐 by Wanda Mason"></a>【泡泡优秀资源推荐】机器人公开课推荐 by Wanda Mason</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484544&amp;idx=1&amp;sn=493a4cf1812a3a7f9d1c34e339ca2739&amp;chksm=ec10ba84db6733923b78940806b8fd2ec5cb48779af5d59491d593b0cd746e731b6950a3b3b9&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484544&amp;idx=1&amp;sn=493a4cf1812a3a7f9d1c34e339ca2739&amp;chksm=ec10ba84db6733923b78940806b8fd2ec5cb48779af5d59491d593b0cd746e731b6950a3b3b9&amp;scene=0#wechat_redirect</a></p>
+<h3 id="【泡泡机器人公开课】第二十五课：激光SLAM-by-王龙军"><a href="#【泡泡机器人公开课】第二十五课：激光SLAM-by-王龙军" class="headerlink" title="【泡泡机器人公开课】第二十五课：激光SLAM by 王龙军"></a>【泡泡机器人公开课】第二十五课：激光SLAM by 王龙军</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484587&amp;idx=1&amp;sn=82c66613817bd6f50f58cd309dc48a6a&amp;chksm=ec10baafdb6733b9ce69ef19f27087ab8ebfc40d479fc5f0469c301d414c3745d6abb02e2d8b&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484587&amp;idx=1&amp;sn=82c66613817bd6f50f58cd309dc48a6a&amp;chksm=ec10baafdb6733b9ce69ef19f27087ab8ebfc40d479fc5f0469c301d414c3745d6abb02e2d8b&amp;scene=0#wechat_redirect</a><br>视频链接：<a href="http://pan.baidu.com/s/1bVrqDg" target="_blank" rel="external">http://pan.baidu.com/s/1bVrqDg</a> 密码：q0va<br>PPT链接：<a href="http://pan.baidu.com/s/1i57CFA1" target="_blank" rel="external">http://pan.baidu.com/s/1i57CFA1</a> 密码：e2pb ;</p>
+<h3 id="【泡泡算法解析】LM算法计算单应矩阵"><a href="#【泡泡算法解析】LM算法计算单应矩阵" class="headerlink" title="【泡泡算法解析】LM算法计算单应矩阵"></a>【泡泡算法解析】LM算法计算单应矩阵</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484602&amp;idx=1&amp;sn=b6d4b9d24af02a1e8de7f30e7f17f525&amp;chksm=ec10babedb6733a8c5b4ff4877b250394797efff616647778885515991daf25e27f2cd0f9914&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484602&amp;idx=1&amp;sn=b6d4b9d24af02a1e8de7f30e7f17f525&amp;chksm=ec10babedb6733a8c5b4ff4877b250394797efff616647778885515991daf25e27f2cd0f9914&amp;scene=0#wechat_redirect</a> ;</p>
+<h3 id="【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介-by-侯涛"><a href="#【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介-by-侯涛" class="headerlink" title="【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介 by 侯涛"></a>【泡泡机器人公开课】第二十六课：TSL安全网络传输协议简介 by 侯涛</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484644&amp;idx=1&amp;sn=b754a96b2132612323beb27a5950da1f&amp;chksm=ec10bae0db6733f6b301b72b228769f8067c7987a0dd511727f05ef8bdfb631ff41b67b98119&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484644&amp;idx=1&amp;sn=b754a96b2132612323beb27a5950da1f&amp;chksm=ec10bae0db6733f6b301b72b228769f8067c7987a0dd511727f05ef8bdfb631ff41b67b98119&amp;scene=0#wechat_redirect</a><br>视频链接：<a href="http://pan.baidu.com/s/1miydyaO" target="_blank" rel="external">http://pan.baidu.com/s/1miydyaO</a> 密码：wgw0<br>PPT链接：<a href="http://pan.baidu.com/s/1dFwVJyD" target="_blank" rel="external">http://pan.baidu.com/s/1dFwVJyD</a> 密码：6036 ;</p>
+<h3 id="【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）"><a href="#【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）" class="headerlink" title="【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）"></a>【泡泡机器人福利一】公开课资源全部公开（视频、PPT、代码等）</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484653&amp;idx=1&amp;sn=a1a19398ae89bf9824a65f3b836ed8da&amp;chksm=ec10bae9db6733ff6d9dc3765fcfe08cd0dd997afc319054b94eb8c451af9c73346e1ac8d4ea&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484653&amp;idx=1&amp;sn=a1a19398ae89bf9824a65f3b836ed8da&amp;chksm=ec10bae9db6733ff6d9dc3765fcfe08cd0dd997afc319054b94eb8c451af9c73346e1ac8d4ea&amp;scene=0#wechat_redirect</a></p>
+<h3 id="【泡泡机器人公开课】第二十七课：Textureless-Object-Tracking-by-吴天"><a href="#【泡泡机器人公开课】第二十七课：Textureless-Object-Tracking-by-吴天" class="headerlink" title="【泡泡机器人公开课】第二十七课：Textureless Object Tracking by 吴天"></a>【泡泡机器人公开课】第二十七课：Textureless Object Tracking by 吴天</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484681&amp;idx=1&amp;sn=e7aee8f849b71c14aa35cf7ee631d40c&amp;chksm=ec10bb0ddb67321b9407ed6006a9cc803787a6553d6f0ca5e6a452f7bfade96701e034ade562&amp;scene=0#wechat_redirect" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484681&amp;idx=1&amp;sn=e7aee8f849b71c14aa35cf7ee631d40c&amp;chksm=ec10bb0ddb67321b9407ed6006a9cc803787a6553d6f0ca5e6a452f7bfade96701e034ade562&amp;scene=0#wechat_redirect</a>;<br>链接：<a href="http://pan.baidu.com/s/1jIO5VIe" target="_blank" rel="external">http://pan.baidu.com/s/1jIO5VIe</a> 密码：7d36</p>
+<h3 id="【泡泡机器人公开课】第二十八课：基于光流的视觉控制-by-李平"><a href="#【泡泡机器人公开课】第二十八课：基于光流的视觉控制-by-李平" class="headerlink" title="【泡泡机器人公开课】第二十八课：基于光流的视觉控制 by 李平"></a>【泡泡机器人公开课】第二十八课：基于光流的视觉控制 by 李平</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484761&amp;idx=1&amp;sn=54e83a99f124ec4e030225013f309f4f&amp;chksm=ec10bb5ddb67324b2dfb559695844a753287f5e3860171c09cc425bf59380fd2d75679576896&amp;scene=0#rd" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484761&amp;idx=1&amp;sn=54e83a99f124ec4e030225013f309f4f&amp;chksm=ec10bb5ddb67324b2dfb559695844a753287f5e3860171c09cc425bf59380fd2d75679576896&amp;scene=0#rd</a>;<br>公开课资源链接：<a href="http://pan.baidu.com/s/1i5qIpTj" target="_blank" rel="external">http://pan.baidu.com/s/1i5qIpTj</a>  密码：lbnt</p>
+<h3 id="【泡泡机器人公开课】第二十九课：Robust-Camera-Location-Estimation-by-阎骥洲-amp-周恺弟"><a href="#【泡泡机器人公开课】第二十九课：Robust-Camera-Location-Estimation-by-阎骥洲-amp-周恺弟" class="headerlink" title="【泡泡机器人公开课】第二十九课：Robust Camera Location Estimation by 阎骥洲 &amp; 周恺弟"></a>【泡泡机器人公开课】第二十九课：Robust Camera Location Estimation by 阎骥洲 &amp; 周恺弟</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484798&amp;idx=1&amp;sn=a4ee2bb8850df98593811325b769a1ba&amp;chksm=ec10bb7adb67326caeb61fbe2092fecb83286250ca4ec0f31a48374774962bfffb8c0542e814&amp;scene=0#rd" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484798&amp;idx=1&amp;sn=a4ee2bb8850df98593811325b769a1ba&amp;chksm=ec10bb7adb67326caeb61fbe2092fecb83286250ca4ec0f31a48374774962bfffb8c0542e814&amp;scene=0#rd</a>;<br>PPT链接：<a href="https://pan.baidu.com/s/1nvS3ZJF" target="_blank" rel="external">https://pan.baidu.com/s/1nvS3ZJF</a><br>视频连接：<a href="https://pan.baidu.com/s/1o8CmWqe" target="_blank" rel="external">https://pan.baidu.com/s/1o8CmWqe</a></p>
+<h3 id="【泡泡机器人公开课】非线性优化与g2o-by-高翔"><a href="#【泡泡机器人公开课】非线性优化与g2o-by-高翔" class="headerlink" title="【泡泡机器人公开课】非线性优化与g2o by 高翔"></a>【泡泡机器人公开课】非线性优化与g2o by 高翔</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484843&amp;idx=1&amp;sn=823fd03386f710e7eb5a5125056f7613&amp;chksm=ec10bbafdb6732b954d8f5e38b09e441c6620d970b0466dff468916c51b6f2daa68922f820c3&amp;scene=0#rd" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484843&amp;idx=1&amp;sn=823fd03386f710e7eb5a5125056f7613&amp;chksm=ec10bbafdb6732b954d8f5e38b09e441c6620d970b0466dff468916c51b6f2daa68922f820c3&amp;scene=0#rd</a>;<br>PPT链接：<a href="http://pan.baidu.com/s/1kVRSyk3" target="_blank" rel="external">http://pan.baidu.com/s/1kVRSyk3</a> 密码：2iqk<br>视频链接：<a href="http://pan.baidu.com/s/1nuKg5ML" target="_blank" rel="external">http://pan.baidu.com/s/1nuKg5ML</a> 密码：qfgp</p>
+<h3 id="【泡泡机器人LSD-SLAM专栏解析】一：Sophus-sophus详解"><a href="#【泡泡机器人LSD-SLAM专栏解析】一：Sophus-sophus详解" class="headerlink" title="【泡泡机器人LSD-SLAM专栏解析】一：Sophus/sophus详解"></a>【泡泡机器人LSD-SLAM专栏解析】一：Sophus/sophus详解</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484909&amp;idx=1&amp;sn=2bffe514383b6a01cb04e296723d89ba&amp;chksm=ec10bbe9db6732ff580bffed1a2c910a76d8ea7df564e307bb4893c80514b3a43c30b0a0221f&amp;scene=0#rd" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484909&amp;idx=1&amp;sn=2bffe514383b6a01cb04e296723d89ba&amp;chksm=ec10bbe9db6732ff580bffed1a2c910a76d8ea7df564e307bb4893c80514b3a43c30b0a0221f&amp;scene=0#rd</a></p>
+<h3 id="【泡泡机器人公开课】第三十一课：G2O简介-by-姚二亮"><a href="#【泡泡机器人公开课】第三十一课：G2O简介-by-姚二亮" class="headerlink" title="【泡泡机器人公开课】第三十一课：G2O简介 by 姚二亮"></a>【泡泡机器人公开课】第三十一课：G2O简介 by 姚二亮</h3><p>微信文章地址：<a href="http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484910&amp;idx=1&amp;sn=b60d1c612a320cbdad374f950d48b449&amp;chksm=ec10bbeadb6732fc24b68cf03de678a0c99dc714190ca01516469da25bd916dd6c9430decd1e&amp;scene=0#rd" target="_blank" rel="external">http://mp.weixin.qq.com/s?__biz=MzI5MTM1MTQwMw==&amp;mid=2247484910&amp;idx=1&amp;sn=b60d1c612a320cbdad374f950d48b449&amp;chksm=ec10bbeadb6732fc24b68cf03de678a0c99dc714190ca01516469da25bd916dd6c9430decd1e&amp;scene=0#rd</a>;<br>PPT链接链接：<a href="http://pan.baidu.com/s/1jHXJVgy" target="_blank" rel="external">http://pan.baidu.com/s/1jHXJVgy</a> 密码：tmrd<br>视频连接链接：<a href="http://pan.baidu.com/s/1qYcXvm0" target="_blank" rel="external">http://pan.baidu.com/s/1qYcXvm0</a> 密码：7zf4</p>
+<p>欢迎关注 @泡泡机器人SLAM 微信公众号</p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SLAM系列--非线性优化（2）]]></title>
+      <url>http://fangrenziwo.com/2016/08/03/cv-nonlinear-optimazation-02/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-08-03
+</strong></p>
+<p>本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquardt是结合了Gauss-Newton和梯度下降法的优点总结而来的迭代算法，因此这里会先介绍梯度下降法。<br><a id="more"></a></p>
+<h1 id="1-梯度下降法"><a href="#1-梯度下降法" class="headerlink" title="1. 梯度下降法"></a>1. 梯度下降法</h1><p>梯度下降法是一个一阶最优化算法，通常我们也将其称为最速下降法。</p>
+<h2 id="1-1-梯度的概念"><a href="#1-1-梯度的概念" class="headerlink" title="1.1. 梯度的概念"></a>1.1. 梯度的概念</h2><p>一个函数$D(\theta)$对它的一个变量$\theta$的梯度定义为：<br>$${\partial D(\theta) \over \partial \theta}=\lim_{\delta \theta \rightarrow 0}{D(\theta+\partial \theta)-D(\theta) \over \delta \theta}\tag{1}$$<br>某一点上的梯度指向标量场增长最快的方向，梯度的长度就是最大的变化率。</p>
+<h2 id="1-2-梯度下降"><a href="#1-2-梯度下降" class="headerlink" title="1.2. 梯度下降"></a>1.2. 梯度下降</h2><p>我们知道对于一个函数沿着梯度的那个方向是下降最快的。例如为了选取一个$\theta$使得$D(\theta)$最小，我们可以先随机选择$\theta$一个初始值，然后不断的修改$\theta$以减小$D(\theta)$，知道$\theta$的值不再改变，对于梯度下降法，可以表示为：<br>$$\theta_j=\theta_j-\alpha {\partial D(\theta) \over \partial \theta_j}\tag{2}$$<br>即不断地向梯度的那个方向（减小最快的方向）更新$\theta$，最终使得$D(\theta)$最小。其中$\alpha$称为学习速率，取值太小会导致迭代过慢，取值太大可能错过最值点。</p>
+<h2 id="1-3-梯度方向下降和函数最值"><a href="#1-3-梯度方向下降和函数最值" class="headerlink" title="1.3. 梯度方向下降和函数最值"></a>1.3. 梯度方向下降和函数最值</h2><p>梯度下降法，基于这样的观察：如果实值函数F(x)在点a处可微且有定义，那么函数F(x)在a点沿着梯度相反的方向–$\Delta F(a)$下降最快。<br>因此，如果：$b=a-\alpha \Delta F(a) $，那么$F(b)\leq F(a)$。<br>考虑如下序列：$x_0,x_1,x_2……$，使得<br>$$x_{n+1}=x_n-\alpha \Delta F(x_n) \tag{3}$$<br>因此可以得到：$F(x_0) \geq F(x_1)…….$，如果顺利的话序列最终可以收敛到期望的极值。<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-8-3/91157798.jpg" alt=""><br>注意：梯度下降得到的结果可能是局部最优值。如果F(x)是凸函数，则可以保证梯度下降得到的是全局最优值。</p>
+<p><strong> 申明：本节引用来源：<a href="http://www.wengweitao.com/ti-du-xia-jiang-fa.html" target="_blank" rel="external">梯度下降法</a> </strong></p>
+<h1 id="2-Levenberg-Marquardt算法"><a href="#2-Levenberg-Marquardt算法" class="headerlink" title="2. Levenberg-Marquardt算法"></a>2. Levenberg-Marquardt算法</h1><p>梯度下降法和Gauss-Newton都是最优化方法。其区别之处在于：</p>
+<ol>
+<li>梯度下降法在寻找目标函数极小值时，是沿着反梯度方向进行寻找的。梯度的定义就是指向标量场增长最快的方向，在寻找极小值时，先随便定初始点（x0，y0）然后进行迭代不断寻找直到梯度的模达到预设的要求。但是梯度下降法的缺点之处在于：在远离极小值的地方下降很快，而在靠近极小值的地方下降很慢。</li>
+<li>而高斯牛顿法是一种非线性最小二乘最优化方法。其利用了目标函数的泰勒展开式把非线性函数的最小二乘化问题化为每次迭代的线性函数的最小二乘化问题。高斯牛顿法的缺点在于：若初始点距离极小值点过远，迭代步长过大会导致迭代下一代的函数值不一定小于上一代的函数值。</li>
+</ol>
+<p>LM算法在高斯牛顿法中加入了因子μ，当μ大时相当于梯度下降法，μ小时相当于高斯牛顿法。（这儿我也不明白为什么，希望有大牛解答）。在使用Levenberg-Marquart时，先设置一个比较小的μ值，当发现目标函数反而增大时，将μ增大使用梯度下降法快速寻找，然后再将μ减小使用牛顿法进行寻找。<br>为了避免发散，有两种解决方法：</p>
+<ol>
+<li>调整下降步伐： $\beta^{s+1}=\beta^s+\alpha \Delta 0&lt;\alpha&lt;1$；</li>
+<li>调整下降方向：$(J^TJ+\lambda D)\Delta=J^Tr$；</li>
+</ol>
+<p>LM方法的好处是可以调节：<br>如果下降太快，使用较小的λ，使之更接近高斯牛顿法；<br>如果下降太慢，使用较大的λ，使之更接近梯度下降法；</p>
+<p><strong> 申明：本节引用来源：<a href="http://blog.csdn.net/dsbatigol/article/details/12448627" target="_blank" rel="external">【math】梯度下降法(梯度下降法，牛顿法，高斯牛顿法，Levenberg-Marquardt算法)</a> </strong></p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SLAM系列--非线性优化（1）]]></title>
+      <url>http://fangrenziwo.com/2016/07/31/cv-nonlinear-optimazation-01/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-07-31
+</strong></p>
+<p>不论是在Feature-based SLAM还是在Direct-Method SLAM中，为了求得当前帧和参考帧直接的相对相机运动(位姿)，都涉及到求解非线性优化问题。在Feature-Based SLAM中，我们可以在得到参考帧和当前帧的匹配对后利用opencv自带的solvePnp函数来求解位姿，而solvePnp中经典的是EPNP算法，算法中就涉及到利用Gauss-Newton迭代来求解最优化参数；而在Direct-Method SLAM中，算法直接根据图像像素匹配误差(photometric error)来构造优化函数来求其最优解。在SLAM的优化问题中常见的有Gauss-Newton迭代和Levenberg-Marquardt迭代，本节和下节将会分别就这两种优化方法展开讲述（主要是针对直接法中需要用到的优化解）。<br><a id="more"></a></p>
+<h1 id="1-Gauss-Newton优化"><a href="#1-Gauss-Newton优化" class="headerlink" title="1.Gauss-Newton优化"></a>1.Gauss-Newton优化</h1><h2 id="1-1-原理"><a href="#1-1-原理" class="headerlink" title="1.1.原理"></a>1.1.原理</h2><p>Gauss-Newton迭代的基本思想是使用泰勒级数展开式去近似代替非线性回归模型，然后通过构造优化函数，并进行多次迭代，多次修正回归系数，使回归系数不断逼近非线性回归模型的最佳回归系数，最后使原模型的残差平方和达到最小。<br>假设已知m个点：$(x_1,y_1),(x_2,y_2),…..,(x_m,y_m)$，函数原型为：$y=f(x, \beta)$，其中$\beta =(\beta_1,\beta_2,……..,\beta_n)$，(m不能小于n，因为函数个数需要大于未知参数个数才能得到方程的解)。构造残差平方和函数如下：<br>$$S=\sum_{i=0}^{m}r_i^2 \tag{1}$$<br>其中：<br>$$ r_i=y_i-f(x_i,\beta) for i=1,2,….,m. \tag{2}$$<br>最优化的目的是找到最优解$\beta$使得残差平方和最小。<br>要求其最小值，即$S$对$\beta$的偏导数等于0：<br>$${\partial S \over \partial \beta_j}=2\sum_{i}{r_i{\partial r_i \over \partial \beta_j}}=0 \ (j=1,2,……,n) \tag{3}$$<br>在非线性优化系统中，$\partial r_i \over \partial \beta_j$是变量和参数的函数，没有闭解。因此我们给定一个初始值，用迭代法逼近解：<br>$$ \beta_j \approx \beta_j^{k+1}=\beta_j^k+\Delta \beta_j \tag{3}$$<br>其中k是迭代次数，$\Delta \beta$是迭代矢量。<br>而每次迭代函数是线性的，在$\beta^k$处用泰勒级数展开：<br>$$f(x_i,\beta)\approx f(x_i,\beta^k)+\sum_j {\partial f(x_i,\beta^k) \over \partial \beta_j}(\beta_j-\beta_j^k)  \approx  f(x_i,\beta^k)+\sum_jJ_{ij}\Delta \beta_j\tag{5} $$<br>其中：J是已知矩阵，为了方便迭代令${\partial r_i \over \partial \beta _j}=-J_{ij}$。<br>此时残差表示为：<br>$$\Delta y_i=y_i-f(x_i,\beta^k) \tag{6}$$<br>$$r_i=y_i-f(x_i,\beta)=(y_i-f(x_i,\beta^k))+(f(x_i,\beta^k)-f(x_i,\beta))=\Delta y_i-\sum_{s=1}^{n}J_{is}\delta \beta_s \tag{7}$$<br>代入公式{3}有：<br>$$-2\sum_{i=1}^{m}J_{ij}(\Delta y_i-\sum _{s=1}^{n}J_{is}\Delta \beta_s)=0 \tag{8}$$<br>移项化简有：<br>$$\sum_{i=1}^{m} \sum_{s=1}^{n} J_{ij}J_{is} \Delta \beta_s=\sum_{i=1}^{m}J_{ij} \Delta y_i \ (j=1,….,n) \tag{9} $$<br>将其表示成矩阵形式有：<br>$$(J^TJ)\Delta \beta=J^T \Delta y \tag{10} $$<br>所以最终迭代公式为：<br>$$\beta^{(s+1)}=\beta^{(s)}+(J_f^TJ_f)^{-1}J_f^Tr(\beta^{(s)}) \tag{11} $$<br>其中，$J_f$是函数$f=(x,\beta)$对$\beta$的雅克比矩阵。</p>
+<p><strong> 申明：本部分引用来源：<a href="http://blog.csdn.net/tclxspy/article/details/51281811" target="_blank" rel="external">最小二乘法–高斯牛顿迭代法</a> </strong></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Gauss-Newton法的介绍在这里就结束了，下一节将会讲述Levenberg-Marquardt迭代，在之后的博客中还会涉及到SLAM部分相关代码的编写和整理，谢谢！</p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SLAM系列-特征检测和匹配(2)]]></title>
+      <url>http://fangrenziwo.com/2016/07/11/cv-feature-extraction-and-matching2/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-07-12
+</strong></p>
+<hr>
+<p>在最近的Feature-Based SLAM系统中，ORB特征检测算子也应用的较为频繁，特别是ORB-SLAM以及ORB-SLAM2的出现，使得ORB特征检测算子的应用更加广泛。因此本节要讲述的就是ORB特征检测算子的原理。<br><a id="more"></a></p>
+<h1 id="ORB特征检测算子"><a href="#ORB特征检测算子" class="headerlink" title="ORB特征检测算子"></a>ORB特征检测算子</h1><p>paper来源：<a href="http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&amp;arnumber=6126544" target="_blank" rel="external">ORB: an efficient alternative to SIFT or SURF</a>;<br>ORB(Oriented FAST and Rotated BRIEF)特征检测算子，是一种新的具有局部不变性的特征检测算法。该算法算法是由Ethan Rublee，Vincent Rabaud，Kurt Konolige以及Gary R.Bradski提出的。ORB特征检测算子是SIFT/SURF的一种替代算法。SIFT/SURF本身是有专利的，而ORB则是免费的。ORB特征检测算子是SIFT特征检测方法和BRIEF特征描述子的结合，综合二者的优势，实现了极高的效率。SIFT相关知识在上一节已经讲过了，这里会先就ORB特征检测子的改进展开叙述，在此基础上阐述ORB特征对SIFT和BRIEF的结合和改进。</p>
+<h1 id="1-oFAST-带主方向的FAST检测算子"><a href="#1-oFAST-带主方向的FAST检测算子" class="headerlink" title="1. oFAST:带主方向的FAST检测算子"></a>1. oFAST:带主方向的FAST检测算子</h1><p> 在特征检测部分，ORB采用了FAST的特征检测算法，同时对其进行改进，使其具有尺度不变性和旋转不变性。为了计算一个特征点的方向，首先需要计算FAST特征点的时候要在一个邻域内，假设邻域的中心为C，同时我们找出这个图像邻域内的重心位置P，那么C与P的连线方向就是该特征点的方向。</p>
+<h2 id="1-1-图像重心计算"><a href="#1-1-图像重心计算" class="headerlink" title="1.1.图像重心计算"></a>1.1.图像重心计算</h2><p> 首先，从概率上来讲，一个一阶随机变量X在C点的k阶中心矩的定义如下：<br> $$E(X) =\sum {xf(x)} \tag{1}$$<br> $$E((x-c)^k) \tag{2}$$<br> 特别的，有以下两种情况：</p>
+<ol>
+<li>c=0，此时$a_k=E(X^k)$称为X的k阶中心距；</li>
+<li>$c=E(x^k)$，此时$\mu _k=E[(X-E(X))^k]成为X的k阶中心距</li>
+</ol>
+<p> 对于2阶pq阶矩的计算如下：<br> $$m_{pq}=\sum _{x,y}{x^py^qI(x,y)} \tag{3} $$<br> 一般而言，零阶矩是物体的质量，一阶矩和零阶矩可以算出物体的中心，而二阶矩是用来计算物体的方向的。而图像可以看成一个平板的物体，其一阶矩和零阶矩就可以拿来计算某个形状的重心，而二阶矩就能拿来计算形状的方向。<br> 对于一幅图像，${m10 \over m00}={\sum _{x,y}xI(x,y) \over \sum _{x,y}I(x,y)}$代表了图像像素在x方向上的偏重，这就是重心的x轴坐标，同理可得重心的y轴坐标为：${m01 \over m00}={\sum _{x,y}yI(x,y) \over \sum _{x,y}I(x,y)}$。因此，重心坐标为：$({m10\over m00},{m01 \over m00})$。<br> 在计算特征点的方向时，除了上述的基于重心和中心连线的方向的方法外，还有其他两种方法：</p>
+<ol>
+<li>MAX法：将FAST特征块内最大的梯度方向作为特征点的方向；</li>
+<li>BIN法：这就是上节中FAST用到的方法，不再赘述；</li>
+</ol>
+<p>这样可以得到主方向的计算公式如下：<br>$$ \theta= atan2(m_{01},m_{10}) \tag{4} $$</p>
+<h1 id="2-BRIEF特征描述子"><a href="#2-BRIEF特征描述子" class="headerlink" title="2. BRIEF特征描述子"></a>2. BRIEF特征描述子</h1><p>paper来源：<a href="http://cvlabwww.epfl.ch/~lepetit/papers/calonder_eccv10.pdf" target="_blank" rel="external">BRIEF:Binary Robust Independent Elementary Features</a>；<br>BRIEF是在2010年提出的。它是对已检测到的特征点进行描述，然后进行二进制编码的描述子。BRIEF描述子摒弃了利用区域灰度直方图描述特征点的方法，大大加快了特征描述符建立的速度，同时也极大的降低了特征匹配的时间，是一种非常快速，很有潜力的算法。</p>
+<h2 id="2-1-具体算法"><a href="#2-1-具体算法" class="headerlink" title="2.1.具体算法"></a>2.1.具体算法</h2><p>由于BRIEF仅仅是特征描述子，因此BRIEF建立在已经进行了特征点提取的基础上，在特征点的邻域位置利用BRIEF算法建立特征描述符。<br>算法的具体步骤如下：</p>
+<ol>
+<li>为减少噪声干扰，先对图像进行高斯滤波（方差为2，高斯窗口为9*9）。</li>
+<li>以特征点为中心，取S*S的邻域窗口。在窗口内随机选取一对点，比较二者像素的大小，并进行如下二进制赋值。$$\tau (p;x,y): = \left\{ {\matrix{<br>1 &amp; if p(x) &lt; p(y)  \cr<br>0 &amp; otherwise  \cr<br>} } \right. \tag{5}$$其中,$p(x)，p(y)$分别是随机点$x=(u_1,v_1)，y=(u_2,v_2)$的像素值。</li>
+<li>在窗口中随机选取N对随机点，重复步骤2的二进制赋值，形成一个二进制编码，这个编码就是对特征点的描述，即特征描述子。（一般N为256）</li>
+</ol>
+<p> 以上便是BRIEF特征描述算法的步骤。</p>
+<h2 id="2-2-随机点选取策略"><a href="#2-2-随机点选取策略" class="headerlink" title="2.2.随机点选取策略"></a>2.2.随机点选取策略</h2><p> 在步骤2中，需要在窗口内选取一对随机点并比较二者像素的大小，关于一对随机点的选择方法，原作者测试了以下5种方法：</p>
+<ol>
+<li>$x_i，y_i$都呈均匀分布$[-{S \over 2},-{S \over 2}]$；</li>
+<li>$x_i，y_i$都呈高斯分布$[0,{1 \over 25}S^2]$，准则采样服从各向同性的同一高斯分布；</li>
+<li>$x_i$服从高斯分布$[0,{1 \over 25}S^2]$，$y_i$服从高斯分布$[0,{1 \over 100}S^2]$，采样分为两步进行：首先在原点处为$x_i$进行高斯采样，然后在中心为$x_i$处为$y_i$进行高斯采样；</li>
+<li>$x_i，y_i$在空间量化极坐标下的离散位置处进行随机采样；</li>
+<li>$x_i=(0,0)^T,y_i$在空间量化极坐标下的离散位置处进行随机采样。</li>
+</ol>
+<p> 这五种方法生成的256对随机点如下（一条线段的两个端点是一对）：<br> <img src="http://o9n30cpt4.bkt.clouddn.com/16-7-11/19695481.jpg" alt=""><br> 其中方法（2）比较好。</p>
+<p> <strong>申明：本部分引用来源：<a href="http://blog.csdn.net/hujingshuang/article/details/46910259" target="_blank" rel="external">【特征检测】BRIEF特征点描述算法</a>；</strong></p>
+<h2 id="2-3-BRIEF性能评价和改进"><a href="#2-3-BRIEF性能评价和改进" class="headerlink" title="2.3.BRIEF性能评价和改进"></a>2.3.BRIEF性能评价和改进</h2><h3 id="2-3-1-BRIEF性能评价"><a href="#2-3-1-BRIEF性能评价" class="headerlink" title="2.3.1.BRIEF性能评价"></a>2.3.1.BRIEF性能评价</h3><ol>
+<li>不具备旋转不变性；</li>
+<li>对噪声敏感；</li>
+<li>不具备尺度不变性；</li>
+<li>在速度上式SURF的10倍；</li>
+</ol>
+<h3 id="2-3-2-ORB特征描述子"><a href="#2-3-2-ORB特征描述子" class="headerlink" title="2.3.2.ORB特征描述子"></a>2.3.2.ORB特征描述子</h3><p> 对于N对二进制随机点，可以得到一个$2\times n$大小的矩阵：<br> $$S=\left[{ \matrix{<br> x_1,…,x_n \cr<br> y_1,…,y_n \cr<br> }}\right] \tag{6} $$<br> 我们通过FAST特征块计算出的主方向$\theta$来计算出一个旋转矩阵$R_\theta$，之后我们更改S矩阵为：<br> $$S_\theta=R_\theta S \tag{7} $$<br> 那么此时由$S_\theta$中点的顺序得到新的随机点矩阵，我们定义此时的BRIEF描述子为：<br> $$ g_n(p,\theta)=f_n(p)|(x_i,y_i) \in S_\theta \tag{8} $$</p>
+<p> <strong>申明：本部分引用源自：<a href="http://blog.csdn.net/gh_home/article/details/51511471" target="_blank" rel="external">ORB特征检测算法小结</a>;</strong></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p> 以上就是ORB特征检测的全部内容，中间还有些不清楚的地方，弄懂了会更新该博客。谢谢。</p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SLAM系列-特征检测和匹配]]></title>
+      <url>http://fangrenziwo.com/2016/07/10/cv-feature-extraction-and-matching/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-07-10
+</strong></p>
+<hr>
+<p>在Feature-Based类型的SLAM系列中，在计算相机姿态之前，需要得到前后帧或者前后关键帧的特征进行匹配并计算前后帧之间的位姿关系，因此，特征检测在Feature-Based SLAM中起到了不可替代的作用。本节和下一节将介绍两种典型的特征检测算子，即SIFT特征检测算子和ORB特征检测算子的原理。<br><a id="more"></a></p>
+<h1 id="SIFT特征检测算子"><a href="#SIFT特征检测算子" class="headerlink" title="SIFT特征检测算子"></a>SIFT特征检测算子</h1><p>paper来源：<a href="http://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf" target="_blank" rel="external">Distinctive Image Features from Scale-Invariant Keypoints</a>；<br>SIFT(Scale-invariant feature transform)是一种在计算机视觉中用来检测局部特征的算法。该算法通过对一幅图像中自定义的图像特征点的计算，求图像中所有的特征点(interest points,corner points)及其有关scale和orientation的描述子得到特征并对图像进行特征点匹配，得到了鲁棒(robust)的效果。此算法由David Lowe在1999年发表，2004年完善总结。SIFT在空间尺度中寻找极值点，并提取出其位置、尺度和旋转不变量。因此其具有尺度不变性和旋转不变性。<br>该算法主要包括4个步骤来进行特征点的计算和匹配：</p>
+<ol>
+<li>构建尺度空间，检测极值点，获得尺度不变性；</li>
+<li>特征点过滤并进行精准定位，剔除不稳定的特征点；</li>
+<li>在特征点处提取特征描述符，为特征点分配方向值；</li>
+<li>生成特征描述子，利用特征描述符寻找匹配点；</li>
+</ol>
+<p>以下将围绕着5部分详细展开描述。</p>
+<h1 id="1-构建尺度空间"><a href="#1-构建尺度空间" class="headerlink" title="1.构建尺度空间"></a>1.构建尺度空间</h1><h2 id="1-1-理论知识"><a href="#1-1-理论知识" class="headerlink" title="1.1.理论知识"></a>1.1.理论知识</h2><h3 id="1-1-1-高斯核"><a href="#1-1-1-高斯核" class="headerlink" title="1.1.1.高斯核"></a>1.1.1.高斯核</h3><p>为了构造尺度空间，需要在构建尺度空间金字塔时引入高斯核作为尺度变换函数，而Koenerink, Lindeberg,Florack等人用精确的数学形式通过不同的途径都证明了高斯核是实现尺度变换的唯一变换核，具体论文参考：<a href="http://download.springer.com/static/pdf/628/bfm%253A978-1-4757-6465-9%252F1.pdf?originUrl=http%3A%2F%2Flink.springer.com%2Fbook%2Fbfm%3A978-1-4757-6465-9%2F1&amp;token2=exp=1468135861~acl=%2Fstatic%2Fpdf%2F628%2Fbfm%25253A978-1-4757-6465-9%25252F1.pdf%3ForiginUrl%3Dhttp%253A%252F%252Flink.springer.com%252Fbook%252Fbfm%253A978-1-4757-6465-9%252F1*~hmac=aa9dbeab90c6bb7ca6a05cc3039221cc4a35f1ef20c53f6a88a17abf37356398" target="_blank" rel="external">Scale-space theory in computer vision</a><br>使用高斯滤波器对图像进行尺度空间金字塔塔图的构建，让这个尺度空间具有以下的性质：</p>
+<ol>
+<li><p>加权平均和有限孔径效应<br>信号在尺度t上的表达可以看成是原信号在空间上的一系列加权平均，权重就是具有不同尺度参数的高斯核。<br>信号在尺度t上的表达也对应一个无方向性的孔径函数（特征长度为$\sigma = \sqrt t $）来观测信号的结果。这时候信号中特征长度小于$\sigma$的精细结构会被抑制（理解为一维信号上小于$\sigma$的波动会被平滑掉）。</p>
+</li>
+<li><p>层叠平滑<br>也叫高斯核族的半群（Semi-Group）性质：两个高斯核函数的卷积等于另外一个不同核参数的高斯核卷积。<br>$$g(\mu ,\sigma _1) * g(\mu ,\sigma _2) = g(\mu ,\sqrt {\sigma _1^2 + \sigma _2^2} ) \tag{1}$$<br>这个性质的意思就是说不同的高斯核函数对图像的平滑是连续的。</p>
+</li>
+<li><p>局部极值递性<br>这个特征可以从人眼的视觉原理去理解，人在看一个物体时，离得越远，物体的细节看到的越少。细节特征是在减少的。<br>高斯核对图像进行滤波具有压制局部细节的性质。</p>
+</li>
+<li><p>尺度伸缩不变性<br>这里只是个公式推导的问题，对原来的信号加一个变换函数，对变换后的信号再进行高斯核的尺度空间生成，新的信号的极值点等特征是不变的。</p>
+</li>
+</ol>
+<p><strong>申明：该部分引用来源：<a href="http://www.cnblogs.com/ronny/p/3886013.html" target="_blank" rel="external">尺度空间理论</a></strong></p>
+<h3 id="1-1-2-DOG角点检测"><a href="#1-1-2-DOG角点检测" class="headerlink" title="1.1.2.DOG角点检测"></a>1.1.2.DOG角点检测</h3><p>DOG（Difference of Gaussian）是灰度图像增强和角点检测的方法，其做法比较简单，但证明比较复杂，具体讲解如下：<br>Difference of Gaussian（DOG）是高斯函数的差分。在图像处理中，我们可以通过将图像和高斯函数进行卷积得到一幅图像的低通滤波结果，即去噪过程，这里的Gaussian和高斯低通滤波器的高斯一样，是一个函数，即正态分布函数：<br>$$G(x) = {1 \over \sqrt {2\pi {\sigma ^2}}}{e^{ - {x^2 \over 2{\sigma ^2}}}} \tag{2}$$<br>那么DOG即高斯函数差分是两幅高斯图像的差，其一维表示为：<br>$$f(x;\mu ,\sigma _1,\sigma _2) = {1 \over {\sigma _1 \sqrt {2\pi}  }}e^ {- {(x - \mu )^2 \over 2\sigma _1^2}}-{1 \over {\sigma _2 \sqrt {2\pi}  }}e^ {- {(x - \mu )^2 \over 2\sigma _2^2}}  \tag{3}$$<br>则其二维表示为：<br>$$f(u,v ,\sigma) = {1 \over { 2\pi \sigma^2 }}e^ {- {(u^2+v^2) \over 2\sigma^2}}- {1 \over { 2\pi \sigma^2 }}e^ {- {(u^2+v^2) \over 2K^2\sigma^2}}\tag{4}$$<br>具体到图像处理上来说，就是讲两幅不同参数下的高斯滤波结果相减，得到DOG图。</p>
+<h2 id="1-2-构建尺度空间"><a href="#1-2-构建尺度空间" class="headerlink" title="1.2 构建尺度空间"></a>1.2 构建尺度空间</h2><h3 id="1-2-1-高斯核函数的引入"><a href="#1-2-1-高斯核函数的引入" class="headerlink" title="1.2.1.高斯核函数的引入"></a>1.2.1.高斯核函数的引入</h3><p>尺度空间理论的目的是模拟图像数据的多尺度特征以实现图像的尺度不变性。<br>高斯卷积核是实现尺度变换唯一的线性核，因此一幅图像的尺度空间定义为：<br>$$L(x,y,\sigma ) = G(x,y,\sigma ) * I(x,y) \tag{5}$$<br>其中，$ G(x,y,\sigma )$是尺度可变高斯函数，$G(x,y,\sigma)={1 \over { 2\pi \sigma^2 }}e^ {- {(u^2+v^2) \over 2\sigma^2}}$。(x,y)是图像坐标，$\sigma$是尺度坐标。$\sigma$大小决定图像的平滑程度。尺度越大，图像越平滑，则图像上显示出来的细节信息越少。大的$\sigma$值对应低分辨率图像，小的$\sigma$值对应高分辨率。为了有效的在尺度空间检测到稳定的关键点，利用了节1.1.2提出的的高斯差分（DOG）构建了高斯差分尺度空间（DOG scale-space）。利用不同尺度的高斯差分核与图像卷积生成：<br>$$D(x,y,\sigma ) = (G(x,y,k\sigma ) - G(x,y,\sigma )) * I(x,y)<br>= L(x,y,k\sigma ) - L(x,y,\sigma ) \tag{6}$$<br>下图表示不同$\sigma$下的图像尺度空间：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-10/93988391.jpg" alt="尺度空间图像"></p>
+<h3 id="1-2-2-图像金字塔的建立"><a href="#1-2-2-图像金字塔的建立" class="headerlink" title="1.2.2. 图像金字塔的建立"></a>1.2.2. 图像金字塔的建立</h3><p>对于一幅图像I，建立其在不同尺度(scale)下的图像，也称为一个八度(octave)，这是为了实现尺度不变性，也就是在任意尺度都能够有对应的特征点，第一个octave的scale为原图大小，后面的每一个octave为上一个octave下采样的结果（width,height分别为原来的一半，图像为原来的1/4）。<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-10/92762284.jpg" alt="octave和对应的DOG"><br>next octave是由first octave下采样得到的。<br>$$2^{i-1}(\sigma,k \sigma,k^2 \sigma,…,k^{n-1}\sigma), k=2^{1 \over s} \tag{7}$$<br>式（7）表示尺度空间的所有取值，s为每组层数，一般为3~5。0塔的0层是原始图像（或是原始图像double后的图像）。往下每一层是对其下一层进行Laplacian变换（高斯卷积，其中σ值渐大，例如可以是$\sigma,k\sigma,k^2 \sigma,…$，直观上越往上图片越模糊。</p>
+<h3 id="1-2-3-检测极值点"><a href="#1-2-3-检测极值点" class="headerlink" title="1.2.3.检测极值点"></a>1.2.3.检测极值点</h3><p>为了寻找尺度空间的极值点，每个采样点要和它所有的相邻点比较，看其是否比它的图像域和尺度域的相邻点大或者小。如图所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-10/91840179.jpg" alt=""><br>中间的检测点和它同尺度的8个相邻点以及上下相邻尺度（跨尺度）对应的$9 \times 2$个点共26个点比较，以确保在尺度空间和二维图像空间都检测到极值点。一个点如果在DOG尺度空间本层以及上下两层（跨尺度）的26个邻域中是最大或最小值时，就认为该点是图像在该尺度下的一个特征点。<br>在极值比较的过程中，每一组图像的首末两层是无法进行极值比较的，为了满足尺度变化的连续性，在每组图像的顶层继续用高斯模糊生成了3幅图像，高斯金字塔每组有S+3层图像，DOG金字塔每组有S+2层图像。如果所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-10/81860992.jpg" alt=""><br>假设S=3，也就是每个塔里有三层，则$k=2^{1 \over s}=2^{1 \over 3}$，那么按照上图可得高斯空间有3个分量，DOG空间有2个分量，在DOG空间中，1st-octave两项分别为$\sigma,k\sigma$；2nd-octave 两项分别为$2\sigma,2k\sigma$；由于无法取极值，我们必须在高斯空间继续添加高斯模糊项，使得形成$\sigma,k\sigma,k^2 \sigma,k^3\sigma,k^4\sigma $这样可以选择DOG空间的中间三项$k\sigma,k^2 \sigma,k^3\sigma$（因为都有极值），那么下一octave所得三项即为：$2k\sigma,2k^2 \sigma,2k^3\sigma$其首项是$2k\sigma=2^{4 \over 3}$。刚好与上一octave的末项$k^3 \sigma=2^{3 \over 3}$尺度变化连续起来，所以每次要在Gaussian空间添加三项，每组塔共有S+3层图像，对应的DOG金字塔共有S+2层图像。<br>使用LOG能够很好的找到图像中的特征点，但是需要进行大量的计算，所以引入DOG图像的极大极小值来寻找特征点，极值点检测用的是非最大值抑制准则。</p>
+<h1 id="2-特征点过滤及精确定位"><a href="#2-特征点过滤及精确定位" class="headerlink" title="2.特征点过滤及精确定位"></a>2.特征点过滤及精确定位</h1><p>关键点的选取要经过两步：(1) 它必须去除低对比度和对噪声敏感的候选关键点；(2)去除边缘点。</p>
+<h2 id="2-1-去除低对比度的点"><a href="#2-1-去除低对比度的点" class="headerlink" title="2.1. 去除低对比度的点"></a>2.1. 去除低对比度的点</h2><p>对局部极值点进行三维二次函数拟合以精确定位特征点的位置和尺度，尺度空间函数$D(x,y,\sigma)$的泰勒展开式为：<br>$$ D(x) = D + {\partial {D^T} \over \partial x}x + {1 \over 2}x^T{\partial ^2 D \over \partial x^2}x \tag{8}$$<br>令上式对x的偏导数等于0，可得极值点位置：<br>$$\hat x =  -{ {\partial ^2D^{ - 1}} \over {\partial x^2}}{\partial ^2D \over \partial x^2} \tag{9}$$<br>把公式(9)代入公式(8)有：<br>$$D(\hat x)=D(x,y,\sigma)+{1 \over 2}{\partial D^T \over \partial x}\hat x \tag{10}$$<br>若$|D(\hat x)| \ge 0.03$，则该特征点就保留下来，否则丢弃。</p>
+<h2 id="2-2-去除边缘响应点"><a href="#2-2-去除边缘响应点" class="headerlink" title="2.2.去除边缘响应点"></a>2.2.去除边缘响应点</h2><p>一个定义不好的高斯差分算子的极值在横跨边缘的区域有较大的主曲率，而在垂直边缘的方向有较小的主曲率（Harris角点检测器中的定义）。主曲率由海森矩阵求出：<br>$$H=\left[{\matrix{<br>D_{xx}&amp;D_{xy} \cr<br>D_{yx}&amp;D_{yy} \cr<br>}}\right] \tag{11}$$<br>D的主曲率和H的特征值成正比，令$\alpha$为最大特征值，$\beta$为最小特征值，则：<br>$$Tr(H)=D_{xx}+D_{yy}=\alpha +\beta \tag{12} $$<br>$$Det(H)=D_{xx}D_{yy}-(D_{xy})^2=\alpha \beta \tag{13}$$<br>令$\alpha =\gamma \beta$，则：<br>$$ {Tr(H)^2 \over Det(H)^2}={(\alpha+\beta)^2 \over \alpha \beta}={(\gamma \beta+\beta)^2 \over \gamma \beta }={(\gamma+1)^2 \over \gamma} \tag{14} $$<br>如果主曲率小于$(\gamma+1)^2 / \gamma$，保留该特征点，否则丢弃。在Lowe的论文中，取$\gamma =10$。<br>这部分实际上是结合了Harris角点检测，利用Harris角点检测来对图像边缘进行进一步筛选。</p>
+<h1 id="3-特征描述符提取和方向值分配"><a href="#3-特征描述符提取和方向值分配" class="headerlink" title="3.特征描述符提取和方向值分配"></a>3.特征描述符提取和方向值分配</h1><p>在节2.中我们通过几个步骤确定了每幅图像中存在的特征点，在这一节中我们需要为特征点提供一个方向值，也就是为每个特征点计算一个方向。依照这个方向做进一步的计算，利用关键点邻域像素的梯度方向分布特性为每个特征点指定方向参数，使得算子具有<strong>旋转不变性</strong>。梯度方向计算公式如下：<br>$$m(x,y)=\sqrt{(L(x+1,y)-L(x-1,y))^2+(L(x,y+1)-L(x,y-1))^2} \tag{15} $$<br>$$\theta(x,y)=\alpha \tan {2({L(x+1,y)-L(x-1,y) \over L(x,y+1)-L(x,y-1)})}  \tag{16}$$<br>其中，$m(x,y)$表示(x,y)处的梯度，$\theta (x,y)$表示方向，L是特征点所在的空间尺度函数。至此，图像的特征点已经检测完毕，每个特征点有三个信息：<strong>位置，所处尺度，方向</strong>，由此可以确定一个SIFT特征区域。<br>我们用梯度直方图来统计邻域像素的梯度方向，如下图所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-10/49423932.jpg" alt=""><br>梯度直方图的横轴代表了邻域像素的梯度方向的大小，纵轴代表了邻域像素梯度值的大小，梯度直方图的横轴的取值范围为0º~360º，每10º为一个单位，总共有36个单位。梯度方向的直方图的主峰值则代表了该特征点的主方向，如果有相当于主峰值的80%大小的其他峰值，则为关键点的辅方向。可以看出关键点的方向就由一个主峰值方向和多个次峰值方向决定。这样可以减少图像旋转对特征点的影响。</p>
+<h1 id="4-关键点描述子的生成"><a href="#4-关键点描述子的生成" class="headerlink" title="4.关键点描述子的生成"></a>4.关键点描述子的生成</h1><p>首先将坐标轴旋转为关键点的方向，以确保旋转不变性。以关键点为中心取$8 \times 8$的窗口。<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-10/88806937.jpg" alt=""><br>图中左边为当前特征点的位置，每个小哥代表关键点邻域所在尺度空间的一个像素，利用公式求得每个像素的梯度峰值和方向，小箭头方向代表该像素的梯度方向，箭头长度代表了梯度模值，然后用高斯窗口对其进行加权计算。图中右边的左上角小方块由左图中左上角4个小方格组成。右图中一个关键点由$2 \times 2$共4个种子点组成，每个种子点有8个方向向量信息。这种邻域方向信息联合的思想增强了算法抗噪性的能力，同时对于含有定位误差的特征匹配也提供了较好的容错性。</p>
+<p>在计算了前后帧图像的特征点描述子之后，我们就将两帧图像的各个scale的描述子进行匹配，匹配上即可表示两个特征点match上了。</p>
+<p>**申明：该部分引用参考来源：<a href="http://blog.csdn.net/abcjennifer/article/details/7639681" target="_blank" rel="external">SIFT特征提取分析</a></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>特征检测算子不仅在SLAM中，同时在各种检测和追踪体系中都起到了很重要的作用，在所有的特征检测算子中，SIFT算是其中的经典，也是鲁棒性最好的一种，然而SIFT算子本身是有专利的，所以在下一节我们会介绍另外一种SIFT检测算子的替代算子—ORB检测算子，同时之后准备引入一些代码的编写和解析，本节结束。<br>顺便说一句，Rachel-Zhang真是个牛人！！</p>
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[SLAM系列--相机标定]]></title>
+      <url>http://fangrenziwo.com/2016/07/03/cv-calibration1/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-07-04
+</strong></p>
+<hr>
+<p>所谓相机标定是只对相机通过特征提取等手段获取相机的内参和畸变。其中内参包括焦距fx,fy (分别为x方向和y方向的尺度因子)和光轴中心cx,xy。<br><a id="more"></a></p>
+<h1 id="1-基础知识"><a href="#1-基础知识" class="headerlink" title="1. 基础知识"></a>1. 基础知识</h1><h2 id="1-1-三维旋转"><a href="#1-1-三维旋转" class="headerlink" title="1.1. 三维旋转"></a>1.1. 三维旋转</h2><h3 id="1-1-1-基元旋转"><a href="#1-1-1-基元旋转" class="headerlink" title="1.1.1. 基元旋转"></a>1.1.1. 基元旋转</h3><p>所谓基元旋转是指在oxyz坐标系中，坐标系围绕某坐标轴旋转后得到的结果。<br>在oxyz坐标系中，坐标系围绕x轴旋转的示意图如下：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-3/1244953.jpg" alt=""><br>则通过示意图得到的对应的转换矩阵为:<br>$${\rm{T}}(\phi ) = \left[ {\matrix{<br>   1 &amp; 0 &amp; 0  \cr<br>   0 &amp; {\cos \phi } &amp; {\sin \phi }  \cr<br>   0 &amp; { - \sin \phi } &amp; {\cos \phi }  \cr<br> } } \right] \tag{1} $$<br> 同理，oxyz绕oy轴和oz轴旋转对应的转换矩阵分别为：<br>$${\rm{T}}(\theta ) = \left[ {\matrix{<br>   {\cos \theta } &amp; 0 &amp; { - \sin \theta }  \cr<br>   0 &amp; 1 &amp; 0  \cr<br>   {\sin \theta } &amp; 0 &amp; {\cos \theta }  \cr<br> } } \right] \tag{2}$$<br> 和<br>$${\rm{T}}(\varphi ) = \left[ {\matrix{<br>   {\cos \varphi } &amp; {\sin \varphi } &amp; 0  \cr<br>   { - \sin \varphi } &amp; {\cos \varphi } &amp; 0  \cr<br>   0 &amp; 0 &amp; 1  \cr<br> } } \right] \tag{3}$$</p>
+<h3 id="1-1-2-坐标变换矩阵"><a href="#1-1-2-坐标变换矩阵" class="headerlink" title="1.1.2.  坐标变换矩阵"></a>1.1.2.  坐标变换矩阵</h3><p> 对于任意两个oxyz坐标系而言，其相对的转换矩阵有两种情况：</p>
+<ol>
+<li>假如两个坐标系共原点。若存在一个空间点处于两个坐标系中，则该空间点在两个坐标系间表示的转换只存在一个旋转矩阵。设该旋转矩阵为$R$，则可以将R分解为依次沿ox轴，oy轴，oz轴旋转的基元旋转矩阵的左乘结果。即：<br>$$R ={R_{oz}} \cdot {R_{oy}} \cdot {R_{ox}}=\left[ {\matrix{<br>{\cos \varphi } &amp; {\sin \varphi } &amp; 0  \cr<br>{ - \sin \varphi } &amp; {\cos \varphi } &amp; 0  \cr<br>0 &amp; 0 &amp; 1  \cr<br>} } \right] \cdot \left[ {\matrix{<br>{\cos \theta } &amp; 0 &amp; { - \sin \theta }  \cr<br>0 &amp; 1 &amp; 0  \cr<br>{\sin \theta } &amp; 0 &amp; {\cos \theta }  \cr<br>} } \right] \cdot \left[ {\matrix{<br>1 &amp; 0 &amp; 0  \cr<br>0 &amp; {\cos \phi } &amp; {\sin \phi }  \cr<br>0 &amp; { - \sin \phi } &amp; {\cos \phi }  \cr<br>} } \right] \tag{4}$$</li>
+<li>假如两个坐标系不共原点，则空间点的转换矩阵在上述的旋转矩阵后还存在一个原点的相对位移。假设两个坐标系原点之间的相对平移矢量为：${\left[ {\matrix{<br>{X_T} &amp; {Y_T} &amp; {Z_T}  \cr<br>} } \right]^T}$ ，则有：<br>$$\left[ {\matrix{<br>{X_2}  \cr<br>{Y_2}  \cr<br>{Z_2}  \cr<br>} } \right] = R \cdot \left[ {\matrix{<br>{X_1}  \cr<br>{Y_1}  \cr<br>{Z_1}  \cr<br>} } \right] + \left[ {\matrix{<br>{X_T}  \cr<br>{Y_T}  \cr<br>{Z_T}  \cr<br>} } \right] \tag{5} $$<br>将该式改写为其次坐标系，有：<br>$$\left[ {\matrix{<br>{X_2}  \cr<br>{Y_2}  \cr<br>{Z_2}  \cr<br>1  \cr<br>} } \right] = \left[ {\matrix{<br>{R_{3 \times 3}} &amp; {T_{3 \times 1}}  \cr<br>O &amp; 1  \cr<br>} } \right] \cdot \left[ {\matrix{<br>{X_1}  \cr<br>{Y_1}  \cr<br>{Z_1}  \cr<br>1  \cr<br>} } \right] \tag{6}$$</li>
+</ol>
+<h2 id="1-2-SLAM中的四个坐标系"><a href="#1-2-SLAM中的四个坐标系" class="headerlink" title="1.2. SLAM中的四个坐标系"></a>1.2. SLAM中的四个坐标系</h2><p>在SLAM系统中存在四个坐标系，即：摄像机坐标系 、 图像物理坐标系 、 像素坐标系 和 世界坐标系（参考坐标系）。而SLAM的运算涉及到点坐标在上述坐标系之间的转换。</p>
+<h3 id="1-2-1-图像物理坐标系-x-y-到-像素坐标系-u-v"><a href="#1-2-1-图像物理坐标系-x-y-到-像素坐标系-u-v" class="headerlink" title="1.2.1. 图像物理坐标系(x,y) 到 像素坐标系(u,v)"></a>1.2.1. 图像物理坐标系(x,y) 到 像素坐标系(u,v)</h3><p>对于图像物理坐标系和像素坐标系，可能存在以下两种情况：</p>
+<ol>
+<li><p>图像坐标系和像素坐标系都是直角坐标系<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-3/29847366.jpg" alt=""><br>图像上的每点坐标(u,v) 分别表示在每一帧采集的图像在系统中存储的数组的列数和行数，坐标(u,v)所对应的值就是当前点的灰度值，所以坐标系$uov$又称为像素坐标系。<br>同时，为了建立图像中各点的像素与实际的物理尺寸的联系，我们还要建立图像物理 坐标系$x{o_1}y$ 。设点${o_1}$ 在像素坐标系中的坐标为$({u_0},{v_0})$，每个像素沿x轴的实际物理尺寸大小是dx，沿y轴的实际物理尺寸大小为dy,则能得到两个坐标系之间的关系式。</p>
+</li>
+<li><p>两坐标轴只有一个轴平行，一个轴不平行<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-3/66170437.jpg" alt=""><br>${o_1}$ 在u,v中的坐标为$(u_0,v_0)$，像素在轴上的物理尺寸为dx,dy，则二者之间的仿射变换为：<br>$$u = u_0 + {x_d \over dx} - {y_d \cot \theta  \over dx}  \tag{7}$$<br>$$v = v_0 + {y_d \over {dy \sin \theta}} \tag{8}$$<br>表示成齐次坐标的形式为：<br>$$\left[ {\matrix{<br>u  \cr<br>v  \cr<br>1  \cr<br>} } \right] = \left[ {\matrix{<br>f_u &amp; {- f_u \cot \theta} &amp; u_0  \cr<br>0 &amp; {f_v \over {\sin \theta}} &amp; v_0  \cr<br>0 &amp; 0 &amp; 1  \cr<br>} } \right] \cdot \left[ {\matrix{<br>x_d  \cr<br>y_d  \cr<br>1  \cr<br>} } \right] \tag{9}$$<br>其中 $f_u={1 \over dx}$， $f_v={1 \over dy}$<br>为了方便公式的推导，将上式表示为：<br>$$\left[ {\matrix{<br>u  \cr<br>v  \cr<br>1  \cr<br>} } \right] = \left[ {\matrix{<br>{1 \over S_x} &amp; r &amp; u_0  \cr<br>0 &amp; {1 \over S_y} &amp; v_0  \cr<br>0 &amp; 0 &amp; 1  \cr<br>} } \right] \cdot \left[ {\matrix{<br>x  \cr<br>y  \cr<br>1  \cr<br>} } \right] \tag{10}$$</p>
+</li>
+</ol>
+<h3 id="1-2-2-图像物理坐标系-x-y-到摄像机坐标系-Xc-Yc-Zc"><a href="#1-2-2-图像物理坐标系-x-y-到摄像机坐标系-Xc-Yc-Zc" class="headerlink" title="1.2.2. 图像物理坐标系(x,y)到摄像机坐标系(Xc,Yc,Zc)"></a>1.2.2. 图像物理坐标系(x,y)到摄像机坐标系(Xc,Yc,Zc)</h3><p> 示意图如下所示:<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-3/6883126.jpg" alt=""><br> 利用三角形相似可得：<br> $${Z_c} \cdot \left[ {\matrix{<br>   x  \cr<br>   y  \cr<br>   1  \cr<br> } } \right] = \left[ {\matrix{<br>   {\matrix{<br>   f &amp; 0 &amp; 0 &amp; 0  \cr<br> } }  \cr<br>   {\matrix{<br>   0 &amp; f &amp; 0 &amp; 0  \cr<br> } }  \cr<br>   {\matrix{<br>   0 &amp; 0 &amp; 1 &amp; 0  \cr<br> } }  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   X_c  \cr<br>   Y_c  \cr<br>   Z_c  \cr<br>   1  \cr<br> } } \right] \tag{11}$$</p>
+<h3 id="1-2-3-摄像机坐标系-Xc-Yc-Zc-到世界坐标系-Xw-Yw-Yw"><a href="#1-2-3-摄像机坐标系-Xc-Yc-Zc-到世界坐标系-Xw-Yw-Yw" class="headerlink" title="1.2.3. 摄像机坐标系(Xc,Yc,Zc) 到世界坐标系(Xw,Yw,Yw)"></a>1.2.3. 摄像机坐标系(Xc,Yc,Zc) 到世界坐标系(Xw,Yw,Yw)</h3><p>示意图如下所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-7-3/65254703.jpg" alt=""><br>转换关系为：<br>$$\left[ {\matrix{<br>   X_c  \cr<br>   Y_c  \cr<br>   Z_c  \cr<br>   1  \cr<br> } } \right] = \left[ {\matrix{<br>   R_{3 \times 3} &amp; T_{3 \times 1}  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   X_w  \cr<br>   Y_w  \cr<br>   Z_w  \cr<br>   1  \cr<br> } } \right] \tag{12}$$</p>
+<h3 id="1-2-4-合并公式-总结"><a href="#1-2-4-合并公式-总结" class="headerlink" title="1.2.4. 合并公式 + 总结"></a>1.2.4. 合并公式 + 总结</h3><p> 对上述公式进行总结整理可得：<br> $${1 \over Z_c}\left[ {\matrix{<br>   u  \cr<br>   v  \cr<br>   1  \cr<br> } } \right] = \left[ {\matrix{<br>   {f \over S_x} &amp; r &amp; u_0  \cr<br>   0 &amp; {f \over S_y} &amp; v_0  \cr<br>   0 &amp; 0 &amp; 1  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   R_{3 \times 3} &amp; T_{3 \times 1}  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   X_w  \cr<br>   Y_w  \cr<br>   Z_w  \cr<br>   1  \cr<br> } } \right] = K_{3 \times 3} \cdot \left[ {\matrix{<br>   R_{3 \times 3} &amp; T_{3 \times 1}  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   X_w  \cr<br>   Y_w  \cr<br>   Z_w  \cr<br>   1  \cr<br> } } \right] \tag{13}$$<br> $${\rm{s}}\left[ {\matrix{<br>   u  \cr<br>   v  \cr<br>   1  \cr<br> } } \right] = {P_{3 \times 4}} \cdot \left[ {\matrix{<br>   X_w  \cr<br>   Y_w  \cr<br>   Z_w \cr<br>   1  \cr<br> } } \right] \tag{14}$$</p>
+<p> <strong>申明：本部分借鉴转载来源：<a href="http://blog.csdn.net/humanking7/article/details/44756073" target="_blank" rel="external">翔的专栏-摄像机标定(1) 标定中的四个坐标系</a></strong></p>
+<h1 id="2-张正友标定法"><a href="#2-张正友标定法" class="headerlink" title="2. 张正友标定法"></a>2. 张正友标定法</h1><p>  paper来源：<a href="http://research.microsoft.com/en-us/um/people/zhang/Papers/TR98-71.pdf" target="_blank" rel="external">A Flexible New Technique for Camera Calibration</a>.</p>
+<h2 id="2-1-基本方程"><a href="#2-1-基本方程" class="headerlink" title="2.1. 基本方程"></a>2.1. 基本方程</h2><p> 对于节1.2.4中的综合公式，我们假设一个空间点的图像坐标表示为$m={[u,v]}^{T}$，空间坐标表示为$M={[X,Y,Z]}^{T}$，其对应的齐次方程表示分别为：$\rm{\tilde m} = [u,v,1]^T$ 和$\rm{\tilde M} = [X,Y,Z,1]^T$，则式(14)可以表示为：<br> $$\rm{s\tilde m} = A[R,t]\tilde M \tag{15}$$<br> 其中s表示任意数尺度，A表示内参矩阵，$[R,t]$表示旋转和平移。<br> 将$R$分解为列向量有：$R=[r_1,r_2,r_3]$。<br> 因为张正友标定法是基于棋盘格的标定法，为了求得相机的内参，我们可以从棋盘格的平面性入手求得棋盘格从一个平面到另一个平面的投影映射。不妨设$Z=0$，则有：<br>$${\rm{s}}\left[ {\matrix{<br>   u  \cr<br>   v  \cr<br>   1  \cr<br> } } \right] = A \cdot \left[ {\matrix{<br>   r_1 &amp; r_2 &amp; r_3 &amp; t  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   X  \cr<br>   Y  \cr<br>   0  \cr<br>   1  \cr<br> } } \right]= A \cdot \left[ {\matrix{<br>   r_1 &amp; r_2  &amp; t  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   X  \cr<br>   Y  \cr<br>   1  \cr<br> } } \right] \tag{16}$$<br> 令$H=A \left[ {\matrix{ r_1 &amp; r_2  &amp; t  \cr } } \right] $，即：<br> $${\rm{s}}\left[ {\matrix{<br>   u  \cr<br>   v  \cr<br>   1  \cr<br> } } \right] =H \cdot \left[ {\matrix{<br>   X  \cr<br>   Y  \cr<br>   1  \cr<br> } } \right] \tag{17}$$<br> 同时将H也分解为列向量：$H=\left[ {\matrix{ h_1 &amp; h_2  &amp; h_3  \cr } } \right] $，因为$H$是一个3x3的矩阵，并且有一个元素作为齐次坐标，因此，H有8个未知量待解(其中A里面有5个未知量，而后面的旋转位移有三个未知量，因此一共是8个未知量)。而$(X,Y)$是标定物的坐标，在棋盘格中可以通过人为控制，因此是已知量。$(u,v)$是像素坐标，直接通过摄像机获得。<br> 由$H= \left[ {\matrix{h_1&amp;h_2&amp;h_3 \cr}} \right] =\lambda \cdot A \left[ { \matrix{r_1&amp;r_2&amp;t \cr}} \right] $可得：<br> $$r_1={1 \over \lambda}{A^{-1}} h_1 ,r_2={1 \over \lambda}{A^{-1}} h_2 \tag{18} $$<br> 因为$r_1,r_2$是单位正交矢量，因此有：${r_1}^2={r_2}^2=1 , r_1 \times r_2=0 , {r_1}^T \times {r_2}^T =0 $，将式{18}代入可得约束条件：<br> $${h_1}^T A^{-T} A^{-1} h_2=0 , {h_1}^T A^{-T} A^{-1} h_1={h_2}^T A^{-T} A^{-1} h_2 \tag{19} $$<br> 这就是用来求单应举证$H$的两个基本约束方程。上式中的$h_1,h_2$是通过求解单应性矩阵 $H$得到的。而A中含有5个参数，如果需要完全解出来这5个未知量，我们需要3个不用的单应性矩阵$H$(3个单应性矩阵在2个约束条件下可以产生6个方程)。</p>
+<h2 id="2-2-单应性矩阵-H-的求解"><a href="#2-2-单应性矩阵-H-的求解" class="headerlink" title="2.2. 单应性矩阵$H$的求解"></a>2.2. 单应性矩阵$H$的求解</h2><p> 由$H=A \left[ { \matrix{ r_1 &amp; r_2 &amp; t \cr}}\right]=\left[ {\matrix{h_1 &amp; h_2 &amp;h_3 \cr}} \right]=\left[{ \matrix{<br>     h_{11} &amp; h_{12} &amp; h_{13} \cr<br>    h_{21} &amp; h_{22} &amp; h_{23} \cr<br>    h_{31} &amp; h_{32} &amp; 1 \cr<br> }}\right] , \rm{s\tilde m} = H \tilde M $可得：<br>$$\left\{ {\matrix{<br>   su = h_{11}X + h_{12}Y + h_{13}  \cr<br>   su = h_{21}X + h_{22}Y + h_{23 } \cr<br>   s = h_{31}X + h_{32} + 1  \cr<br> } } \right. \tag{20}$$<br> 整理可得：<br> $$\left\{ {\matrix{<br>    uX{h_{31}}+uY{h_{32}}+u={h_{11}}X+{h_{12}}Y+h_{13} \cr<br>    vX{h_{31}}+vY{h_{32}}+v={h_{21}}X+{h_{22}}Y+h_{23} \cr<br> } } \right. \tag{21}$$<br> 不妨设$h’=\left[{\matrix{h_{11} &amp;h_{12} &amp;h_{13} &amp;h_{21} &amp;h_{22} &amp;h_{23} &amp;h_{31} &amp;h_{32} &amp;1}}\right] $，则上式可表示为：<br> $$\left[{\matrix{<br> X&amp;Y&amp;1&amp;0&amp;0&amp;0&amp;-uX&amp;-uY&amp;-u \cr<br> 0&amp;0&amp;0&amp;X&amp;Y&amp;1&amp;-vX&amp;-vY&amp;-v \cr<br> }}\right]h’=0 \tag{22}$$<br> 上式可以看成是$Sh’=0$，那么矩阵${S^T}S$最小特征值对应的特征向量就是该方程的最小二乘解。再将解归一化得到所需的$h’$，从而可以求得$H$。由于线性解法所得到的解一般不是最优的解，所以可以选取上面两个等式中的一个，构建评价函数，利用Levenberg-Marquarat算法计算出更高精度的解。<br> <strong>该部分参考来源：<br> [1] <a href="http://wenku.baidu.com/link?url=QcOW4FNSi8Htllv1Yf1SBM_6XxmzkY3vcxvQNxVIAELOcyhD58Rzj8LMe7l0510Lw9UA5dfFTPh7m8z_Z9qUyyAWUSLG_uJpBTF6osPeSzm" target="_blank" rel="external">张正友相机标定法</a><br> [2] <a href="http://wenku.baidu.com/view/d435906e2f60ddccda38a0b7.html" target="_blank" rel="external">张氏标定法</a>
+ </strong></p>
+<h2 id="2-3-摄像机内外参数的求解"><a href="#2-3-摄像机内外参数的求解" class="headerlink" title="2.3. 摄像机内外参数的求解"></a>2.3. 摄像机内外参数的求解</h2><p> 令$$B={A^{-T}}{A^{-1}}=\left[{ \matrix{<br> B_{11}&amp;B_{12}&amp;B_{13} \cr<br>  B_{21}&amp;B_{22}&amp;B_{23} \cr<br>   B_{31}&amp;B_{32}&amp;B_{33} \cr<br> }}\right] =\left[ {\matrix{<br> 1 \over {\alpha ^2} &amp;  - \gamma  \over{ {\alpha ^2}\beta } &amp; {v_0} \gamma  - {u_0} \beta  \over {\alpha ^2} \beta   \cr<br> - \gamma  \over {\alpha ^2}\beta &amp; {\gamma ^2 \over {\alpha ^2}{\beta ^2}} + {1 \over \beta ^2 } &amp; { - \gamma ({v_0}\gamma  - {u_0}\beta ) \over {\alpha ^2}{\beta ^2}} - {v_0 \over \beta ^2}  \cr<br>  {v_0} \gamma  - {u_0} \beta  \over {\alpha ^2} \beta &amp;  { - \gamma ({v_0}\gamma  - {u_0}\beta ) \over {\alpha ^2}{\beta ^2}} - {v_0 \over \beta ^2} &amp; {({v_0}\gamma  - {u_0}\beta )^2 \over {\alpha ^2}{\beta ^2}} + {v_0^2 \over \beta ^2} + 1 \cr<br> } } \right] \tag{23}$$<br> 由于$B$是对称的，所以$B$可以用一个6D的矢量来表示：<br> $$b=\left[{\matrix{B_{11}&amp;B_{12}&amp;B_{22}&amp;B_{13}&amp;B_{23}&amp;B_{33} \cr}}\right]^T \tag{24} $$<br> 假设单应矩阵$H$第i列矢量为：${h_i}=\left[{\matrix{h_{i1}&amp;h_{i2}&amp;h_{i3} \cr}}\right]^T $，那么，我们可以得到：<br> $$ {h_i^T}B{h_j}={v_{ij}^T}b \tag{25} $$<br> 其中：$$v_{ij}=\left[{\matrix{<br> h_{i1}h_{j1}&amp; h_{i1}h_{j2}+ h_{i2}h_{j1}&amp; h_{i2}h_{j2}&amp; h_{i3}h_{j1}+ h_{i1}h_{j3}&amp; h_{i3}h_{j2}+ h_{i2}h_{j3}&amp; h_{i3}h_{j3} \cr<br> }}\right]^T \tag{26} $$利用式(19)的约束条件可以得到两个关于b的单应方程：<br> $$\left[{\matrix{<br> v_{12}^T \cr<br> (v_{11}-v_{22})^T \cr<br> }}\right]b=0 \tag{27}$$<br> 假设有N幅模板图像，就可以得到：<br> $$Vb=0 \tag{28} $$<br> 其中，V是一个$2N \times 6$ 的矩阵，如果$N \ge 3$，b就可以被解出，从而可以得到5个内参：<br>  $$\left\{ {\matrix{<br> {v_0} =(B_{12}B_{13}-B_{11}B_{23}) / (B_{11}B_{22}-B_{12}^2) \cr<br> \lambda =B_{33}-[B_{13}^2+{v-0}(B_{12}B_{13}-B_{11}B_{23})]/B_{11} \cr<br> \alpha =\sqrt{\lambda / B_{11}} \cr<br> \beta = \sqrt{\lambda B_{11}/(B_{12}B_{22}-B_{12}^2)} \cr<br> \gamma =-B_12 \alpha^2\beta/\lambda \cr<br> {u_0}=\gamma v_0/\alpha -B_13 \alpha^2 /\lambda \cr<br> }}\right. \tag{29} $$<br> 当求出了内参A时，我们就可以得到对应的旋转和位移矢量：<br><br> <center>$r_1=\lambda A^{-1} h_1,r_2=\lambda A^{-1} h_2, r_3=r_1 \times r_2, t=\lambda A^{-1}h_3 $<center><br></center></center></p>
+<h2 id="2-4-最大似然估计"><a href="#2-4-最大似然估计" class="headerlink" title="2.4. 最大似然估计"></a>2.4. 最大似然估计</h2><p> 节2.3.得到的旋转矩阵$R$的方法是基于最小距离的，而在实际中$R=(r_1,r_2,r_3)$并不满足正交性质，所以可以利用最大似然估计来求解。<br> 我们通过移动棋盘格和相机的相对位置来得到关于棋盘格的n幅图像，假设在每一幅图像中都具有数量相同的标定点，且其个数为m，并假设背个表定点的坐标都有独立同分布的噪声，我们可以构造最大似然估计的能量函数：<br> $$\sum\limits_{i = 1}^n {\sum\limits_{j = 1}^m {||m_{ij} - \hat m(A,R_i,t_i,M_j)||^2} } \tag{30}$$<br> 其中$m_{ij}$是第j个标定点在第i幅图像上的像素坐标矢量，$R_i$是第i幅图像的旋转矩阵,$t_i$是对应的平移向量，$M_j$是第j个标定点的空间坐标,$\hat m(A,R_i,t_i,M_j)$是通过已知初始值得到的像素点估计坐标。该方程的求解是一个经典的非线性优化问题，可以通过LM算法来求解。</p>
+<h2 id="2-5-摄像机的畸变校正模型修正"><a href="#2-5-摄像机的畸变校正模型修正" class="headerlink" title="2.5. 摄像机的畸变校正模型修正"></a>2.5. 摄像机的畸变校正模型修正</h2><p> 在张氏标定法中只关注径向畸变，并且假设x方向和y方向上的径向畸变是一致的。<br> 由于在实际情况中，径向畸变较小，所以可以利用主点及其周围的泰勒级数来表示。在张氏标定法中，利用泰勒展开的前两项来确定径向畸变的畸变洗漱。数学表达式如下：<br>$$\mathord{\buildrel{\lower3pt\hbox{$\scriptscriptstyle\smile$}}\over<br> u}  = u + (u - u_0)[k_1({x^2} + {y^2}) + k_2({x^2} + {y^2})^2] \tag{31}$$<br> $$\mathord{\buildrel{\lower3pt\hbox{$\scriptscriptstyle\smile$}}\over<br> v}  = v + (v - v_0)[k_1({x^2} + {y^2}) + k_2({x^2} + {y^2})^2] \tag{32}$$<br> 其中，$(u,v)$代表理想无畸变的像素坐标，$(\mathord{\buildrel{\lower3pt\hbox{$\scriptscriptstyle\smile$}}\over<br> u},\mathord{\buildrel{\lower3pt\hbox{$\scriptscriptstyle\smile$}}\over<br> v})$代表实际径向畸变情况下的像素坐标，$(u_0,v_0)$代表当前点，(x,y)代表理想无畸变时的连续图像坐标，k1,k2代表前两阶的畸变参数。<br> 将其写成矩阵的形式：<br> $$\left[{ \matrix{<br> (u-u_0)({x^2}+{y^2})&amp; (u-u_0){({x^2}+{y^2})}^2 \cr<br> (v-v_0)({x^2}+{y^2})&amp; (v-v_0){({x^2}+{y^2})}^2 \cr<br> }}\right] \left[{\matrix{<br> k_1 \cr<br> k_2 \cr<br> }}\right] =\left[{\matrix{<br>     \mathord{\buildrel{\lower3pt\hbox{$\scriptscriptstyle\smile$}}\over<br> u}-u \cr<br> \mathord{\buildrel{\lower3pt\hbox{$\scriptscriptstyle\smile$}}\over<br> v}-v \cr<br> }}\right] \tag{33}$$<br> 根据节2.4. 我们有n幅图像，每幅图像都可以构造如上形式的矩阵方程，因此可以得到：<br> $$k=({D^T}D)^{-1}{D^T}d \tag{34}$$<br> 其中，D是矩阵左边所有系数构成的系数矩阵，d是等式右边的有畸变像素和无畸变像素坐标之差构成的矩阵。运用最小二乘法对结果进行优化，就可以得到径向畸变$k=[k_1,k_2]$。<br> 将该径向畸变融入节2.4.为求解最优化而构造的能量函数中，得到：<br> $$\sum\limits_{i = 1}^n {\sum\limits_{j = 1}^m {||m_{ij} - \hat m(A,k_1,k_2,R_i,t_i,M_j)||^2} } \tag{35}$$<br> 对上式求解LM得到所有未知参数的最优解。</p>
+<h2 id="2-6-张氏标定法步骤总结"><a href="#2-6-张氏标定法步骤总结" class="headerlink" title="2.6. 张氏标定法步骤总结"></a>2.6. 张氏标定法步骤总结</h2><p> 张氏标定法的流程如下所示：</p>
+<ol>
+<li>打印一张标定板，然后附加到一个平坦的表面上。</li>
+<li>通过移动相机或者平面拍摄关于标定板的各种角度的图片。</li>
+<li>检测图像中的特征点。</li>
+<li>计算五个内部参数和所有外部参数。</li>
+<li>通过最小二乘法先行求解径向畸变系数。</li>
+<li>通过求最小化参数值，优化所有的参数。</li>
+</ol>
+<h1 id="3-总结"><a href="#3-总结" class="headerlink" title="3. 总结"></a>3. 总结</h1><p> 关于张氏标定法的基本原理与流程到这就基本结束了，参考了作者的原paper和网上的一些博客，对此已一一申明，同时对作者和博主表示感谢。刚开始规规矩矩的写博客，感觉还是挺受益匪浅的，继续加油吧！<br><br> <div style="float:right">Frank&nbsp;&nbsp;&nbsp;&nbsp;</div></p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[计算机视觉-SLAM系列学习]]></title>
+      <url>http://fangrenziwo.com/2016/07/01/cv-start/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-07-01
+</strong></p>
+<hr>
+<p>为了加深对Monocular SLAM的理解，开始学习并撰写一系列的博客，博客内容可能从最基本的相机标定开始，涉及单目相机的标定原理，各特征提取和匹配算子等系列内容。由于自己对SLAM相关的知识点理解的也不是非常透彻，所以博客序列也算是对自己知识的巩固和加强吧，文中若有错误，请不吝指出，谢谢！</p>
+<center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[hexo-math Test]]></title>
+      <url>http://fangrenziwo.com/2016/06/30/hexo-math/</url>
+      <content type="html"><![CDATA[<p>  $$T_{k,k-1}=arg [\mathop {\min }\limits_T ] \sum_{i}||u^{‘}_i- \pi(p_i)||_{\sum}^2 \tag{2} $$</p>
+<p> $$\left\{ {\matrix{<br> {v_0}=(B_{12}B_{13}-B_{11}B_{23}) / (B_{11}B_{22}-B_{12}^2) \cr<br> }}\right. \tag{29} $$</p>
+<p> 令$$B={A^{-T}}{A^{-1}}=\left[{ \matrix{<br> B_{11}&amp;B_{12}&amp;B_{13} \cr<br>  B_{21}&amp;B_{22}&amp;B_{23} \cr<br>   B_{31}&amp;B_{32}&amp;B_{33} \cr<br> }}\right] =\left[ {\matrix{<br> 1 \over {\alpha ^2} &amp;  - \gamma  \over{ {\alpha ^2}\beta } &amp; {v_0} \gamma  - {u_0} \beta  \over {\alpha ^2} \beta   \cr<br> - \gamma  \over {\alpha ^2}\beta &amp; {\gamma ^2 \over {\alpha ^2}{\beta ^2}} + {1 \over \beta ^2 } &amp; { - \gamma ({v_0}\gamma  - {u_0}\beta ) \over {\alpha ^2}{\beta ^2}} - {v_0 \over \beta ^2}  \cr<br>  {v_0} \gamma  - {u_0} \beta  \over {\alpha ^2} \beta &amp;  { - \gamma ({v_0}\gamma  - {u_0}\beta ) \over {\alpha ^2}{\beta ^2}} - {v_0 \over \beta ^2} &amp; {({v_0}\gamma  - {u_0}\beta )^2 \over {\alpha ^2}{\beta ^2}} + {v_0^2 \over \beta ^2} + 1 \cr<br> } } \right]$$</p>
+<a id="more"></a>
+<p>$$\left\{ {A} \right.$$</p>
+<p>$$u ={u_0} + {x_d \over dx}$$<br>$$u = 2 + {x_d \over dx}$$</p>
+<p> $$\left[ {\matrix{<br>   R_{3 \times 3} &amp;  R_{3 \times 3}  \cr<br>   O &amp; 1  \cr<br> } } \right]$$</p>
+<p> $${R_{3 \times 3}}$$</p>
+<p>Simple inline $a = b + c$.</p>
+<p>$$\frac{\partial u}{\partial t}<br>= h^2 \left( \frac{\partial^2 u}{\partial x^2} +<br>\frac{\partial^2 u}{\partial y^2} +<br>\frac{\partial^2 u}{\partial z^2}\right)$$</p>
+<p>$$<br>\begin{eqnarray}<br>\nabla\cdot\vec{E} &amp;=&amp; \frac{\rho}{\epsilon_0} \<br>\nabla\cdot\vec{B} &amp;=&amp; 0 \<br>\nabla\times\vec{E} &amp;=&amp; -\frac{\partial B}{\partial t} \<br>\nabla\times\vec{B} &amp;=&amp; \mu_0\left(\vec{J}+\epsilon_0\frac{\partial E}{\partial t} \right)<br>\end{eqnarray}<br>$$</p>
+<p>$$\frac{|ax + by + c|}{\sqrt{a^{2}+b^{2}}}$$</p>
+<p>$$\sqrt {a^{2} + b^{2}}$$</p>
+<p>$${\sqrt {a^{2} + b^{2}} } \over {\mathop {\lim }\limits_{x \to \infty } \sqrt {b^{2} - 4ac} }$$</p>
+<p>$${\sqrt {a^{2} + b^{2}} } \over {\mathop {\lim }\limits_{x \to \infty } \sqrt {b^{2} - 4ac} } \cdot \sqrt 2  \cdot  {n!}$$</p>
+<p>$${\rm{T}}(\phi ) = \left[ {\matrix{<br>   1 &amp; 0 &amp; 0  \cr<br>   0 &amp; {\cos \phi } &amp; {\sin \phi }  \cr<br>   0 &amp; { - \sin \phi } &amp; {\cos \phi }  \cr<br> } } \right]$$</p>
+<p>$$R =\left[ {\matrix{<br>   {\cos \varphi } &amp; {\sin \varphi } &amp; 0  \cr<br>   { - \sin \varphi } &amp; {\cos \varphi } &amp; 0  \cr<br>   0 &amp; 0 &amp; 1  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   {\cos \theta } &amp; 0 &amp; { - \sin \theta }  \cr<br>   0 &amp; 1 &amp; 0  \cr<br>   {\sin \theta } &amp; 0 &amp; {\cos \theta }  \cr<br> } } \right] \cdot \left[ {\matrix{<br>   1 &amp; 0 &amp; 0  \cr<br>   0 &amp; {\cos \phi } &amp; {\sin \phi }  \cr<br>   0 &amp; { - \sin \phi } &amp; {\cos \phi }  \cr<br> } } \right]$$</p>
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Fang's Blog]]></title>
+      <url>http://fangrenziwo.com/2016/06/21/untitled-1466519157052/</url>
+      <content type="html"><![CDATA[<h2 id="我的博客站"><a href="#我的博客站" class="headerlink" title="我的博客站"></a>我的博客站</h2><p>MarkDown测试：</p>
+<h1 id="test"><a href="#test" class="headerlink" title="test"></a>test</h1><h2 id="test-1"><a href="#test-1" class="headerlink" title="test"></a>test</h2><h3 id="test-2"><a href="#test-2" class="headerlink" title="test"></a>test</h3><h4 id="test-3"><a href="#test-3" class="headerlink" title="test"></a>test</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">test</span></span><br></pre></td></tr></table></figure>
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[Hello World]]></title>
+      <url>http://fangrenziwo.com/2016/06/21/hello-world/</url>
+      <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.<br><a id="more"></a></p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+]]></content>
+    </entry>
+    
+  
+  
+    
+    <entry>
+      <title><![CDATA[分类]]></title>
+      <url>http://fangrenziwo.com/categories/index.html</url>
+      <content type="html"></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[分类 & 标签云]]></title>
+      <url>http://fangrenziwo.com/tags/index.html</url>
+      <content type="html"></content>
+    </entry>
+    
+  
+</search>
