@@ -4,31 +4,23 @@
 <head>
   <meta charset="UTF-8">
   
-    <title>SLAM系列--非线性优化（2） | Fang&#39;s Blog</title>
+    <title>深入应用C++11之auto、decltype和模板别名 | Fang&#39;s Blog</title>
     <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
     
     <meta name="author" content="Fang">
     
 
     
-    <meta name="description" content="作者：Frank时间：2016-08-03
-
-本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquardt是结合了Gauss-Newton和梯度下降法的优点总结而来的迭代算法，因此这里会先介绍梯度下降法。">
+    <meta name="description" content="作者：Frank时间：2016-11-25">
 <meta property="og:type" content="article">
-<meta property="og:title" content="SLAM系列--非线性优化（2）">
-<meta property="og:url" content="http://fangrenziwo.com/2016/08/03/cv-nonlinear-optimazation-02/index.html">
+<meta property="og:title" content="深入应用C++11之auto、decltype和模板别名">
+<meta property="og:url" content="http://fangrenziwo.com/2016/11/25/Cpp11-auto-decltype-using/index.html">
 <meta property="og:site_name" content="Fang's Blog">
-<meta property="og:description" content="作者：Frank时间：2016-08-03
-
-本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquardt是结合了Gauss-Newton和梯度下降法的优点总结而来的迭代算法，因此这里会先介绍梯度下降法。">
-<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-8-3/91157798.jpg">
-<meta property="og:updated_time" content="2016-08-03T15:10:12.816Z">
+<meta property="og:description" content="作者：Frank时间：2016-11-25">
+<meta property="og:updated_time" content="2016-11-24T18:43:56.452Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="SLAM系列--非线性优化（2）">
-<meta name="twitter:description" content="作者：Frank时间：2016-08-03
-
-本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquardt是结合了Gauss-Newton和梯度下降法的优点总结而来的迭代算法，因此这里会先介绍梯度下降法。">
-<meta name="twitter:image" content="http://o9n30cpt4.bkt.clouddn.com/16-8-3/91157798.jpg">
+<meta name="twitter:title" content="深入应用C++11之auto、decltype和模板别名">
+<meta name="twitter:description" content="作者：Frank时间：2016-11-25">
 
     
     
@@ -86,14 +78,14 @@
 		<header class="article-info clearfix">
   <h1 itemprop="name">
     
-      <a href="/2016/08/03/cv-nonlinear-optimazation-02/" title="SLAM系列--非线性优化（2）" itemprop="url">SLAM系列--非线性优化（2）</a>
+      <a href="/2016/11/25/Cpp11-auto-decltype-using/" title="深入应用C++11之auto、decltype和模板别名" itemprop="url">深入应用C++11之auto、decltype和模板别名</a>
   </h1>
   <p class="article-author">By
        
 		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
 		
   <p class="article-time">
-    <time datetime="2016-08-03T13:43:15.000Z" itemprop="datePublished"> 發表於 2016-08-03</time>
+    <time datetime="2016-11-24T18:41:05.000Z" itemprop="datePublished"> 發表於 2016-11-25</time>
     
   </p>
 </header>
@@ -102,33 +94,39 @@
 		<div id="toc" class="toc-article">
 			<strong class="toc-title">文章目錄</strong>
 		
-			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-梯度下降法"><span class="toc-number">1.</span> <span class="toc-text">1. 梯度下降法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-梯度的概念"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. 梯度的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-梯度下降"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. 梯度下降</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-梯度方向下降和函数最值"><span class="toc-number">1.3.</span> <span class="toc-text">1.3. 梯度方向下降和函数最值</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-Levenberg-Marquardt算法"><span class="toc-number">2.</span> <span class="toc-text">2. Levenberg-Marquardt算法</span></a></li></ol>
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#auto类型推导"><span class="toc-number">1.</span> <span class="toc-text">auto类型推导</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#auto的概念"><span class="toc-number">1.1.</span> <span class="toc-text">auto的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#auto的推导规则："><span class="toc-number">1.2.</span> <span class="toc-text">auto的推导规则：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#auto的限制："><span class="toc-number">1.3.</span> <span class="toc-text">auto的限制：</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#decltype关键字"><span class="toc-number">2.</span> <span class="toc-text">decltype关键字</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#decltype的概念"><span class="toc-number">2.1.</span> <span class="toc-text">decltype的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#decltype推导规则"><span class="toc-number">2.2.</span> <span class="toc-text">decltype推导规则</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#返回类型后置语法—auto和decltype的结合使用"><span class="toc-number">3.</span> <span class="toc-text">返回类型后置语法—auto和decltype的结合使用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#模板别名"><span class="toc-number">4.</span> <span class="toc-text">模板别名</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#模板别名的概念"><span class="toc-number">4.1.</span> <span class="toc-text">模板别名的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#函数模板的默认模板参数"><span class="toc-number">4.2.</span> <span class="toc-text">函数模板的默认模板参数</span></a></li></ol></li></ol>
 		
 		</div>
 		
-		<p><strong><br>作者：Frank<br>时间：2016-08-03
+		<p><strong><br>作者：Frank<br>时间：2016-11-25
 </strong></p>
-<p>本节延续上节部分讲述非线性优化问题中的Levenberg-Marquardt算法。Gauss-Newton和Levenberg-Marquardt都是在直接法中求解相机姿态时最常用到的两种迭代算法。而Levenberg-Marquardt是结合了Gauss-Newton和梯度下降法的优点总结而来的迭代算法，因此这里会先介绍梯度下降法。<br><a id="more"></a></p>
-<h1 id="1-梯度下降法"><a href="#1-梯度下降法" class="headerlink" title="1. 梯度下降法"></a>1. 梯度下降法</h1><p>梯度下降法是一个一阶最优化算法，通常我们也将其称为最速下降法。</p>
-<h2 id="1-1-梯度的概念"><a href="#1-1-梯度的概念" class="headerlink" title="1.1. 梯度的概念"></a>1.1. 梯度的概念</h2><p>一个函数$D(\theta)$对它的一个变量$\theta$的梯度定义为：<br>$${\partial D(\theta) \over \partial \theta}=\lim_{\delta \theta \rightarrow 0}{D(\theta+\partial \theta)-D(\theta) \over \delta \theta}\tag{1}$$<br>某一点上的梯度指向标量场增长最快的方向，梯度的长度就是最大的变化率。</p>
-<h2 id="1-2-梯度下降"><a href="#1-2-梯度下降" class="headerlink" title="1.2. 梯度下降"></a>1.2. 梯度下降</h2><p>我们知道对于一个函数沿着梯度的那个方向是下降最快的。例如为了选取一个$\theta$使得$D(\theta)$最小，我们可以先随机选择$\theta$一个初始值，然后不断的修改$\theta$以减小$D(\theta)$，知道$\theta$的值不再改变，对于梯度下降法，可以表示为：<br>$$\theta_j=\theta_j-\alpha {\partial D(\theta) \over \partial \theta_j}\tag{2}$$<br>即不断地向梯度的那个方向（减小最快的方向）更新$\theta$，最终使得$D(\theta)$最小。其中$\alpha$称为学习速率，取值太小会导致迭代过慢，取值太大可能错过最值点。</p>
-<h2 id="1-3-梯度方向下降和函数最值"><a href="#1-3-梯度方向下降和函数最值" class="headerlink" title="1.3. 梯度方向下降和函数最值"></a>1.3. 梯度方向下降和函数最值</h2><p>梯度下降法，基于这样的观察：如果实值函数F(x)在点a处可微且有定义，那么函数F(x)在a点沿着梯度相反的方向–$\Delta F(a)$下降最快。<br>因此，如果：$b=a-\alpha \Delta F(a) $，那么$F(b)\leq F(a)$。<br>考虑如下序列：$x_0,x_1,x_2……$，使得<br>$$x_{n+1}=x_n-\alpha \Delta F(x_n) \tag{3}$$<br>因此可以得到：$F(x_0) \geq F(x_1)…….$，如果顺利的话序列最终可以收敛到期望的极值。<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-8-3/91157798.jpg" alt=""><br>注意：梯度下降得到的结果可能是局部最优值。如果F(x)是凸函数，则可以保证梯度下降得到的是全局最优值。</p>
-<p><strong> 申明：本节引用来源：<a href="http://www.wengweitao.com/ti-du-xia-jiang-fa.html" target="_blank" rel="external">梯度下降法</a> </strong></p>
-<h1 id="2-Levenberg-Marquardt算法"><a href="#2-Levenberg-Marquardt算法" class="headerlink" title="2. Levenberg-Marquardt算法"></a>2. Levenberg-Marquardt算法</h1><p>梯度下降法和Gauss-Newton都是最优化方法。其区别之处在于：</p>
-<ol>
-<li>梯度下降法在寻找目标函数极小值时，是沿着反梯度方向进行寻找的。梯度的定义就是指向标量场增长最快的方向，在寻找极小值时，先随便定初始点（x0，y0）然后进行迭代不断寻找直到梯度的模达到预设的要求。但是梯度下降法的缺点之处在于：在远离极小值的地方下降很快，而在靠近极小值的地方下降很慢。</li>
-<li>而高斯牛顿法是一种非线性最小二乘最优化方法。其利用了目标函数的泰勒展开式把非线性函数的最小二乘化问题化为每次迭代的线性函数的最小二乘化问题。高斯牛顿法的缺点在于：若初始点距离极小值点过远，迭代步长过大会导致迭代下一代的函数值不一定小于上一代的函数值。</li>
+<a id="more"></a>
+<h1 id="auto类型推导"><a href="#auto类型推导" class="headerlink" title="auto类型推导"></a>auto类型推导</h1><h2 id="auto的概念"><a href="#auto的概念" class="headerlink" title="auto的概念"></a>auto的概念</h2><ol>
+<li>auto并不能代表一个实际的类型声明，只是一个类型声明的占位符；</li>
+<li>使用auto声明的变量必须马上初始化，以让编译器推断出它的实际类型，并在编译时将auto占位符替换为真正的类型。</li>
 </ol>
-<p>LM算法在高斯牛顿法中加入了因子μ，当μ大时相当于梯度下降法，μ小时相当于高斯牛顿法。（这儿我也不明白为什么，希望有大牛解答）。在使用Levenberg-Marquart时，先设置一个比较小的μ值，当发现目标函数反而增大时，将μ增大使用梯度下降法快速寻找，然后再将μ减小使用牛顿法进行寻找。<br>为了避免发散，有两种解决方法：</p>
-<ol>
-<li>调整下降步伐： $\beta^{s+1}=\beta^s+\alpha \Delta 0&lt;\alpha&lt;1$；</li>
-<li>调整下降方向：$(J^TJ+\lambda D)\Delta=J^Tr$；</li>
+<h2 id="auto的推导规则："><a href="#auto的推导规则：" class="headerlink" title="auto的推导规则："></a>auto的推导规则：</h2><ol>
+<li>当不声明为指针或引用时，auto的推导结果和初始化表达式抛弃引用和cv限定符后类型一致；</li>
+<li>当声明为指针或引用时，auto的推导结果将保持初始化表达式的cv属性；</li>
 </ol>
-<p>LM方法的好处是可以调节：<br>如果下降太快，使用较小的λ，使之更接近高斯牛顿法；<br>如果下降太慢，使用较大的λ，使之更接近梯度下降法；</p>
-<p><strong> 申明：本节引用来源：<a href="http://blog.csdn.net/dsbatigol/article/details/12448627" target="_blank" rel="external">【math】梯度下降法(梯度下降法，牛顿法，高斯牛顿法，Levenberg-Marquardt算法)</a> </strong></p>
- <center><br><strong><br>转载请注明出处
-</strong><br></center>
-
+<p>注：cv属性表示const/volitate等限定符；</p>
+<h2 id="auto的限制："><a href="#auto的限制：" class="headerlink" title="auto的限制："></a>auto的限制：</h2><ol>
+<li>auto不能用于函数参数；</li>
+<li>auto不能用于类中的非静态成员变量；</li>
+<li>auto无法定义数组；</li>
+<li>auto无法推导出模板参数；</li>
+</ol>
+<h1 id="decltype关键字"><a href="#decltype关键字" class="headerlink" title="decltype关键字"></a>decltype关键字</h1><h2 id="decltype的概念"><a href="#decltype的概念" class="headerlink" title="decltype的概念"></a>decltype的概念</h2><p>auto所修饰的变量必须要立即初始化，若仅希望得到类型，而不需要定义变量的时候，可以使用decltype，它是用来在编译时推导表达式类型。如下：decltype(exp)。其中，exp表示一个表达式。decltype将精确的推导出表达式定义本身的类型，不会像auto那样在某些情况下舍弃掉引用和cv限定符。</p>
+<h2 id="decltype推导规则"><a href="#decltype推导规则" class="headerlink" title="decltype推导规则"></a>decltype推导规则</h2><ol>
+<li>exp是标识符、类访问表达式，decltype(exp)和exp的类型一致；</li>
+<li>exp是函数调用，decltype(exp)和返回值的类型一致；</li>
+<li>其他情况，若exp是一个左值，则decltype(exp)是exp类型的左值引用，否则和exp类型一致；</li>
+</ol>
+<p>注：对于纯右值而言，只有类类型可以携带cv限定符，此外一般忽略掉cv限定。</p>
+<h1 id="返回类型后置语法—auto和decltype的结合使用"><a href="#返回类型后置语法—auto和decltype的结合使用" class="headerlink" title="返回类型后置语法—auto和decltype的结合使用"></a>返回类型后置语法—auto和decltype的结合使用</h1><p>在C++11中增加了返回类型后置语法，将decltype和auto结合起来完成返回值类型的推导。见示例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">//ex1</span><br><span class="line">template&lt;typename T,typename U&gt;</span><br><span class="line">auto add(T t,U u) -&gt; decltype(t+u)&#123;</span><br><span class="line">	return t+u;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//ex2</span><br><span class="line">int&amp; foo(int&amp; i);</span><br><span class="line">float foo(float&amp; f);</span><br><span class="line"></span><br><span class="line">template&lt;typename T&gt;</span><br><span class="line">auto func(T&amp; val)-&gt;decltype(foo(val))&#123;</span><br><span class="line">	return foo(val);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="模板别名"><a href="#模板别名" class="headerlink" title="模板别名"></a>模板别名</h1><h2 id="模板别名的概念"><a href="#模板别名的概念" class="headerlink" title="模板别名的概念"></a>模板别名的概念</h2><p>在C++11中，重定义了using来作为模板别名的定义语法。实际上，using的别名语法覆盖了typedef的全部功能。示例如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//重定义unsigned int</span><br><span class="line">typedef unsigned int uint_t;</span><br><span class="line">using uint_t=unsigned int;</span><br><span class="line"></span><br><span class="line">//重定义std::map</span><br><span class="line">typedef std::map&lt;std::string,int&gt; map_int_t;</span><br><span class="line">using map_int_t=std::map&lt;std::string,int&gt;;</span><br></pre></td></tr></table></figure></p>
+<p>通过using定义模板别名的语法，只是在普通类型别名语法的基础上增加了template的参数列表。使用using可以轻松的创建一个新的模板别名，而不需要像之前的C++一样使用繁琐的外敷模板。    </p>
+<h2 id="函数模板的默认模板参数"><a href="#函数模板的默认模板参数" class="headerlink" title="函数模板的默认模板参数"></a>函数模板的默认模板参数</h2><p>在C++98/03中，类模板可以有默认的模板参数，但是却不支持函数的默认模板参数，而在C++11中该限制被解除了。当所有的模板参数都有默认参数时，函数模板的调用可以如同一个普通函数，而对于类模板而言，哪怕所有参数都有默认参数，在使用时也必须在模板名后跟随”&lt;&gt;”来实例化。<br>同时，函数模板的默认模板参数在使用规则上和其他的默认参数也有不同，它没有必须写在参数表最后的限制。</p>
   
 	</div>
 		<footer class="article-footer clearfix">
@@ -136,13 +134,13 @@
 
 <div class="article-categories">
   <span></span>
-  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+  <a class="article-category-link" href="/categories/C-11/">C++11</a>
 </div>
 
 
   <div class="article-tags">
   
-  <span></span> <a href="/tags/非线性优化/">非线性优化</a>
+  <span></span> <a href="/tags/C-11理论/">C++11理论</a>
   </div>
 
 </div>
@@ -151,7 +149,7 @@
 
 	<div class="article-share" id="share">
 	
-	  <div data-url="http://fangrenziwo.com/2016/08/03/cv-nonlinear-optimazation-02/" data-title="SLAM系列--非线性优化（2） | Fang&#39;s Blog" data-tsina="null" class="share clearfix">
+	  <div data-url="http://fangrenziwo.com/2016/11/25/Cpp11-auto-decltype-using/" data-title="深入应用C++11之auto、decltype和模板别名 | Fang&#39;s Blog" data-tsina="null" class="share clearfix">
 	  </div>
 	
 	</div>
@@ -164,19 +162,11 @@
 	
 <nav class="article-nav clearfix">
  
- <div class="prev" >
- <a href="/2016/08/14/slam-resources-list/" title="【泡泡机器人】SLAM干货整理">
-  <strong>上一篇：</strong><br/>
-  <span>
-  【泡泡机器人】SLAM干货整理</span>
-</a>
-</div>
-
 
 <div class="next">
-<a href="/2016/07/31/cv-nonlinear-optimazation-01/"  title="SLAM系列--非线性优化（1）">
+<a href="/2016/11/25/C-11-start/"  title="《深入应用C++11代码优化与工程级应用》知识点总结">
  <strong>下一篇：</strong><br/> 
- <span>SLAM系列--非线性优化（1）
+ <span>《深入应用C++11代码优化与工程级应用》知识点总结
 </span>
 </a>
 </div>
@@ -185,7 +175,7 @@
 
 	
 <section id="comments" class="comment">
-	<div class="ds-thread" data-thread-key="2016/08/03/cv-nonlinear-optimazation-02/" data-title="SLAM系列--非线性优化（2）" data-url="http://fangrenziwo.com/2016/08/03/cv-nonlinear-optimazation-02/"></div>
+	<div class="ds-thread" data-thread-key="2016/11/25/Cpp11-auto-decltype-using/" data-title="深入应用C++11之auto、decltype和模板别名" data-url="http://fangrenziwo.com/2016/11/25/Cpp11-auto-decltype-using/"></div>
 </section>
 
 
@@ -195,7 +185,7 @@
   <div id="toc" class="toc-aside">
   <strong class="toc-title">文章目錄</strong>
  
- <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-梯度下降法"><span class="toc-number">1.</span> <span class="toc-text">1. 梯度下降法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-梯度的概念"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. 梯度的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-梯度下降"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. 梯度下降</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-梯度方向下降和函数最值"><span class="toc-number">1.3.</span> <span class="toc-text">1.3. 梯度方向下降和函数最值</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-Levenberg-Marquardt算法"><span class="toc-number">2.</span> <span class="toc-text">2. Levenberg-Marquardt算法</span></a></li></ol>
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#auto类型推导"><span class="toc-number">1.</span> <span class="toc-text">auto类型推导</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#auto的概念"><span class="toc-number">1.1.</span> <span class="toc-text">auto的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#auto的推导规则："><span class="toc-number">1.2.</span> <span class="toc-text">auto的推导规则：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#auto的限制："><span class="toc-number">1.3.</span> <span class="toc-text">auto的限制：</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#decltype关键字"><span class="toc-number">2.</span> <span class="toc-text">decltype关键字</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#decltype的概念"><span class="toc-number">2.1.</span> <span class="toc-text">decltype的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#decltype推导规则"><span class="toc-number">2.2.</span> <span class="toc-text">decltype推导规则</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#返回类型后置语法—auto和decltype的结合使用"><span class="toc-number">3.</span> <span class="toc-text">返回类型后置语法—auto和decltype的结合使用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#模板别名"><span class="toc-number">4.</span> <span class="toc-text">模板别名</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#模板别名的概念"><span class="toc-number">4.1.</span> <span class="toc-text">模板别名的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#函数模板的默认模板参数"><span class="toc-number">4.2.</span> <span class="toc-text">函数模板的默认模板参数</span></a></li></ol></li></ol>
  
   </div>
 

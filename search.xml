@@ -4,6 +4,49 @@
   
     
     <entry>
+      <title><![CDATA[深入应用C++11之auto、decltype和模板别名]]></title>
+      <url>http://fangrenziwo.com/2016/11/25/Cpp11-auto-decltype-using/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-11-25
+</strong></p>
+<a id="more"></a>
+<h1 id="auto类型推导"><a href="#auto类型推导" class="headerlink" title="auto类型推导"></a>auto类型推导</h1><h2 id="auto的概念"><a href="#auto的概念" class="headerlink" title="auto的概念"></a>auto的概念</h2><ol>
+<li>auto并不能代表一个实际的类型声明，只是一个类型声明的占位符；</li>
+<li>使用auto声明的变量必须马上初始化，以让编译器推断出它的实际类型，并在编译时将auto占位符替换为真正的类型。</li>
+</ol>
+<h2 id="auto的推导规则："><a href="#auto的推导规则：" class="headerlink" title="auto的推导规则："></a>auto的推导规则：</h2><ol>
+<li>当不声明为指针或引用时，auto的推导结果和初始化表达式抛弃引用和cv限定符后类型一致；</li>
+<li>当声明为指针或引用时，auto的推导结果将保持初始化表达式的cv属性；</li>
+</ol>
+<p>注：cv属性表示const/volitate等限定符；</p>
+<h2 id="auto的限制："><a href="#auto的限制：" class="headerlink" title="auto的限制："></a>auto的限制：</h2><ol>
+<li>auto不能用于函数参数；</li>
+<li>auto不能用于类中的非静态成员变量；</li>
+<li>auto无法定义数组；</li>
+<li>auto无法推导出模板参数；</li>
+</ol>
+<h1 id="decltype关键字"><a href="#decltype关键字" class="headerlink" title="decltype关键字"></a>decltype关键字</h1><h2 id="decltype的概念"><a href="#decltype的概念" class="headerlink" title="decltype的概念"></a>decltype的概念</h2><p>auto所修饰的变量必须要立即初始化，若仅希望得到类型，而不需要定义变量的时候，可以使用decltype，它是用来在编译时推导表达式类型。如下：decltype(exp)。其中，exp表示一个表达式。decltype将精确的推导出表达式定义本身的类型，不会像auto那样在某些情况下舍弃掉引用和cv限定符。</p>
+<h2 id="decltype推导规则"><a href="#decltype推导规则" class="headerlink" title="decltype推导规则"></a>decltype推导规则</h2><ol>
+<li>exp是标识符、类访问表达式，decltype(exp)和exp的类型一致；</li>
+<li>exp是函数调用，decltype(exp)和返回值的类型一致；</li>
+<li>其他情况，若exp是一个左值，则decltype(exp)是exp类型的左值引用，否则和exp类型一致；</li>
+</ol>
+<p>注：对于纯右值而言，只有类类型可以携带cv限定符，此外一般忽略掉cv限定。</p>
+<h1 id="返回类型后置语法—auto和decltype的结合使用"><a href="#返回类型后置语法—auto和decltype的结合使用" class="headerlink" title="返回类型后置语法—auto和decltype的结合使用"></a>返回类型后置语法—auto和decltype的结合使用</h1><p>在C++11中增加了返回类型后置语法，将decltype和auto结合起来完成返回值类型的推导。见示例：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">//ex1</span><br><span class="line">template&lt;typename T,typename U&gt;</span><br><span class="line">auto add(T t,U u) -&gt; decltype(t+u)&#123;</span><br><span class="line">	return t+u;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//ex2</span><br><span class="line">int&amp; foo(int&amp; i);</span><br><span class="line">float foo(float&amp; f);</span><br><span class="line"></span><br><span class="line">template&lt;typename T&gt;</span><br><span class="line">auto func(T&amp; val)-&gt;decltype(foo(val))&#123;</span><br><span class="line">	return foo(val);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="模板别名"><a href="#模板别名" class="headerlink" title="模板别名"></a>模板别名</h1><h2 id="模板别名的概念"><a href="#模板别名的概念" class="headerlink" title="模板别名的概念"></a>模板别名的概念</h2><p>在C++11中，重定义了using来作为模板别名的定义语法。实际上，using的别名语法覆盖了typedef的全部功能。示例如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//重定义unsigned int</span><br><span class="line">typedef unsigned int uint_t;</span><br><span class="line">using uint_t=unsigned int;</span><br><span class="line"></span><br><span class="line">//重定义std::map</span><br><span class="line">typedef std::map&lt;std::string,int&gt; map_int_t;</span><br><span class="line">using map_int_t=std::map&lt;std::string,int&gt;;</span><br></pre></td></tr></table></figure></p>
+<p>通过using定义模板别名的语法，只是在普通类型别名语法的基础上增加了template的参数列表。使用using可以轻松的创建一个新的模板别名，而不需要像之前的C++一样使用繁琐的外敷模板。    </p>
+<h2 id="函数模板的默认模板参数"><a href="#函数模板的默认模板参数" class="headerlink" title="函数模板的默认模板参数"></a>函数模板的默认模板参数</h2><p>在C++98/03中，类模板可以有默认的模板参数，但是却不支持函数的默认模板参数，而在C++11中该限制被解除了。当所有的模板参数都有默认参数时，函数模板的调用可以如同一个普通函数，而对于类模板而言，哪怕所有参数都有默认参数，在使用时也必须在模板名后跟随”&lt;&gt;”来实例化。<br>同时，函数模板的默认模板参数在使用规则上和其他的默认参数也有不同，它没有必须写在参数表最后的限制。</p>
+]]></content>
+    </entry>
+    
+    <entry>
+      <title><![CDATA[《深入应用C++11代码优化与工程级应用》知识点总结]]></title>
+      <url>http://fangrenziwo.com/2016/11/25/C-11-start/</url>
+      <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-11-25
+</strong><br>最近在看《深入应用C++11代码优化与工程级应用》，所以在博客中新开C++11部分，来总结这本书中涉及到的知识点，同时也算是对看书的一个巩固吧。</p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[【泡泡机器人】SLAM干货整理(二)]]></title>
       <url>http://fangrenziwo.com/2016/11/23/slam-resources-list2/</url>
       <content type="html"><![CDATA[<p><strong><br>作者：Frank<br>时间：2016-11-23
