@@ -55,7 +55,7 @@
 				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
 				<h2 class="blog-motto">special for SLAM</h2>
 			</div>
-			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜單">
 			</a></div>
 			<nav class="animated">
 				<ul>
@@ -71,7 +71,7 @@
  					
 					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
 						<label>Search</label>
-						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
 						<input type="hidden" name="q" value="site:fangrenziwo.com">
 					</form>
 					
@@ -94,14 +94,14 @@
 		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
 		
   <p class="article-time">
-    <time datetime="2016-09-08T08:53:23.000Z" itemprop="datePublished"> Published 2016-09-08</time>
+    <time datetime="2016-09-08T08:53:23.000Z" itemprop="datePublished"> 發表於 2016-09-08</time>
     
   </p>
 </header>
 	<div class="article-content">
 		
 		<div id="toc" class="toc-article">
-			<strong class="toc-title">Contents</strong>
+			<strong class="toc-title">文章目錄</strong>
 		
 			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-RANSAC算法"><span class="toc-number">1.</span> <span class="toc-text">1. RANSAC算法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-RANSAC算法基础"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. RANSAC算法基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-1-算法的基本假设"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.1.1. 算法的基本假设</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-2-算法示例"><span class="toc-number">1.1.2.</span> <span class="toc-text">1.1.2. 算法示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-3-算法概述"><span class="toc-number">1.1.3.</span> <span class="toc-text">1.1.3. 算法概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-4-RANSAC的优劣"><span class="toc-number">1.1.4.</span> <span class="toc-text">1.1.4. RANSAC的优劣</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-RANSAC算法用于消除图像误匹配原理"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. RANSAC算法用于消除图像误匹配原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-1-算法原理"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.2.1. 算法原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-2-算法步骤"><span class="toc-number">1.2.2.</span> <span class="toc-text">1.2.2. 算法步骤</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-EPnP算法"><span class="toc-number">2.</span> <span class="toc-text">2. EPnP算法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-基本表示"><span class="toc-number">2.1.</span> <span class="toc-text">2.1. 基本表示</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-控制点在相机坐标系的坐标"><span class="toc-number">2.2.</span> <span class="toc-text">2.2. 控制点在相机坐标系的坐标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-选择合适的线性组合"><span class="toc-number">2.3.</span> <span class="toc-text">2.3. 选择合适的线性组合</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-4-计算R-t"><span class="toc-number">2.4.</span> <span class="toc-text">2.4. 计算R,t</span></a></li></ol></li></ol>
 		
@@ -221,22 +221,22 @@
 
 
 </div>  
-      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+      <div class="openaside"><a class="navbutton" href="#" title="顯示側邊欄"></a></div>
 
   <div id="toc" class="toc-aside">
-  <strong class="toc-title">Contents</strong>
+  <strong class="toc-title">文章目錄</strong>
  
  <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-RANSAC算法"><span class="toc-number">1.</span> <span class="toc-text">1. RANSAC算法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-RANSAC算法基础"><span class="toc-number">1.1.</span> <span class="toc-text">1.1. RANSAC算法基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-1-算法的基本假设"><span class="toc-number">1.1.1.</span> <span class="toc-text">1.1.1. 算法的基本假设</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-2-算法示例"><span class="toc-number">1.1.2.</span> <span class="toc-text">1.1.2. 算法示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-3-算法概述"><span class="toc-number">1.1.3.</span> <span class="toc-text">1.1.3. 算法概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-4-RANSAC的优劣"><span class="toc-number">1.1.4.</span> <span class="toc-text">1.1.4. RANSAC的优劣</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-RANSAC算法用于消除图像误匹配原理"><span class="toc-number">1.2.</span> <span class="toc-text">1.2. RANSAC算法用于消除图像误匹配原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-1-算法原理"><span class="toc-number">1.2.1.</span> <span class="toc-text">1.2.1. 算法原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-2-算法步骤"><span class="toc-number">1.2.2.</span> <span class="toc-text">1.2.2. 算法步骤</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-EPnP算法"><span class="toc-number">2.</span> <span class="toc-text">2. EPnP算法</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-基本表示"><span class="toc-number">2.1.</span> <span class="toc-text">2.1. 基本表示</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-控制点在相机坐标系的坐标"><span class="toc-number">2.2.</span> <span class="toc-text">2.2. 控制点在相机坐标系的坐标</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-选择合适的线性组合"><span class="toc-number">2.3.</span> <span class="toc-text">2.3. 选择合适的线性组合</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-4-计算R-t"><span class="toc-number">2.4.</span> <span class="toc-text">2.4. 计算R,t</span></a></li></ol></li></ol>
  
   </div>
 
 <div id="asidepart">
-<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<div class="closeaside"><a class="closebutton" href="#" title="隱藏側邊欄"></a></div>
 <aside class="clearfix">
 
   
 <div class="categorieslist">
-	<p class="asidetitle">Categories</p>
+	<p class="asidetitle">分類</p>
 		<ul>
 		
 		  
@@ -269,7 +269,7 @@
 
   
 <div class="tagslist">
-	<p class="asidetitle">Tags</p>
+	<p class="asidetitle">標簽</p>
 		<ul class="clearfix">
 		
 			
@@ -325,7 +325,7 @@
 
 
   <div class="linkslist">
-  <p class="asidetitle">Links</p>
+  <p class="asidetitle">友情鏈接</p>
     <ul>
         
           <li>
@@ -585,7 +585,7 @@ var _hmt = _hmt || [];
 <!-- Totop Begin -->
 
 	<div id="totop">
-	<a title="Back to Top"><img src="/img/scrollup.png"/></a>
+	<a title="返回頂部"><img src="/img/scrollup.png"/></a>
 	</div>
 	<script src="/js/totop.js"></script>
 
