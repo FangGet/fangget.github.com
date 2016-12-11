@@ -31,6 +31,9 @@
 <p>利用右值引用、完美转发再结合可变函数，可以写一个万能的函数包装器，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">template&lt;class Function,class... Args&gt;</span><br><span class="line">inline auto FuncWrapper(Function&amp;&amp; f,Args&amp;&amp; ... args)-&gt;decltype(f(std::forward&lt;Args&gt;(args)...))&#123;</span><br><span class="line">	return f(std::forward&lt;Args&gt;(args)...);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h1 id="emplace-back"><a href="#emplace-back" class="headerlink" title="emplace_back"></a>emplace_back</h1><p>emplace_back能就地通过参数构造对象，不需要拷贝或者移动内存，相比push_back能更好的避免内存的拷贝和移动，使容器插入元素的性能得到进一步的提升，在大多数情况下应该优先使用emplace_back来代替push_back。<br>emplace_back的用法比较简单，直接通过构造函数的参数就可以构造对象，因此，也要求对象有相应的构造函数，如果没有对应的构造函数，编译器会报错。需要注意的是，还不能完全用emplace_back来代替push_back等老接口，因为在某些场景下并不能直接使用emplace来进行就地构造。</p>
 <h1 id="unordered-container-无序容器"><a href="#unordered-container-无序容器" class="headerlink" title="unordered container 无序容器"></a>unordered container 无序容器</h1><p>C++11增加了无序容器unordered_map/unordered_multimap和unordered_set/unordered_multiset，由于这些容器中的元素是不排序的，因此比有序容器map/multimap和set/multiset效率更高。map和set内部是红黑树，在插入元素时会自动排序，而无序容器内部是散列表，通过哈希，而不是排序来快速操作元素，使得效率高。由于无序容器内部是散列表，因此无序容器的key需要提供hash_value函数，其他用法和map/set的用法是一样的。</p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
 ]]></content>
     </entry>
     

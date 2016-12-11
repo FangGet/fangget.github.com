@@ -21,7 +21,7 @@
 <meta property="og:description" content="作者：Frank时间：2016-12-06
 
 该部分是《深入应用C++11代码优化和工程级应用》的第二章，在这章中主要介绍了右值引用及其对性能的优化，move语义、forward和完美转发、emplace_back以及无序容器，以下就对其中涉及的主要知识点进行总结。">
-<meta property="og:updated_time" content="2016-12-06T14:45:07.013Z">
+<meta property="og:updated_time" content="2016-12-11T09:24:48.707Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入应用C++11之使用C++11改进程序性能">
 <meta name="twitter:description" content="作者：Frank时间：2016-12-06
@@ -52,7 +52,7 @@
 				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
 				<h2 class="blog-motto">special for SLAM</h2>
 			</div>
-			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜單">
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
 			</a></div>
 			<nav class="animated">
 				<ul>
@@ -68,7 +68,7 @@
  					
 					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
 						<label>Search</label>
-						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
 						<input type="hidden" name="q" value="site:fangrenziwo.com">
 					</form>
 					
@@ -91,14 +91,14 @@
 		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
 		
   <p class="article-time">
-    <time datetime="2016-12-06T12:22:22.000Z" itemprop="datePublished"> 發表於 2016-12-06</time>
+    <time datetime="2016-12-06T12:22:22.000Z" itemprop="datePublished"> Published 2016-12-06</time>
     
   </p>
 </header>
 	<div class="article-content">
 		
 		<div id="toc" class="toc-article">
-			<strong class="toc-title">文章目錄</strong>
+			<strong class="toc-title">Contents</strong>
 		
 			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#右值引用和性能优化"><span class="toc-number">1.</span> <span class="toc-text">右值引用和性能优化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#amp-amp-的特性"><span class="toc-number">1.1.</span> <span class="toc-text">&&的特性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#右值引用优化性能，避免深拷贝"><span class="toc-number">1.2.</span> <span class="toc-text">右值引用优化性能，避免深拷贝</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#move语义"><span class="toc-number">2.</span> <span class="toc-text">move语义</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#forward和完美转发"><span class="toc-number">3.</span> <span class="toc-text">forward和完美转发</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#emplace-back"><span class="toc-number">4.</span> <span class="toc-text">emplace_back</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#unordered-container-无序容器"><span class="toc-number">5.</span> <span class="toc-text">unordered container 无序容器</span></a></li></ol>
 		
@@ -129,6 +129,9 @@
 <p>利用右值引用、完美转发再结合可变函数，可以写一个万能的函数包装器，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">template&lt;class Function,class... Args&gt;</span><br><span class="line">inline auto FuncWrapper(Function&amp;&amp; f,Args&amp;&amp; ... args)-&gt;decltype(f(std::forward&lt;Args&gt;(args)...))&#123;</span><br><span class="line">	return f(std::forward&lt;Args&gt;(args)...);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h1 id="emplace-back"><a href="#emplace-back" class="headerlink" title="emplace_back"></a>emplace_back</h1><p>emplace_back能就地通过参数构造对象，不需要拷贝或者移动内存，相比push_back能更好的避免内存的拷贝和移动，使容器插入元素的性能得到进一步的提升，在大多数情况下应该优先使用emplace_back来代替push_back。<br>emplace_back的用法比较简单，直接通过构造函数的参数就可以构造对象，因此，也要求对象有相应的构造函数，如果没有对应的构造函数，编译器会报错。需要注意的是，还不能完全用emplace_back来代替push_back等老接口，因为在某些场景下并不能直接使用emplace来进行就地构造。</p>
 <h1 id="unordered-container-无序容器"><a href="#unordered-container-无序容器" class="headerlink" title="unordered container 无序容器"></a>unordered container 无序容器</h1><p>C++11增加了无序容器unordered_map/unordered_multimap和unordered_set/unordered_multiset，由于这些容器中的元素是不排序的，因此比有序容器map/multimap和set/multiset效率更高。map和set内部是红黑树，在插入元素时会自动排序，而无序容器内部是散列表，通过哈希，而不是排序来快速操作元素，使得效率高。由于无序容器内部是散列表，因此无序容器的key需要提供hash_value函数，其他用法和map/set的用法是一样的。</p>
+ <center><br><strong><br>转载请注明出处
+</strong><br></center>
+
   
 	</div>
 		<footer class="article-footer clearfix">
@@ -182,22 +185,22 @@
 
 
 </div>  
-      <div class="openaside"><a class="navbutton" href="#" title="顯示側邊欄"></a></div>
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
 
   <div id="toc" class="toc-aside">
-  <strong class="toc-title">文章目錄</strong>
+  <strong class="toc-title">Contents</strong>
  
  <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#右值引用和性能优化"><span class="toc-number">1.</span> <span class="toc-text">右值引用和性能优化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#amp-amp-的特性"><span class="toc-number">1.1.</span> <span class="toc-text">&&的特性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#右值引用优化性能，避免深拷贝"><span class="toc-number">1.2.</span> <span class="toc-text">右值引用优化性能，避免深拷贝</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#move语义"><span class="toc-number">2.</span> <span class="toc-text">move语义</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#forward和完美转发"><span class="toc-number">3.</span> <span class="toc-text">forward和完美转发</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#emplace-back"><span class="toc-number">4.</span> <span class="toc-text">emplace_back</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#unordered-container-无序容器"><span class="toc-number">5.</span> <span class="toc-text">unordered container 无序容器</span></a></li></ol>
  
   </div>
 
 <div id="asidepart">
-<div class="closeaside"><a class="closebutton" href="#" title="隱藏側邊欄"></a></div>
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
 <aside class="clearfix">
 
   
 <div class="categorieslist">
-	<p class="asidetitle">分類</p>
+	<p class="asidetitle">Categories</p>
 		<ul>
 		
 		  
@@ -230,7 +233,7 @@
 
   
 <div class="tagslist">
-	<p class="asidetitle">標簽</p>
+	<p class="asidetitle">Tags</p>
 		<ul class="clearfix">
 		
 			
@@ -286,7 +289,7 @@
 
 
   <div class="linkslist">
-  <p class="asidetitle">友情鏈接</p>
+  <p class="asidetitle">Links</p>
     <ul>
         
           <li>
@@ -546,7 +549,7 @@ var _hmt = _hmt || [];
 <!-- Totop Begin -->
 
 	<div id="totop">
-	<a title="返回頂部"><img src="/img/scrollup.png"/></a>
+	<a title="Back to Top"><img src="/img/scrollup.png"/></a>
 	</div>
 	<script src="/js/totop.js"></script>
 
