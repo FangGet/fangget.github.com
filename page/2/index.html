@@ -79,6 +79,72 @@
         <header class="article-info clearfix">
   <h1 itemprop="name">
     
+      <a href="/2016/09/08/cv-ransac-epnp/" title="SLAM系列--RANSAC和EPNP算法" itemprop="url">SLAM系列--RANSAC和EPNP算法</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-09-08T08:53:23.000Z" itemprop="datePublished"> Published 2016-09-08</time>
+    
+  </p>
+</header>
+    <div class="article-content">
+        
+        <p><strong><br>作者：Frank<br>时间：2016-09-03
+</strong></p>
+<p>在Feature-Based SLAM中， 在利用特征检测算子对前后两帧进行了特征检测和匹配后，得到的结果可能有很大的误差，因为可能会存在误匹配的情况，这会使得计算获取的位姿精度降低，因此我们需要对匹配结果进行滤波和优化，而在此过程中最经典的就是利用RANSAC(RANdom SAmple Consensus ，随机采样一致性)算法。而在优化了匹配结果后，我们需要利用该结果来计算两帧之间的相对运动（即旋转R和平移t），而这部分可以利用本节将要讲述的EPNP算法来进行求解。因此，本节会按照上述的顺序先介绍RANSAC算法的基本原理，然后再介绍EPNP算法的原理。<br>
+        
+        
+        <p class="article-more-link">
+          
+            <a href="/2016/09/08/cv-ransac-epnp/#more">Read More</a>
+          
+       </p>
+    </div>
+    <footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/计算机视觉/">计算机视觉</a>►<a class="article-category-link" href="/categories/计算机视觉/SLAM系列/">SLAM系列</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/SLAM/">SLAM</a><a href="/tags/算法/">算法</a>
+  </div>
+
+</div>
+
+
+
+
+<div class="comments-count">
+	
+	  	<span></span>
+		<a href="/2016/09/08/cv-ransac-epnp/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/09/08/cv-ransac-epnp/" data-count-type="comments">&nbsp;</a>
+	
+</div>
+
+</footer>
+
+
+    </article>
+
+
+
+
+
+
+   
+    
+    <article class="post-expand post" itemprop="articleBody"> 
+        <header class="article-info clearfix">
+  <h1 itemprop="name">
+    
       <a href="/2016/09/03/cv-svd/" title="SLAM系列---SVD分解" itemprop="url">SLAM系列---SVD分解</a>
   </h1>
   <p class="article-author">By
@@ -675,70 +741,6 @@
 
 
 
-   
-    
-    <article class="post-expand post" itemprop="articleBody"> 
-        <header class="article-info clearfix">
-  <h1 itemprop="name">
-    
-      <a href="/2016/06/21/untitled-1466519157052/" title="Fang&#39;s Blog" itemprop="url">Fang&#39;s Blog</a>
-  </h1>
-  <p class="article-author">By
-       
-		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
-		
-  <p class="article-time">
-    <time datetime="2016-06-21T14:25:57.000Z" itemprop="datePublished"> Published 2016-06-21</time>
-    
-  </p>
-</header>
-    <div class="article-content">
-        
-        <h2 id="我的博客站"><a href="#我的博客站" class="headerlink" title="我的博客站"></a>我的博客站</h2><p>MarkDown测试：</p>
-<h1 id="test"><a href="#test" class="headerlink" title="test"></a>test</h1><h2 id="test-1"><a href="#test-1" class="headerlink" title="test"></a>test</h2><h3 id="test-2"><a href="#test-2" class="headerlink" title="test"></a>test</h3><h4 id="test-3"><a href="#test-3" class="headerlink" title="test"></a>test</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">test</span></span><br></pre></td></tr></table></figure>
-
-        
-        
-        <p class="article-more-link">
-          
-       </p>
-    </div>
-    <footer class="article-footer clearfix">
-<div class="article-catetags">
-
-<div class="article-categories">
-  <span></span>
-  <a class="article-category-link" href="/categories/随笔/">随笔</a>
-</div>
-
-
-  <div class="article-tags">
-  
-  <span></span> <a href="/tags/test/">test</a>
-  </div>
-
-</div>
-
-
-
-
-<div class="comments-count">
-	
-	  	<span></span>
-		<a href="/2016/06/21/untitled-1466519157052/#comments" class="ds-thread-count comments-count-link" data-thread-key="2016/06/21/untitled-1466519157052/" data-count-type="comments">&nbsp;</a>
-	
-</div>
-
-</footer>
-
-
-    </article>
-
-
-
-
-
-
 
   <nav id="page-nav" class="clearfix">
     <a class="extend prev" rel="prev" href="/"><span></span>Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next<span></span></a>
@@ -757,7 +759,7 @@
 		<ul>
 		
 		  
-			<li><a href="/categories/C-11/" title="C++11">C++11<sup>4</sup></a></li>
+			<li><a href="/categories/C-11/" title="C++11">C++11<sup>5</sup></a></li>
 		  
 		
 		  
@@ -790,7 +792,7 @@
 		<ul class="clearfix">
 		
 			
-				<li><a href="/tags/C-11理论/" title="C++11理论">C++11理论<sup>4</sup></a></li>
+				<li><a href="/tags/C-11理论/" title="C++11理论">C++11理论<sup>5</sup></a></li>
 			
 		
 			

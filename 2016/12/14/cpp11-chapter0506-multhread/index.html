@@ -1,0 +1,630 @@
+
+ <!DOCTYPE HTML>
+<html >
+<head>
+  <meta charset="UTF-8">
+  
+    <title>深入应用C++11之多线程 | Fang&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="Fang">
+    
+
+    
+    <meta name="description" content="作者：Frank时间：2016-12-14
+
+在C++11之前，C++语言中并没有对并发编程提供支持。而现在C++11中增加了线程以及线程相关的类，很方便的支持了并发编程。本节将对C++11中多线程部分涉及的知识进行总结，包括互斥量、条件变量、原子变量、call_once等。此外，本节还会对C++11中提供的一些便利性的工具进行讲述，主要有chrono库，数值和字符转换以及宽窄字符转换。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入应用C++11之多线程">
+<meta property="og:url" content="http://fangrenziwo.com/2016/12/14/cpp11-chapter0506-multhread/index.html">
+<meta property="og:site_name" content="Fang's Blog">
+<meta property="og:description" content="作者：Frank时间：2016-12-14
+
+在C++11之前，C++语言中并没有对并发编程提供支持。而现在C++11中增加了线程以及线程相关的类，很方便的支持了并发编程。本节将对C++11中多线程部分涉及的知识进行总结，包括互斥量、条件变量、原子变量、call_once等。此外，本节还会对C++11中提供的一些便利性的工具进行讲述，主要有chrono库，数值和字符转换以及宽窄字符转换。">
+<meta property="og:updated_time" content="2016-12-14T04:53:23.050Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入应用C++11之多线程">
+<meta name="twitter:description" content="作者：Frank时间：2016-12-14
+
+在C++11之前，C++语言中并没有对并发编程提供支持。而现在C++11中增加了线程以及线程相关的类，很方便的支持了并发编程。本节将对C++11中多线程部分涉及的知识进行总结，包括互斥量、条件变量、原子变量、call_once等。此外，本节还会对C++11中提供的一些便利性的工具进行讲述，主要有chrono库，数值和字符转换以及宽窄字符转换。">
+
+    
+    
+    <link rel="icon" href="/img/avatar2.png">
+    
+    
+    <link rel="apple-touch-icon" href="/img/avatar.png">
+    <link rel="apple-touch-icon-precomposed" href="/img/avatar.png">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/avatar2.png" alt="Fang&#39;s Blog" title="Fang&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
+				<h2 class="blog-motto">special for SLAM</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:fangrenziwo.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/12/14/cpp11-chapter0506-multhread/" title="深入应用C++11之多线程" itemprop="url">深入应用C++11之多线程</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-12-14T04:42:08.000Z" itemprop="datePublished"> Published 2016-12-14</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#C-11中的多线程"><span class="toc-number">1.</span> <span class="toc-text">C++11中的多线程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#线程"><span class="toc-number">1.1.</span> <span class="toc-text">线程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#互斥量"><span class="toc-number">1.2.</span> <span class="toc-text">互斥量</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#独占互斥量std-mutex"><span class="toc-number">1.2.1.</span> <span class="toc-text">独占互斥量std::mutex</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#递归互斥量std-recursive-mutex"><span class="toc-number">1.2.2.</span> <span class="toc-text">递归互斥量std::recursive_mutex</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#带超时的互斥量std-timed-mutex和std-recursive-timed-mutex"><span class="toc-number">1.2.3.</span> <span class="toc-text">带超时的互斥量std::timed_mutex和std::recursive_timed_mutex</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#条件变量"><span class="toc-number">1.3.</span> <span class="toc-text">条件变量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#原子变量"><span class="toc-number">1.4.</span> <span class="toc-text">原子变量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#call-once和once-flag的使用"><span class="toc-number">1.5.</span> <span class="toc-text">call_once和once_flag的使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#异步操作"><span class="toc-number">1.6.</span> <span class="toc-text">异步操作</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<p><strong><br>作者：Frank<br>时间：2016-12-14
+</strong></p>
+<p>在C++11之前，C++语言中并没有对并发编程提供支持。而现在C++11中增加了线程以及线程相关的类，很方便的支持了并发编程。本节将对C++11中多线程部分涉及的知识进行总结，包括互斥量、条件变量、原子变量、call_once等。此外，本节还会对C++11中提供的一些便利性的工具进行讲述，主要有chrono库，数值和字符转换以及宽窄字符转换。<br><a id="more"></a></p>
+<h1 id="C-11中的多线程"><a href="#C-11中的多线程" class="headerlink" title="C++11中的多线程"></a>C++11中的多线程</h1><h2 id="线程"><a href="#线程" class="headerlink" title="线程"></a>线程</h2><p>C++11中利用thread来创建使用线程，用std::thread创建线程非常简单，只需要提供线程函数或者函数对象即可，并且可以同时指定函数的参数，其基本使用示例如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;thread&gt;</span><br><span class="line"></span><br><span class="line">void func()&#123;</span><br><span class="line">	//do some work</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void func2(int a)&#123;</span><br><span class="line">	//do some work</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main()&#123;</span><br><span class="line">	std::thread t(func);</span><br><span class="line">   t.join();</span><br><span class="line">   </span><br><span class="line">   std::thread t2(func);</span><br><span class="line">   t.detach();</span><br><span class="line">   //do other jobs</span><br><span class="line">   </span><br><span class="line">   std::thread t3(func2,1);</span><br><span class="line">   t.join();</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在std::thread中，join表示阻塞当前线程，直到线程函数执行结束。如果不希望线程被阻塞执行，可以调用线程的detach方法，将线程和线程对象分离。通过detach，让线程作为后台线程去执行，当前线程也不会阻塞了。但是，detach之后就无法和线程发生联系了，线程何时执行完主线程也无法控制了。而带参数的函数线程只需要在函数对象后加上对应的参数即可得到。需要注意的是，std::thread出了作用域之后会被析构，这时如果线程函数还没有执行完则会发生错误，因此，需要保证线程函数的生命周期在线程变量std::thread的生命周期之内。<br>线程不能复制，但可以移动：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">std::thread t1(func);</span><br><span class="line">std::thread t2(std::move(t1));</span><br><span class="line">t1.join();</span><br><span class="line">t2.join();</span><br></pre></td></tr></table></figure></p>
+<p>当线程被移动之后，线程对象t1将不代表任何线程。另外，还可以通过std::bind或lambda表达式来创建线程，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">std::thread t1(std::bind(func2,2));</span><br><span class="line">std::thread t2([](int a,int b)&#123;&#125;,1,2);</span><br><span class="line">t1.join();</span><br><span class="line">t2.join();</span><br></pre></td></tr></table></figure></p>
+<p>为了保证线程函数的生命周期在线程变量的生命周期之内，可以将线程对象保存在一个容器中，以保证线程对象的生命周期。</p>
+<p>在std::thread中，可以获取到当前线程的ID，还可以获取CPU核心数量，其示例代码如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">std::thread t(func);</span><br><span class="line">cout&lt;&lt;t.get_id()&lt;&lt;endl;//获取当前线程id</span><br><span class="line">//获取CPU核数，如果获取失败则返回0</span><br><span class="line">cout&lt;&lt;std::thread::hardware_concureency()&lt;&lt;endl;</span><br></pre></td></tr></table></figure></p>
+<p>同时，还可以使得当前线程休眠一定时间，其示例代码如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">void f()&#123;</span><br><span class="line">	std::this_thread::sleep_for(std::chrono::seconds(3));</span><br><span class="line">    cout&lt;&lt;&quot;time out&quot;&lt;&lt;endl;</span><br><span class="line">&#125;</span><br><span class="line">int main()&#123;</span><br><span class="line">	std::thread t(f);</span><br><span class="line">    t.join();</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="互斥量"><a href="#互斥量" class="headerlink" title="互斥量"></a>互斥量</h2><p>互斥量是一种线程同步的手段，用来保护多线程同时访问的共享数据。C++11中提供了2种语义的互斥量（mutex）:</p>
+<ol>
+<li>std::mutex:独占的互斥量，不能递归使用；</li>
+<li>std::timed_mutex：带超时的独占互斥量，不能递归使用；</li>
+<li>std::recursive_mutex:递归互斥量，不带超时；</li>
+<li>std::recursive_timed_mutex:带超时的递归互斥量；</li>
+</ol>
+<p>这些互斥量的基本接口很相似，一般用法是通过lock()方法来阻塞线程，直到获得互斥量的所有权为止。在线程获得互斥量并完成任务后，必须使用unclock()来解除对互斥量的占用，lock()和unlock()必须成对出现。try_lock()尝试锁定互斥量，如果成功则返回true，如果失败则返回false,它是非阻塞的。</p>
+<h3 id="独占互斥量std-mutex"><a href="#独占互斥量std-mutex" class="headerlink" title="独占互斥量std::mutex"></a>独占互斥量std::mutex</h3><p>std::mutex的基本用法如下所示：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">std::mutex g_lock;</span><br><span class="line">void func()&#123;</span><br><span class="line">	g_lock.lock();</span><br><span class="line">   //do some work</span><br><span class="line">   g_lock.unlock();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>使用lock_guard可以简化lock/unlock的写法，同时也更安全，因为lock_guard在构造时会自动锁定互斥量，而在退出作用域后进行析构时就会自动解锁，从而保证了互斥量的正确操作，因此，应尽量用lock_guard。其基本使用示例如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">void func()&#123;</span><br><span class="line">	std::lock_gurad&lt;std::mutex&gt; lock(g_lock);//出作用域自动解锁</span><br><span class="line">   //do some work</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="递归互斥量std-recursive-mutex"><a href="#递归互斥量std-recursive-mutex" class="headerlink" title="递归互斥量std::recursive_mutex"></a>递归互斥量std::recursive_mutex</h3><p>递归锁允许同一线程多次获得该互斥锁，可以用来解决同一线程需要多次获取互斥量时的死锁问题。其基本用法和和mutex区别并不大，只需要在需要使用std::recursive_mutex的地方用其代替std::mutex即可。<br>但需要注意的是，尽量不要使用递归锁，因为：</p>
+<ol>
+<li>需要用到递归锁定的多线程互斥处理往往本身就是可以简化的，允许递归互斥很容易放纵复杂逻辑的产生，从而导致一些多线程同步引起的晦涩问题；</li>
+<li>递归锁比起非递归锁，效率会低一些；</li>
+<li>递归锁虽然允许同一线程多次获得同一互斥量，可重复获得的最大次数并未具体说明，一旦超过一定次数，再对lock进行调用就会抛出std::system错误</li>
+</ol>
+<h3 id="带超时的互斥量std-timed-mutex和std-recursive-timed-mutex"><a href="#带超时的互斥量std-timed-mutex和std-recursive-timed-mutex" class="headerlink" title="带超时的互斥量std::timed_mutex和std::recursive_timed_mutex"></a>带超时的互斥量std::timed_mutex和std::recursive_timed_mutex</h3><p>std::timed_mutex是超时的独占锁，std::recursive_timed_mutex是超时的递归锁，主要用于在获取锁时增加超时功能。<br>std::timed_mutex比std::mutex多了两个超时获取锁接口：try_lock_for和try_lock_until，其基本用法如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">std::timed_mutex;</span><br><span class="line">void work()&#123;</span><br><span class="line">	std::chrono::milliseconds timeout(1000);</span><br><span class="line">    while(true)&#123;</span><br><span class="line">    	if(mutex.try_lock_for(timeout))&#123;</span><br><span class="line">      	  //do some work</span><br><span class="line">          mutex.unlock();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="条件变量"><a href="#条件变量" class="headerlink" title="条件变量"></a>条件变量</h2><p>条件变量是C++11提供的另外一种等待的同步机制，它能阻塞一个或多个线程，直到收到另外一个线程发出的通知或者超时，才能唤醒当前的阻塞线程，条件变量需要和互斥量配合起来使用，C++11提供了两种条件变量：</p>
+<ul>
+<li>condition_variable:配合std::unique_lock<std::mutex>进行wait操作；</std::mutex></li>
+<li>condition_variable_any:和任意带有lock，unlock语义的mutex搭配使用，比价灵活，但效率比condition_variable差一些。</li>
+</ul>
+<p>条件变量的使用过程如下：</p>
+<ol>
+<li>拥有条件变量的线程获取互斥量；</li>
+<li>循环检查某个条件，如果条件不满足，则阻塞直到条件满足；如果条件满足，则向下执行；</li>
+<li>某个线程满足条件执行完后调用notify_one或者notify_all唤醒一个或者所有的等待线程。</li>
+</ol>
+<h2 id="原子变量"><a href="#原子变量" class="headerlink" title="原子变量"></a>原子变量</h2><p>C++11提供了一个原子类型std::atomic<t>，可以使用任意类型作为模板参数，其基本使用示例如下所示：</t></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;atomic&gt;</span><br><span class="line">struct AtomicCounter&#123;</span><br><span class="line">	std::atomic&lt;int&gt; value;</span><br><span class="line">    </span><br><span class="line">    void increment()&#123;</span><br><span class="line">    	++value;</span><br><span class="line">    &#125;</span><br><span class="line">    void decrement()&#123;</span><br><span class="line">    	--value;</span><br><span class="line">    &#125;</span><br><span class="line">    int get()&#123;</span><br><span class="line">    	return value.load();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="call-once和once-flag的使用"><a href="#call-once和once-flag的使用" class="headerlink" title="call_once和once_flag的使用"></a>call_once和once_flag的使用</h2><p>为了保证在多线程环境中某个函数仅被调用一次，可以用std::call_once，其需要一个once_flag作为call_once的入参，其基本用法为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::once_flag flag;</span><br><span class="line">std::call_once(flag,[]()&#123;//do some work&#125;);</span><br></pre></td></tr></table></figure></p>
+<h2 id="异步操作"><a href="#异步操作" class="headerlink" title="异步操作"></a>异步操作</h2><p>C++11提供了异步操作相关的类，主要有std::future、std::promise和std::packaged_task。std::future作为异步结果的传输通道，可以很方便的获取线程函数的返回值；std::promise用来包装一个值，将数据和future绑定起来，方便线程赋值；std::packaged_task用来包装一个可调用对象，将函数和future绑定起来，以便异步调用。</p>
+<ol>
+<li>std::future<br>std::future提供了获取异步操作结果的通道。可以以同步等待的方式来获取结果，可以通过查询future的状态(future_status)来获取异步操作的结果。future_status有如下三种状态：1）Deferred，异步操作还没开始；2）Ready，异步操作已经完成；3）Timeout，异步操作超时。其基本代码示例如下：<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//查询future的状态</span><br><span class="line">std::future_status status;</span><br><span class="line">do&#123;</span><br><span class="line">	status=std::future.wait_for(std::chrono::seconds(1));</span><br><span class="line">    if(status==std::future_status::deferred)&#123;</span><br><span class="line">    	//do some work</span><br><span class="line">    &#125;else ...</span><br><span class="line">&#125;while(status!=std::future_status::ready);</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>获取future结果有三种方式：get,wait_for,wait，其中get等待异步操作结束并返回结果；wait只是等待异步操作完成，没有返回值；wait_for是超时等待返回结果。</p>
+<ol>
+<li><p>协助线程赋值的类std::promise<br>std::promise将数据和future绑定起来，为获取线程函数中某个值提供了便利，在线程函数中为外面传来的promise赋值，在线程函数执行完成后就可以通过std::promise的future获取该值。std::promise的基本示例如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">std::promise&lt;int&gt; pr;</span><br><span class="line">std::thread t([](std::promise&lt;int&gt;&amp; p)&#123;p.set_value_at_thread_exit(9);&#125;,std::ref(pr));</span><br><span class="line">std::future&lt;int&gt; f=pr.get_future();</span><br><span class="line">auto r=f.get();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可调用对象的包装类std::packaged_task<br>std::packaged_task包装了一个可调用对象的包装类，将函数和future绑定起来，以便异步调用，std::promise是保存了一个共享的值，而std::packaged_task是保存了一个函数。其基本用法如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">std::packaged_task&lt;int()&gt; task([]()&#123;return 7;&#125;);</span><br><span class="line">std::thread t1(std::ref(task));</span><br><span class="line">std::future&lt;int&gt; f1=task.get_future();</span><br><span class="line">auto r1=f1.get();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>线程异步操作函数async<br>std::async比std::promise和std::packaged_task更高一层，它可以用来直接创建异步的task，异步任务返回的结果也在future中。std::async的原型是async(std::launch::async|std::lauch::deferred,f,args…)，第一个参数时函数的创建策略，有如下两种策略：</p>
+</li>
+</ol>
+<ul>
+<li>std::lauch::async：在调用async时就开始创建线程；</li>
+<li>std::lauch::deferred：延迟加载方式创建线程。调用async时不创建线程，直到调用了future的get或者wait时才创建线程；</li>
+</ul>
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/C-11/">C++11</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/C-11理论/">C++11理论</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://fangrenziwo.com/2016/12/14/cpp11-chapter0506-multhread/" data-title="深入应用C++11之多线程 | Fang&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+
+<div class="next">
+<a href="/2016/12/06/cpp11-chapter02-rvalue-forward-move-unordered/"  title="深入应用C++11之使用C++11改进程序性能">
+ <strong>下一篇：</strong><br/> 
+ <span>深入应用C++11之使用C++11改进程序性能
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2016/12/14/cpp11-chapter0506-multhread/" data-title="深入应用C++11之多线程" data-url="http://fangrenziwo.com/2016/12/14/cpp11-chapter0506-multhread/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#C-11中的多线程"><span class="toc-number">1.</span> <span class="toc-text">C++11中的多线程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#线程"><span class="toc-number">1.1.</span> <span class="toc-text">线程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#互斥量"><span class="toc-number">1.2.</span> <span class="toc-text">互斥量</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#独占互斥量std-mutex"><span class="toc-number">1.2.1.</span> <span class="toc-text">独占互斥量std::mutex</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#递归互斥量std-recursive-mutex"><span class="toc-number">1.2.2.</span> <span class="toc-text">递归互斥量std::recursive_mutex</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#带超时的互斥量std-timed-mutex和std-recursive-timed-mutex"><span class="toc-number">1.2.3.</span> <span class="toc-text">带超时的互斥量std::timed_mutex和std::recursive_timed_mutex</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#条件变量"><span class="toc-number">1.3.</span> <span class="toc-text">条件变量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#原子变量"><span class="toc-number">1.4.</span> <span class="toc-text">原子变量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#call-once和once-flag的使用"><span class="toc-number">1.5.</span> <span class="toc-text">call_once和once_flag的使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#异步操作"><span class="toc-number">1.6.</span> <span class="toc-text">异步操作</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/C-11/" title="C++11">C++11<sup>5</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM系列/" title="SLAM系列">SLAM系列<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/SLAM系列/" title="SLAM系列">SLAM系列<sup>8</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM资源/" title="SLAM资源">SLAM资源<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/" title="计算机视觉">计算机视觉<sup>10</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/随笔/" title="随笔">随笔<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">Tags</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/C-11理论/" title="C++11理论">C++11理论<sup>5</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/SLAM/" title="SLAM">SLAM<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/计算机视觉/" title="计算机视觉">计算机视觉<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/特征检测/" title="特征检测">特征检测<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/干货/" title="干货">干货<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/test/" title="test">test<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/链接/" title="链接">链接<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/算法/" title="算法">算法<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/非线性优化/" title="非线性优化">非线性优化<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机姿态/" title="相机姿态">相机姿态<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像处理理论/" title="图像处理理论">图像处理理论<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/回环检测/" title="回环检测">回环检测<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://blog.csdn.net/zf19921020" target="_blank" title="我的CSDN">我的CSDN</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wantedonline.cn" target="_blank" title="技术家园">技术家园</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://www.slamcn.org" target="_blank" title="SLAMCN">SLAMCN</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> 业精于勤荒于嬉，行成于思毁于随 <br/>
+			热爱计算机视觉，热爱Coding...</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/FangGet" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:buptzhaofang@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2016 
+		
+		<a href="/about" target="_blank" title="Fang">Fang</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"fangrenziwo"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?e6d1f421bbc9962127a50488f9ed37d1";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="Back to Top"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>
