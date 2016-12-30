@@ -1,0 +1,637 @@
+
+ <!DOCTYPE HTML>
+<html >
+<head>
+  <meta charset="UTF-8">
+  
+    <title>Markless-AR在Android端的移植 | Fang&#39;s Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1,user-scalable=no">
+    
+    <meta name="author" content="Fang">
+    
+
+    
+    <meta name="description" content="作者：Frank时间：2016-12-30
+
+之前一直在看C++11的书籍和DSO的论文和源码分析，最近两天张罗着写写代码，刚好看到了关于Markless-AR的一些东西，所以就对其中的原理进行了分析，刚好发现Android Studio从2.2开始引入了CMAKE编译，所以就在Android端实现了一份简易的Markless-AR的演示程序，也算是对如何在Android Studio上使用Ope">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Markless-AR在Android端的移植">
+<meta property="og:url" content="http://fangrenziwo.com/2016/12/30/markless-ar-mobile-as/index.html">
+<meta property="og:site_name" content="Fang's Blog">
+<meta property="og:description" content="作者：Frank时间：2016-12-30
+
+之前一直在看C++11的书籍和DSO的论文和源码分析，最近两天张罗着写写代码，刚好看到了关于Markless-AR的一些东西，所以就对其中的原理进行了分析，刚好发现Android Studio从2.2开始引入了CMAKE编译，所以就在Android端实现了一份简易的Markless-AR的演示程序，也算是对如何在Android Studio上使用Ope">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/28649829-file_1483075576309_4b9c.png">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/3401139-file_1483078405529_18051.png">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/22636184-file_1483078438196_3edc.png">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/59704783-file_1483078461115_8dfb.png">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/37178114-file_1483082984485_1156a.png">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/2862320-file_1483082981923_140cd.png">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/79242561-file_1483082986339_1426.png">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/54637961-file_1483084015596_3b49.png">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/18473135-file_1483084068429_1312a.png">
+<meta property="og:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/46474287-file_1483084097356_f917.png">
+<meta property="og:updated_time" content="2016-12-30T07:48:40.479Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Markless-AR在Android端的移植">
+<meta name="twitter:description" content="作者：Frank时间：2016-12-30
+
+之前一直在看C++11的书籍和DSO的论文和源码分析，最近两天张罗着写写代码，刚好看到了关于Markless-AR的一些东西，所以就对其中的原理进行了分析，刚好发现Android Studio从2.2开始引入了CMAKE编译，所以就在Android端实现了一份简易的Markless-AR的演示程序，也算是对如何在Android Studio上使用Ope">
+<meta name="twitter:image" content="http://o9n30cpt4.bkt.clouddn.com/16-12-30/28649829-file_1483075576309_4b9c.png">
+
+    
+    
+    <link rel="icon" href="/img/avatar2.png">
+    
+    
+    <link rel="apple-touch-icon" href="/img/avatar.png">
+    <link rel="apple-touch-icon-precomposed" href="/img/avatar.png">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+  <body>
+    <header>
+      
+<div>
+		
+			<div id="imglogo">
+				<a href="/"><img src="/img/avatar2.png" alt="Fang&#39;s Blog" title="Fang&#39;s Blog"/></a>
+			</div>
+			
+			<div id="textlogo">
+				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
+				<h2 class="blog-motto">special for SLAM</h2>
+			</div>
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			</a></div>
+			<nav class="animated">
+				<ul>
+					<ul>
+					 
+						<li><a href="/">主页</a></li>
+					
+						<li><a href="/archives">归档</a></li>
+					
+						<li><a href="/about">关于</a></li>
+					
+					<li>
+ 					
+					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
+						<label>Search</label>
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="hidden" name="q" value="site:fangrenziwo.com">
+					</form>
+					
+					</li>
+				</ul>
+			</nav>			
+</div>
+    </header>
+    <div id="container">
+      <div id="main" class="post" itemscope itemprop="blogPost">
+  
+	<article itemprop="articleBody"> 
+		<header class="article-info clearfix">
+  <h1 itemprop="name">
+    
+      <a href="/2016/12/30/markless-ar-mobile-as/" title="Markless-AR在Android端的移植" itemprop="url">Markless-AR在Android端的移植</a>
+  </h1>
+  <p class="article-author">By
+       
+		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
+		
+  <p class="article-time">
+    <time datetime="2016-12-30T02:47:48.000Z" itemprop="datePublished"> Published 2016-12-30</time>
+    
+  </p>
+</header>
+	<div class="article-content">
+		
+		<div id="toc" class="toc-article">
+			<strong class="toc-title">Contents</strong>
+		
+			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Markless-AR原理"><span class="toc-number">1.</span> <span class="toc-text">Markless-AR原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Android端移植"><span class="toc-number">2.</span> <span class="toc-text">Android端移植</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Android端算法移植的方法"><span class="toc-number">2.1.</span> <span class="toc-text">Android端算法移植的方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Android-Studio环境的配置"><span class="toc-number">2.2.</span> <span class="toc-text">Android Studio环境的配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenCV的使用"><span class="toc-number">2.3.</span> <span class="toc-text">OpenCV的使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Markless-AR的移植"><span class="toc-number">2.4.</span> <span class="toc-text">Markless-AR的移植</span></a></li></ol></li></ol>
+		
+		</div>
+		
+		<p><strong><br>作者：Frank<br>时间：2016-12-30
+</strong></p>
+<p>之前一直在看C++11的书籍和DSO的论文和源码分析，最近两天张罗着写写代码，刚好看到了关于Markless-AR的一些东西，所以就对其中的原理进行了分析，刚好发现Android Studio从2.2开始引入了CMAKE编译，所以就在Android端实现了一份简易的Markless-AR的演示程序，也算是对如何在Android Studio上使用Opencv等三方库的一个总结吧。<br><a id="more"></a></p>
+<h1 id="Markless-AR原理"><a href="#Markless-AR原理" class="headerlink" title="Markless-AR原理"></a>Markless-AR原理</h1><p>Markless-AR是利用Opencv中的特征检测和特征匹配结合KNN所实现的一个简易的增强显示展示程序。其基本流程如下图所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-12-30/28649829-file_1483075576309_4b9c.png" alt=""></p>
+<ol>
+<li><p>模式图像选取和训练<br>该算法需要首先输入一帧模式图像，该图片即为待检测的特征图像，算法会首先对模式图像进行特征提取，得到特征点后对特征点进行描述子计算，这里利用的特征检测算子为ORB，而描述子为BRIEF。其基本原理在之前的博客中已经讲过了，这里就不再赘述。在得到模式图像的描述子后，利用OpenCV自带的DescriptorMatch来对描述子进行训练，得到关于模板图像的训练集，算是基本数据库吧，由此，算法的基础就准备好了。</p>
+</li>
+<li><p>当前帧处理<br>当新的图像进入算法时，同样会先对图像进行特征检测和描述子的计算，得到描述子后会利用DescriptorMatcher的knnMatch方法来将当前帧的描述子和模板图像描述子训练的特征库进行比对，来判定当前帧和模板帧是否存在重合部分，这基本算是一个特征匹配的过程，只不过是利用当前图像和设定好的模板图像进行匹配罢了。</p>
+</li>
+<li><p>提纯特征描述子<br>当检测到当前帧和模板帧存在重合部分后，利用两帧间的描述子来计算两帧间的单应矩阵变换，利用该变换来对当前得到的匹配子进行过滤，去掉其中存在的错误的匹配点，这部分还存在一个二次单应矩阵变换，即是在第一个单应矩阵计算成功的基础上再进行一个单应矩阵的计算和匹配点的过滤，以尽可能的得到最佳的匹配点，这部分有点类似于提前的RANSAC的步骤；</p>
+</li>
+<li><p>相机位姿计算<br>当得到最佳的匹配点时，利用这些匹配点来直接进行相机位姿的计算，这里计算的是基础矩阵，利用OpenCV自带的solvePnP即可实现。这里经过计算后就可以得到当前帧和模式帧之间的相对相机位姿，这也是用来叠加增强现实场景的基本所在；</p>
+</li>
+<li><p>场景叠加<br>利用相机位姿可以构造OpenGL中的视景矩阵，视景矩阵可以将OpenGL中的场景进行矩阵变换，来得到当前相机的坐标系，其基本用法如下：</p>
+</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">glMatrixMode(GL_PROJECTION);//加载投影矩阵</span><br><span class="line">glLoadMatrixf(projectionMatrix.data);</span><br><span class="line"></span><br><span class="line">glMatrixModruxiae(GL_MODELVIEW);//加载视景矩阵。</span><br><span class="line">glLoadIdentity();</span><br></pre></td></tr></table></figure>
+<p>之后就可以在当前帧下叠加一些基本的增强现实场景，这里只做了基本的立方体的叠加。</p>
+<p>以下是利用该算法在Ubuntu下实现的提取和计算：<br>当前帧：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-12-30/3401139-file_1483078405529_18051.png" alt=""><br>匹配图像：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-12-30/22636184-file_1483078438196_3edc.png" alt=""><br>增强现实图像：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-12-30/59704783-file_1483078461115_8dfb.png" alt=""></p>
+<h1 id="Android端移植"><a href="#Android端移植" class="headerlink" title="Android端移植"></a>Android端移植</h1><p>该项目除了试验基本的增强现实叠加方法之外，更重要的是展示如何利用Android Studio对一些主流的项目进行移植。因此，该部分将对会其中涉及的技术进行具体的讲解。</p>
+<h2 id="Android端算法移植的方法"><a href="#Android端算法移植的方法" class="headerlink" title="Android端算法移植的方法"></a>Android端算法移植的方法</h2><p>如果想在Android端实现和PC端相同的算法，一般来说主要有两种方式，一种是将当前算法完全以Java版本重写一遍以实现在Android端的运行，该方法对于一些简单的算法可能还行之有效，但对于复杂的算法，特别是存在三方依赖库的复杂算法，其基本是不可实现的，在SLAM领域，存在众多的三方依赖库，如矩阵处理库Eigen，Sophus，图优化库G2O等，这些库都是SLAM中最基础的依赖，实现方式为C++ ，想要将其改写为Java版本，工作量是非常大的，得不偿失。这就自然而然的引出了NDK的概念。NDK是利用jni为桥梁，将Java端代码和native端的C++代码进行融合调用的方式，这样，我们就可以将利用C++实现的主体代码，开放接口函数，利用NDK为桥梁来供给Android端调用，而在Android端则只需要实现界面交互的主体逻辑即可，这样能极大的减少编码的复杂度，唯一的困难就是需要将C++代码的依赖库也同时移植到Android端，但相比直接改写而言已经简单了太多。<br>Android开发所用到的IDE主要有Eclipse和Android Studio，在AS出现之前，Eclipse一直都是Android开发的必备IDE，但Eclipse有些时候使用起来很不方便，所以现在的Android开发基本都在Android Studio上实现。本人限于电脑原因，一直使用的都是Eclipse，用起来也还凑合，在Eclipse上进行NDK开发主要是使用一种类CMAKE的Android.mk文件方式，基本思路和cmake的语法也相差不大，其基本用法可以参考我的ORBSLAM2_Android的实现：<a href="https://github.com/FangGet/ORB_SLAM2_Android" target="_blank" rel="external">点这里</a>。而在Android Studio中，一直使用的也是Android makefile的方式，直到AS2.2的出现，在AS2.2中，引入的一个重要的特性就是对Cmake的支持，这样对于原来熟悉Cmake开发的人员来说，就简便了很多。这里将会演示如何在AS中使用OpenCV和进行算法的移植。同时，我认为的另外一个重要的特性是Android Studio中增加了LLDB组件，用来支持对NDK中C++ 代码的单步调试，这就使得Android中native代码的调试非常的方便快捷，更是开发人员选择AS的不二选择</p>
+<h2 id="Android-Studio环境的配置"><a href="#Android-Studio环境的配置" class="headerlink" title="Android Studio环境的配置"></a>Android Studio环境的配置</h2><p>关于Android环境的配置在网上可能一搜就有一大堆，这里也不会过多描述，只说明进行NDK和Cmake开发所需要的基本组件和步骤。<br>Android Studio在安装时就会默认需要下载Android的SDK manager，这个是对Android环境支持的最重要的组件，当SDK安装完成后，Android Studio就可以启动了，接下来说明如何实现对NDK和CMAKE的支持。<br>点击IDE菜单中的Tools-&gt;Android-&gt;Android SDK，将得到以下界面：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-12-30/37178114-file_1483082984485_1156a.png" alt=""><br>其中的三个选项分别为SDK platforms，SDK Tools和SDK Update Sites。SDK platforms主要是Google官方发布的各Android版本的SDK和一些编译工具及镜像，读者可以按照自己的需要来下载所需的SDK（或者你只想体验一把最新的Android系统：））而关于NDK和CMAKE的支持全部在SDK Tools选项中，其中，我们选择CMAKE，LLDB和NDK三项，点击Apply，就会下载对应的NDK工具包，native代码调试工具和CMAKE工具了。这样，就已经完成了NDK+CMAKE开发的基本环境搭建。<br>为了在自己的Android工程中实现对C++ 代码的支持，在Android Studio中新建项目时，需要勾选Include C++ Support选项，则会在你的app module下的main目录下生成对应的cpp文件夹，这里对应的就是原Eclipse中的jni文件夹，如下所示：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-12-30/2862320-file_1483082981923_140cd.png" alt=""><br><img src="http://o9n30cpt4.bkt.clouddn.com/16-12-30/79242561-file_1483082986339_1426.png" alt=""><br>而在app目录下同样生成了CMakeLists.txt文件，其基本内容就是cmake的最小组成部分，以下贴出的是项目Markless-AR中的CMakeLists文件的基本设置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"># Sets the minimum version of CMake required to build the native</span><br><span class="line"># library. You should either keep the default value or only pass a</span><br><span class="line"># value of 3.4.0 or lower.</span><br><span class="line"></span><br><span class="line">set(PROJECT_NAME native-lib)</span><br><span class="line">cmake_minimum_required(VERSION 3.4.1)</span><br><span class="line">set(CMAKE_VERBOSE_MAKEFILE on)</span><br><span class="line">set(CMAKE_CXX_FLAGS &quot;$&#123;CMAKE_CXX_FLAGS&#125; -std=gnu++11&quot;)</span><br><span class="line"></span><br><span class="line">set(PROJECT_PATH /home/lab213/AndroidStudioProjects/MarklessAR)</span><br><span class="line">set(OPENCV_PATH /home/lab213/Documents/libraries/OpenCV-android-sdk)</span><br><span class="line"></span><br><span class="line">list(APPEND LINK_LIBS &quot;-lEGL;-lGLESv1_CM&quot;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># add opencv library</span><br><span class="line">add_library(lib_opencv SHARED IMPORTED)</span><br><span class="line">set_target_properties(lib_opencv PROPERTIES IMPORTED_LOCATION $&#123;PROJECT_PATH&#125;/app/src/main/jniLibs/$&#123;ANDROID_ABI&#125;/libopencv_java.so)</span><br><span class="line"></span><br><span class="line">find_library( log-lib log )</span><br><span class="line"></span><br><span class="line"># add ml-ar library</span><br><span class="line">SET(ML_CPP_ROOT $&#123;PROJECT_PATH&#125;/app/src/main/cpp)</span><br><span class="line">list(APPEND ML_SOURCES</span><br><span class="line">     $&#123;ML_CPP_ROOT&#125;/src/ARDrawingContext.cpp</span><br><span class="line">     $&#123;ML_CPP_ROOT&#125;/src/CameraCalibration.cpp</span><br><span class="line">     $&#123;ML_CPP_ROOT&#125;/src/GeometryTypes.cpp</span><br><span class="line">     $&#123;ML_CPP_ROOT&#125;/src/ARPipeline.cpp</span><br><span class="line">     $&#123;ML_CPP_ROOT&#125;/src/Pattern.cpp</span><br><span class="line">     $&#123;ML_CPP_ROOT&#125;/src/PatternDetector.cpp)</span><br><span class="line"></span><br><span class="line">list(APPEND ML_INCLUDES</span><br><span class="line">    $&#123;ML_CPP_ROOT&#125;/include</span><br><span class="line">    $&#123;OPENCV_PATH&#125;/sdk/native/jni/include)</span><br><span class="line"></span><br><span class="line">include_directories($&#123;ML_INCLUDES&#125;)</span><br><span class="line">add_library(ml_ar SHARED $&#123;ML_SOURCES&#125;)</span><br><span class="line">target_link_libraries(ml_ar $&#123;log-lib&#125; lib_opencv $&#123;LINK_LIBS&#125;)</span><br><span class="line"></span><br><span class="line"># include_directories($&#123;OPENCV_PATH&#125;/sdk/native/jni/include)</span><br><span class="line">add_library($&#123;PROJECT_NAME&#125; SHARED src/main/cpp/ml_ar.cpp )</span><br><span class="line">target_link_libraries($&#123;PROJECT_NAME&#125; $&#123;log-lib&#125; ml_ar $&#123;LINK_LIBS&#125;)</span><br></pre></td></tr></table></figure>
+<p>同时，在新建的工程中存在几个基本需要修改的地方，都在app下的build.gradle文件下，主要是两个：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">compileSdkVersion 24</span><br><span class="line">buildToolsVersion &quot;25.0.2&quot;</span><br></pre></td></tr></table></figure></p>
+<p>这里需要改成当前IDE中对应的版本。这样基本的Android+NDK+CMAKE工程就完成了</p>
+<h2 id="OpenCV的使用"><a href="#OpenCV的使用" class="headerlink" title="OpenCV的使用"></a>OpenCV的使用</h2><p>OpenCV官方提供了对Android的支持，因此，需要先将OpenCV4Android下载下来，这里我使用的是OpenCV4Android2.4.11。该SDK提供了两个版本，JAVA版和C++ 版，JAVA版实现了OpenCV中大多数函数的java落地，并添加了对Android中基本组件和硬件的支持。而C++ 端则是基本移植了OpenCV本身的源码。因为代码中需要利用Java端的OpenCV进行摄像头的获取和参数的传递，而在native端则依赖OpenCV进行基础处理，因此这里将从两方面介绍。</p>
+<ol>
+<li><p>Android Module的引入<br>在AS中，Module相当于原来Eclipse中的工程，也可以作为library来使用，因此，java版本的OpenCV引入是非常简单的，只需要点击File-&gt;New-&gt;Import Module，找到下载的OpenCV4Android目录下的sdk/java文件夹，点击ok即可引入，相关依赖AS会自动将其在build.gradle中生成。这样，你就可以在项目中自由的使用opencv的java端代码了。</p>
+</li>
+<li><p>native端的引入<br>在OpenCV4Android中，本身提供了已编译好的Android端so文件，因此，我们只需要将这些so文件引入即可，首先，我们可以在main文件夹下建立jniLibs文件夹，然后将OpenCV4Android下sdk/native/libs目录下的所有目录copy到jniLibs下即可，同时需要在CMakeList中引入OpenCV，基本代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># add opencv library</span><br><span class="line">add_library(lib_opencv SHARED IMPORTED)</span><br><span class="line">set_target_properties(lib_opencv PROPERTIES IMPORTED_LOCATION $&#123;PROJECT_PATH&#125;/app/src/main/jniLibs/$&#123;ANDROID_ABI&#125;/libopencv_java.so)</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>这里就将opencv直接作为了一个library供其他执行程序使用，同时，别忘记在使用时includeopencv的头文件，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">include_directories($&#123;OPENCV_PATH&#125;/sdk/native/jni/include)</span><br></pre></td></tr></table></figure></p>
+<p>最后一步，我们需要让工程读取到jniLibs目录，因此，需要在app的build.gradle中android部分引入如下内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">sourceSets &#123;</span><br><span class="line">        main &#123;</span><br><span class="line">            jniLibs.srcDirs = [&apos;/home/lab213/AndroidStudioProjects/MarklessAR/app/src/main/jniLibs&apos;]</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>如果你需要为CMake增加一些flags，也可以在build.gradle的android.defaultConfig中实现，如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">android &#123;</span><br><span class="line">    defaultConfig &#123;</span><br><span class="line">        externalNativeBuild &#123;</span><br><span class="line">            cmake &#123;</span><br><span class="line">                cppFlags &quot;-std=c++11 -frtti -fexceptions&quot;</span><br><span class="line">                abiFilters &apos;armeabi&apos;, &apos;armeabi-v7a&apos;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>这样就可以在native端的代码中使用OpenCV了，同理，其他依赖库也可以通过该方式来实现移植。</p>
+<h2 id="Markless-AR的移植"><a href="#Markless-AR的移植" class="headerlink" title="Markless-AR的移植"></a>Markless-AR的移植</h2><p>因为OpenCV的依赖已经搞定，因此，只需要将Markless-AR的源码导入到cpp文件夹下，并按照上述CmakeLists.txt的方式编译即可，同时，为了实现java端对native端的调用，在java端定义了几个native函数并在native端进行了实现，其中涉及的原理在我ORBSLAM2_Android的博客中有讲述：<a href="http://blog.csdn.net/zf19921020/article/details/51154358" target="_blank" rel="external">传送门</a>。基本实现过程也和ORBSLAM2类似，代码见我的github:<a href="https://github.com/FangGet/ORB_SLAM2_Android" target="_blank" rel="external">https://github.com/FangGet/ORB_SLAM2_Android</a> ，不再赘述。这里讲一下该app如何使用：当app打开后，界面如下：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-12-30/54637961-file_1483084015596_3b49.png" alt=""><br>任意点击，就进入了系统的主流程，左上角有个窗口显示了当前的图像帧，当摄像头对准你需要识别的物体后，点击以下小窗口，会对当前图像进行保存并作为算法的模板图像使用，界面如下：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-12-30/18473135-file_1483084068429_1312a.png" alt=""><br>之后就会对摄像头提取的每一帧进行处理，来得到相机的位姿，并在该位姿下进行简单的增强场景的展示，如下：<br><img src="http://o9n30cpt4.bkt.clouddn.com/16-12-30/46474287-file_1483084097356_f917.png" alt=""></p>
+<p>在移植中涉及的主要的就是native相关的几个函数，其java端声明在NDKLoader类下，而native端实现则在ml_ar.cpp文件下，都比较简单，有兴趣的可以去对应的文件看看写法。</p>
+<p>题外话：这里只是在现实场景下叠加了一个简单的坐标轴和立方体，如果需要加载三维模型的童鞋可以参考以下几份代码：<br><a href="https://github.com/takmin/OpenCV-Marker-less-AR" target="_blank" rel="external">https://github.com/takmin/OpenCV-Marker-less-AR</a><br><a href="https://github.com/meiroo/opencv-markerless-AR-Mobile" target="_blank" rel="external">https://github.com/meiroo/opencv-markerless-AR-Mobile</a><br>这里提供了加载mqo文件的方法以及IOS端实现的代码，有兴趣的可以看一看。</p>
+<center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+
+
+
+
+
+  
+	</div>
+		<footer class="article-footer clearfix">
+<div class="article-catetags">
+
+<div class="article-categories">
+  <span></span>
+  <a class="article-category-link" href="/categories/SLAM移植/">SLAM移植</a>
+</div>
+
+
+  <div class="article-tags">
+  
+  <span></span> <a href="/tags/Android-Studio/">Android Studio</a>
+  </div>
+
+</div>
+
+
+
+	<div class="article-share" id="share">
+	
+	  <div data-url="http://fangrenziwo.com/2016/12/30/markless-ar-mobile-as/" data-title="Markless-AR在Android端的移植 | Fang&#39;s Blog" data-tsina="null" class="share clearfix">
+	  </div>
+	
+	</div>
+
+
+</footer>
+
+   	       
+	</article>
+	
+<nav class="article-nav clearfix">
+ 
+
+<div class="next">
+<a href="/2016/12/14/cpp11-chapter0506-multhread/"  title="深入应用C++11之多线程">
+ <strong>下一篇：</strong><br/> 
+ <span>深入应用C++11之多线程
+</span>
+</a>
+</div>
+
+</nav>
+
+	
+<section id="comments" class="comment">
+	<div class="ds-thread" data-thread-key="2016/12/30/markless-ar-mobile-as/" data-title="Markless-AR在Android端的移植" data-url="http://fangrenziwo.com/2016/12/30/markless-ar-mobile-as/"></div>
+</section>
+
+
+</div>  
+      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+
+  <div id="toc" class="toc-aside">
+  <strong class="toc-title">Contents</strong>
+ 
+ <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Markless-AR原理"><span class="toc-number">1.</span> <span class="toc-text">Markless-AR原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Android端移植"><span class="toc-number">2.</span> <span class="toc-text">Android端移植</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Android端算法移植的方法"><span class="toc-number">2.1.</span> <span class="toc-text">Android端算法移植的方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Android-Studio环境的配置"><span class="toc-number">2.2.</span> <span class="toc-text">Android Studio环境的配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenCV的使用"><span class="toc-number">2.3.</span> <span class="toc-text">OpenCV的使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Markless-AR的移植"><span class="toc-number">2.4.</span> <span class="toc-text">Markless-AR的移植</span></a></li></ol></li></ol>
+ 
+  </div>
+
+<div id="asidepart">
+<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<aside class="clearfix">
+
+  
+<div class="categorieslist">
+	<p class="asidetitle">Categories</p>
+		<ul>
+		
+		  
+			<li><a href="/categories/C-11/" title="C++11">C++11<sup>5</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM移植/" title="SLAM移植">SLAM移植<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM系列/" title="SLAM系列">SLAM系列<sup>1</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/SLAM系列/" title="SLAM系列">SLAM系列<sup>8</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM资源/" title="SLAM资源">SLAM资源<sup>2</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/计算机视觉/" title="计算机视觉">计算机视觉<sup>10</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/随笔/" title="随笔">随笔<sup>2</sup></a></li>
+		  
+		
+		</ul>
+</div>
+
+
+  
+<div class="tagslist">
+	<p class="asidetitle">Tags</p>
+		<ul class="clearfix">
+		
+			
+				<li><a href="/tags/C-11理论/" title="C++11理论">C++11理论<sup>5</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/SLAM/" title="SLAM">SLAM<sup>4</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/计算机视觉/" title="计算机视觉">计算机视觉<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/非线性优化/" title="非线性优化">非线性优化<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/链接/" title="链接">链接<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/干货/" title="干货">干货<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/特征检测/" title="特征检测">特征检测<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/算法/" title="算法">算法<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/test/" title="test">test<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/相机姿态/" title="相机姿态">相机姿态<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/图像处理理论/" title="图像处理理论">图像处理理论<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/回环检测/" title="回环检测">回环检测<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Android-Studio/" title="Android Studio">Android Studio<sup>1</sup></a></li>
+			
+		
+		</ul>
+</div>
+
+
+  <div class="linkslist">
+  <p class="asidetitle">Links</p>
+    <ul>
+        
+          <li>
+            
+            	<a href="http://blog.csdn.net/zf19921020" target="_blank" title="我的CSDN">我的CSDN</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://wantedonline.cn" target="_blank" title="技术家园">技术家园</a>
+            
+          </li>
+        
+          <li>
+            
+            	<a href="http://www.slamcn.org" target="_blank" title="SLAMCN">SLAMCN</a>
+            
+          </li>
+        
+    </ul>
+</div>
+
+</aside>
+</div>
+    </div>
+    <footer><div id="footer" >
+	
+	<div class="line">
+		<span></span>
+		<div class="author"></div>
+	</div>
+	
+	
+	<section class="info">
+		<p> 业精于勤荒于嬉，行成于思毁于随 <br/>
+			热爱计算机视觉，热爱Coding...</p>
+	</section>
+	 
+	<div class="social-font" class="clearfix">
+		
+		
+		<a href="https://github.com/FangGet" target="_blank" class="icon-github" title="github"></a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		<a href="mailto:buptzhaofang@163.com" target="_blank" class="icon-email" title="Email Me"></a>
+		
+	</div>
+			
+		
+
+		<p class="copyright">
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2016 
+		
+		<a href="/about" target="_blank" title="Fang">Fang</a>
+		
+		
+		</p>
+</div>
+</footer>
+    <script src="/js/jquery-2.0.3.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+<script src="/js/jquery.qrcode-0.12.0.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.navbar').click(function(){
+    $('header nav').toggleClass('shownav');
+  });
+  var myWidth = 0;
+  function getSize(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+  };
+  var m = $('#main'),
+      a = $('#asidepart'),
+      c = $('.closeaside'),
+      o = $('.openaside');
+  c.click(function(){
+    a.addClass('fadeOut').css('display', 'none');
+    o.css('display', 'block').addClass('fadeIn');
+    m.addClass('moveMain');
+  });
+  o.click(function(){
+    o.css('display', 'none').removeClass('beforeFadeIn');
+    a.css('display', 'block').removeClass('fadeOut').addClass('fadeIn');      
+    m.removeClass('moveMain');
+  });
+  $(window).scroll(function(){
+    o.css("top",Math.max(80,260-$(this).scrollTop()));
+  });
+  
+  $(window).resize(function(){
+    getSize(); 
+    if (myWidth >= 1024) {
+      $('header nav').removeClass('shownav');
+    }else{
+      m.removeClass('moveMain');
+      a.css('display', 'block').removeClass('fadeOut');
+      o.css('display', 'none');
+      
+      $('#toc.toc-aside').css('display', 'none');
+        
+    }
+  });
+});
+</script>
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var ai = $('.article-content>iframe'),
+      ae = $('.article-content>embed'),
+      t  = $('#toc'),
+      ta = $('#toc.toc-aside'),
+      o  = $('.openaside'),
+      c  = $('.closeaside');
+  if(ai.length>0){
+    ai.wrap('<div class="video-container" />');
+  };
+  if(ae.length>0){
+   ae.wrap('<div class="video-container" />');
+  };
+  c.click(function(){
+    ta.css('display', 'block').addClass('fadeIn');
+  });
+  o.click(function(){
+    ta.css('display', 'none');
+  });
+  $(window).scroll(function(){
+    ta.css("top",Math.max(140,320-$(this).scrollTop()));
+  });
+});
+</script>
+
+
+<script type="text/javascript">
+$(document).ready(function(){ 
+  var $this = $('.share'),
+      url = $this.attr('data-url'),
+      encodedUrl = encodeURIComponent(url),
+      title = $this.attr('data-title'),
+      tsina = $this.attr('data-tsina'),
+      description = $this.attr('description');
+  var html = [
+  '<div class="hoverqrcode clearfix"></div>',
+  '<a class="overlay" id="qrcode"></a>',
+  '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="article-share-facebook" target="_blank" title="Facebook"></a>',
+  '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="article-share-twitter" target="_blank" title="Twitter"></a>',
+  '<a href="#qrcode" class="article-share-qrcode" title="微信"></a>',
+  '<a href="http://widget.renren.com/dialog/share?resourceUrl=' + encodedUrl + '&srcUrl=' + encodedUrl + '&title=' + title +'" class="article-share-renren" target="_blank" title="人人"></a>',
+  '<a href="http://service.weibo.com/share/share.php?title='+title+'&url='+encodedUrl +'&ralateUid='+ tsina +'&searchPic=true&style=number' +'" class="article-share-weibo" target="_blank" title="微博"></a>',
+  '<span title="Share to"></span>'
+  ].join('');
+  $this.append(html);
+
+  $('.hoverqrcode').hide();
+
+  var myWidth = 0;
+  function updatehoverqrcode(){
+    if( typeof( window.innerWidth ) == 'number' ) {
+      myWidth = window.innerWidth;
+    } else if( document.documentElement && document.documentElement.clientWidth) {
+      myWidth = document.documentElement.clientWidth;
+    };
+    var qrsize = myWidth > 1024 ? 200:100;
+    var options = {render: 'image', size: qrsize, fill: '#2ca6cb', text: url, radius: 0.5, quiet: 1};
+    var p = $('.article-share-qrcode').position();
+    $('.hoverqrcode').empty().css('width', qrsize).css('height', qrsize)
+                          .css('left', p.left-qrsize/2+20).css('top', p.top-qrsize-10)
+                          .qrcode(options);
+  };
+  $(window).resize(function(){
+    $('.hoverqrcode').hide();
+  });
+  $('.article-share-qrcode').click(function(){
+    updatehoverqrcode();
+    $('.hoverqrcode').toggle();
+  });
+  $('.article-share-qrcode').hover(function(){}, function(){
+      $('.hoverqrcode').hide();
+  });
+});   
+</script>
+
+
+
+<script type="text/javascript">
+  var duoshuoQuery = {short_name:"fangrenziwo"};
+  (function() {
+    var ds = document.createElement('script');
+    ds.type = 'text/javascript';ds.async = true;
+    ds.src = '//static.duoshuo.com/embed.js';
+    ds.charset = 'UTF-8';
+    (document.getElementsByTagName('head')[0] 
+    || document.getElementsByTagName('body')[0]).appendChild(ds);
+  })();
+</script> 
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){ 
+  $('.article-content').each(function(i){
+    $(this).find('img').each(function(){
+      if ($(this).parent().hasClass('fancybox')) return;
+      var alt = this.alt;
+      if (alt) $(this).after('<span class="caption">' + alt + '</span>');
+      $(this).wrap('<a href="' + this.src + '" title="' + alt + '" class="fancybox"></a>');
+    });
+    $(this).find('.fancybox').each(function(){
+      $(this).attr('rel', 'article' + i);
+    });
+  });
+  if($.fancybox){
+    $('.fancybox').fancybox();
+  }
+}); 
+</script>
+
+
+
+<!-- Analytics Begin -->
+
+
+
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "//hm.baidu.com/hm.js?e6d1f421bbc9962127a50488f9ed37d1";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+
+
+
+<!-- Analytics End -->
+
+<!-- Totop Begin -->
+
+	<div id="totop">
+	<a title="Back to Top"><img src="/img/scrollup.png"/></a>
+	</div>
+	<script src="/js/totop.js"></script>
+
+<!-- Totop End -->
+
+<!-- MathJax Begin -->
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+<!-- MathJax End -->
+
+<!-- Tiny_search Begin -->
+
+<!-- Tiny_search End -->
+
+  </body>
+</html>

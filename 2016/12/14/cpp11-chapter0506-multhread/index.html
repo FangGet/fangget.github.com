@@ -21,7 +21,7 @@
 <meta property="og:description" content="作者：Frank时间：2016-12-14
 
 在C++11之前，C++语言中并没有对并发编程提供支持。而现在C++11中增加了线程以及线程相关的类，很方便的支持了并发编程。本节将对C++11中多线程部分涉及的知识进行总结，包括互斥量、条件变量、原子变量、call_once等。此外，本节还会对C++11中提供的一些便利性的工具进行讲述，主要有chrono库，数值和字符转换以及宽窄字符转换。">
-<meta property="og:updated_time" content="2016-12-14T04:53:23.050Z">
+<meta property="og:updated_time" content="2016-12-30T07:26:56.583Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入应用C++11之多线程">
 <meta name="twitter:description" content="作者：Frank时间：2016-12-14
@@ -164,6 +164,13 @@
 <li>std::lauch::async：在调用async时就开始创建线程；</li>
 <li>std::lauch::deferred：延迟加载方式创建线程。调用async时不创建线程，直到调用了future的get或者wait时才创建线程；</li>
 </ul>
+<center><br><strong><br>转载请注明出处
+</strong><br></center>
+
+
+
+
+
   
 	</div>
 		<footer class="article-footer clearfix">
@@ -199,6 +206,14 @@
 	
 <nav class="article-nav clearfix">
  
+ <div class="prev" >
+ <a href="/2016/12/30/markless-ar-mobile-as/" title="Markless-AR在Android端的移植">
+  <strong>上一篇：</strong><br/>
+  <span>
+  Markless-AR在Android端的移植</span>
+</a>
+</div>
+
 
 <div class="next">
 <a href="/2016/12/06/cpp11-chapter02-rvalue-forward-move-unordered/"  title="深入应用C++11之使用C++11改进程序性能">
@@ -237,6 +252,10 @@
 		
 		  
 			<li><a href="/categories/C-11/" title="C++11">C++11<sup>5</sup></a></li>
+		  
+		
+		  
+			<li><a href="/categories/SLAM移植/" title="SLAM移植">SLAM移植<sup>1</sup></a></li>
 		  
 		
 		  
@@ -281,15 +300,7 @@
 			
 		
 			
-				<li><a href="/tags/特征检测/" title="特征检测">特征检测<sup>2</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/干货/" title="干货">干货<sup>2</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/test/" title="test">test<sup>2</sup></a></li>
+				<li><a href="/tags/非线性优化/" title="非线性优化">非线性优化<sup>2</sup></a></li>
 			
 		
 			
@@ -297,11 +308,19 @@
 			
 		
 			
+				<li><a href="/tags/干货/" title="干货">干货<sup>2</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/特征检测/" title="特征检测">特征检测<sup>2</sup></a></li>
+			
+		
+			
 				<li><a href="/tags/算法/" title="算法">算法<sup>2</sup></a></li>
 			
 		
 			
-				<li><a href="/tags/非线性优化/" title="非线性优化">非线性优化<sup>2</sup></a></li>
+				<li><a href="/tags/test/" title="test">test<sup>2</sup></a></li>
 			
 		
 			
@@ -314,6 +333,10 @@
 		
 			
 				<li><a href="/tags/回环检测/" title="回环检测">回环检测<sup>1</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/Android-Studio/" title="Android Studio">Android Studio<sup>1</sup></a></li>
 			
 		
 		</ul>
