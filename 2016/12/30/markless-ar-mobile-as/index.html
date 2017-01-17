@@ -63,7 +63,7 @@
 				<h1 class="site-name"><a href="/" title="Fang&#39;s Blog">Fang&#39;s Blog</a></h1>
 				<h2 class="blog-motto">special for SLAM</h2>
 			</div>
-			<div class="navbar"><a class="navbutton navmobile" href="#" title="Menu">
+			<div class="navbar"><a class="navbutton navmobile" href="#" title="菜單">
 			</a></div>
 			<nav class="animated">
 				<ul>
@@ -79,7 +79,7 @@
  					
 					<form class="search" action="//google.com/search" method="get" accept-charset="utf-8">
 						<label>Search</label>
-						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="Search" />
+						<input type="search" id="search" name="q" autocomplete="off" maxlength="20" placeholder="搜索" />
 						<input type="hidden" name="q" value="site:fangrenziwo.com">
 					</form>
 					
@@ -102,14 +102,14 @@
 		<a href="/about" title="Fang" target="_blank" itemprop="author">Fang</a>
 		
   <p class="article-time">
-    <time datetime="2016-12-30T02:47:48.000Z" itemprop="datePublished"> Published 2016-12-30</time>
+    <time datetime="2016-12-30T02:47:48.000Z" itemprop="datePublished"> 發表於 2016-12-30</time>
     
   </p>
 </header>
 	<div class="article-content">
 		
 		<div id="toc" class="toc-article">
-			<strong class="toc-title">Contents</strong>
+			<strong class="toc-title">文章目錄</strong>
 		
 			<ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Markless-AR原理"><span class="toc-number">1.</span> <span class="toc-text">Markless-AR原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Android端移植"><span class="toc-number">2.</span> <span class="toc-text">Android端移植</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Android端算法移植的方法"><span class="toc-number">2.1.</span> <span class="toc-text">Android端算法移植的方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Android-Studio环境的配置"><span class="toc-number">2.2.</span> <span class="toc-text">Android Studio环境的配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenCV的使用"><span class="toc-number">2.3.</span> <span class="toc-text">OpenCV的使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Markless-AR的移植"><span class="toc-number">2.4.</span> <span class="toc-text">Markless-AR的移植</span></a></li></ol></li></ol>
 		
@@ -198,6 +198,14 @@
 	
 <nav class="article-nav clearfix">
  
+ <div class="prev" >
+ <a href="/2017/01/17/slam-resources-list3/" title="【泡泡机器人】SLAM干货整理(三)">
+  <strong>上一篇：</strong><br/>
+  <span>
+  【泡泡机器人】SLAM干货整理(三)</span>
+</a>
+</div>
+
 
 <div class="next">
 <a href="/2016/12/14/cpp11-chapter0506-multhread/"  title="深入应用C++11之多线程">
@@ -216,22 +224,22 @@
 
 
 </div>  
-      <div class="openaside"><a class="navbutton" href="#" title="Show Sidebar"></a></div>
+      <div class="openaside"><a class="navbutton" href="#" title="顯示側邊欄"></a></div>
 
   <div id="toc" class="toc-aside">
-  <strong class="toc-title">Contents</strong>
+  <strong class="toc-title">文章目錄</strong>
  
  <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Markless-AR原理"><span class="toc-number">1.</span> <span class="toc-text">Markless-AR原理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Android端移植"><span class="toc-number">2.</span> <span class="toc-text">Android端移植</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Android端算法移植的方法"><span class="toc-number">2.1.</span> <span class="toc-text">Android端算法移植的方法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Android-Studio环境的配置"><span class="toc-number">2.2.</span> <span class="toc-text">Android Studio环境的配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenCV的使用"><span class="toc-number">2.3.</span> <span class="toc-text">OpenCV的使用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Markless-AR的移植"><span class="toc-number">2.4.</span> <span class="toc-text">Markless-AR的移植</span></a></li></ol></li></ol>
  
   </div>
 
 <div id="asidepart">
-<div class="closeaside"><a class="closebutton" href="#" title="Hide Sidebar"></a></div>
+<div class="closeaside"><a class="closebutton" href="#" title="隱藏側邊欄"></a></div>
 <aside class="clearfix">
 
   
 <div class="categorieslist">
-	<p class="asidetitle">Categories</p>
+	<p class="asidetitle">分類</p>
 		<ul>
 		
 		  
@@ -251,7 +259,7 @@
 		  
 		
 		  
-			<li><a href="/categories/SLAM资源/" title="SLAM资源">SLAM资源<sup>2</sup></a></li>
+			<li><a href="/categories/SLAM资源/" title="SLAM资源">SLAM资源<sup>3</sup></a></li>
 		  
 		
 		  
@@ -268,7 +276,7 @@
 
   
 <div class="tagslist">
-	<p class="asidetitle">Tags</p>
+	<p class="asidetitle">標簽</p>
 		<ul class="clearfix">
 		
 			
@@ -284,15 +292,15 @@
 			
 		
 			
+				<li><a href="/tags/链接/" title="链接">链接<sup>3</sup></a></li>
+			
+		
+			
+				<li><a href="/tags/干货/" title="干货">干货<sup>3</sup></a></li>
+			
+		
+			
 				<li><a href="/tags/非线性优化/" title="非线性优化">非线性优化<sup>2</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/链接/" title="链接">链接<sup>2</sup></a></li>
-			
-		
-			
-				<li><a href="/tags/干货/" title="干货">干货<sup>2</sup></a></li>
 			
 		
 			
@@ -328,7 +336,7 @@
 
 
   <div class="linkslist">
-  <p class="asidetitle">Links</p>
+  <p class="asidetitle">友情鏈接</p>
     <ul>
         
           <li>
@@ -388,7 +396,7 @@
 		
 
 		<p class="copyright">
-		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2016 
+		Powered by <a href="http://hexo.io" target="_blank" title="hexo">hexo</a> and Theme by <a href="https://github.com/wuchong/jacman" target="_blank" title="Jacman">Jacman</a> © 2017 
 		
 		<a href="/about" target="_blank" title="Fang">Fang</a>
 		
@@ -588,7 +596,7 @@ var _hmt = _hmt || [];
 <!-- Totop Begin -->
 
 	<div id="totop">
-	<a title="Back to Top"><img src="/img/scrollup.png"/></a>
+	<a title="返回頂部"><img src="/img/scrollup.png"/></a>
 	</div>
 	<script src="/js/totop.js"></script>
 
